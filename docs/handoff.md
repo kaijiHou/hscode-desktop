@@ -8,7 +8,7 @@
 - **阶段**：Phase 1 全部完成（套皮 + 隐私清理 + 文档 + 验证 + 提交）
 - **工作目录**：`D:/hscode`（所有操作必须在 D 盘）
 - **上游**：`https://github.com/anomalyco/opencode`，分支 `dev`，commit `e00890c`
-- **仓库**：`kaijiHou/hscode`（private）
+- **仓库**：`kaijiHou/hscode-desktop`（public）
 - **活跃模型**：`mimo-v2.5` via `opencode-go`
 
 ## Git 提交记录
