@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect } from "bun:test"
-import { Effect, Exit, Layer, Option } from "effect"
+import { Effect, Layer, Option } from "effect"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { httpClient } from "@opencode-ai/core/effect/app-node-platform"
@@ -135,190 +135,130 @@ describe("ShareNext", () => {
     ),
   )
 
-  it.live("create posts share, persists it, and returns the result", () =>
-    provideTmpdirInstance(
-      () => {
-        const createRequests: HttpClientRequest.HttpClientRequest[] = []
-        const client = HttpClient.make((req) => {
-          if (req.url.endsWith("/api/share")) {
+  it.live("create is hard-disabled: no HTTP request, returns empty result", () =>
+      provideTmpdirInstance(
+        () => {
+          const createRequests: HttpClientRequest.HttpClientRequest[] = []
+          const client = HttpClient.make((req) => {
             createRequests.push(req)
-            return Effect.succeed(
-              json(req, {
-                id: "shr_abc",
-                url: "https://legacy-share.example.com/share/abc",
-                secret: "sec_123",
-              }),
-            )
-          }
-          return Effect.succeed(json(req, { ok: true }))
-        })
+            return Effect.succeed(json(req, { ok: true }))
+          })
+          return Effect.gen(function* () {
+            const session = yield* (yield* Session.Service).create({ title: "test" })
+
+            const result = yield* (yield* ShareNext.Service).create(session.id)
+
+            // HSCode: Session Share 永久禁用 —— create 短路，返回空结果
+            expect(result).toEqual({ id: "", url: "", secret: "" })
+            expect(yield* share(session.id)).toBeUndefined()
+            // 关键断言：零 HTTP 请求
+            expect(createRequests).toHaveLength(0)
+          }).pipe(Effect.provide(integrationLayer(client)))
+        },
+        { config: { enterprise: { url: "https://legacy-share.example.com" } } },
+      ),
+    )
+
+    it.live("remove is hard-disabled: no HTTP request", () =>
+      provideTmpdirInstance(
+        () => {
+          const seen: HttpClientRequest.HttpClientRequest[] = []
+          const client = HttpClient.make((req) => {
+            seen.push(req)
+            return Effect.succeed(HttpClientResponse.fromWeb(req, new Response(null, { status: 200 })))
+          })
+          return Effect.gen(function* () {
+            const session = yield* (yield* Session.Service).create({ title: "test" })
+            const service = yield* ShareNext.Service
+
+            yield* service.create(session.id)
+            yield* service.remove(session.id)
+
+            // HSCode: disabled 时 remove 短路，零 HTTP 请求
+            expect(yield* share(session.id)).toBeUndefined()
+            expect(seen).toHaveLength(0)
+          }).pipe(Effect.provide(integrationLayer(client)))
+        },
+        { config: { enterprise: { url: "https://legacy-share.example.com" } } },
+      ),
+    )
+
+    it.live("disabled via env OPENCODE_DISABLE_SHARE=false cannot re-enable sharing", () =>
+          provideTmpdirInstance(() => {
+            // HSCode: 环境变量无法恢复 Share 上传（硬禁用）
+            process.env["OPENCODE_DISABLE_SHARE"] = "false"
+            const seen: HttpClientRequest.HttpClientRequest[] = []
+            const client = HttpClient.make((req) => {
+              seen.push(req)
+              return Effect.succeed(json(req, { ok: true }))
+            })
+            return Effect.gen(function* () {
+              const session = yield* (yield* Session.Service).create({ title: "test" })
+              const result = yield* (yield* ShareNext.Service).create(session.id)
+
+              expect(result).toEqual({ id: "", url: "", secret: "" })
+              expect(seen).toHaveLength(0)
+            })
+              .pipe(Effect.provide(integrationLayer(client)))
+              .pipe(Effect.onExit(() => Effect.sync(() => delete process.env["OPENCODE_DISABLE_SHARE"])))
+          }),
+        )
+
+  it.live("create is disabled even on non-ok client: zero HTTP requests", () =>
+      provideTmpdirInstance(() => {
+        const client = HttpClient.make((req) => Effect.succeed(json(req, { error: "bad" }, 500)))
         return Effect.gen(function* () {
           const session = yield* (yield* Session.Service).create({ title: "test" })
 
           const result = yield* (yield* ShareNext.Service).create(session.id)
 
-          expect(result.id).toBe("shr_abc")
-          expect(result.url).toBe("https://legacy-share.example.com/share/abc")
-          expect(result.secret).toBe("sec_123")
-
-          const row = yield* share(session.id)
-          expect(row?.id).toBe("shr_abc")
-          expect(row?.url).toBe("https://legacy-share.example.com/share/abc")
-          expect(row?.secret).toBe("sec_123")
-
-          expect(createRequests).toHaveLength(1)
-          expect(createRequests[0].method).toBe("POST")
-          expect(createRequests[0].url).toBe("https://legacy-share.example.com/api/share")
-        }).pipe(Effect.provide(integrationLayer(client)))
-      },
-      { config: { enterprise: { url: "https://legacy-share.example.com" } } },
-    ),
-  )
-
-  it.live("remove deletes the persisted share and calls the delete endpoint", () =>
-    provideTmpdirInstance(
-      () => {
-        const seen: HttpClientRequest.HttpClientRequest[] = []
-        const client = HttpClient.make((req) => {
-          seen.push(req)
-          if (req.method === "POST") {
-            return Effect.succeed(
-              json(req, {
-                id: "shr_abc",
-                url: "https://legacy-share.example.com/share/abc",
-                secret: "sec_123",
-              }),
-            )
-          }
-          return Effect.succeed(HttpClientResponse.fromWeb(req, new Response(null, { status: 200 })))
-        })
-        return Effect.gen(function* () {
-          const session = yield* (yield* Session.Service).create({ title: "test" })
-          const service = yield* ShareNext.Service
-
-          yield* service.create(session.id)
-          yield* service.remove(session.id)
-
+          // HSCode: disabled 短路 —— 不触发 HTTP，客户端返回 500 也不会影响
+          expect(result).toEqual({ id: "", url: "", secret: "" })
           expect(yield* share(session.id)).toBeUndefined()
-          expect(seen.map((req) => [req.method, req.url])).toEqual([
-            ["POST", "https://legacy-share.example.com/api/share"],
-            ["DELETE", "https://legacy-share.example.com/api/share/shr_abc"],
-          ])
         }).pipe(Effect.provide(integrationLayer(client)))
-      },
-      { config: { enterprise: { url: "https://legacy-share.example.com" } } },
-    ),
-  )
+      }),
+    )
 
-  it.live("create fails on a non-ok response and does not persist a share", () =>
-    provideTmpdirInstance(() => {
-      const client = HttpClient.make((req) => Effect.succeed(json(req, { error: "bad" }, 500)))
-      return Effect.gen(function* () {
-        const session = yield* (yield* Session.Service).create({ title: "test" })
+    it.live("ShareNext disabled: session diff events do not produce sync HTTP requests", () =>
+      provideTmpdirInstance(
+        () => {
+          const seen: Array<{ url: string; body: string }> = []
+          const client = HttpClient.make((req) => {
+            if (req.url.endsWith("/sync") && req.body._tag === "Uint8Array") {
+              seen.push({ url: req.url, body: new TextDecoder().decode(req.body.body) })
+            }
+            return Effect.succeed(json(req, { ok: true }))
+          })
 
-        const exit = yield* ShareNext.Service.use((svc) => Effect.exit(svc.create(session.id)))
+          return Effect.gen(function* () {
+            const events = yield* EventV2Bridge.Service
+            const share = yield* ShareNext.Service
+            const session = yield* Session.Service
 
-        expect(Exit.isFailure(exit)).toBe(true)
-        expect(yield* share(session.id)).toBeUndefined()
-      }).pipe(Effect.provide(integrationLayer(client)))
-    }),
-  )
+            const info = yield* session.create({ title: "first" })
+            yield* share.init()
+            yield* Effect.sleep(50)
 
-  it.live("ShareNext coalesces rapid diff events into one delayed sync with latest data", () =>
-    provideTmpdirInstance(
-      () => {
-        const seen: Array<{ url: string; body: string }> = []
-        const client = HttpClient.make((req) => {
-          if (req.url.endsWith("/sync") && req.body._tag === "Uint8Array") {
-            seen.push({ url: req.url, body: new TextDecoder().decode(req.body.body) })
-          }
-          return Effect.succeed(json(req, { ok: true }))
-        })
-
-        return Effect.gen(function* () {
-          const events = yield* EventV2Bridge.Service
-          const share = yield* ShareNext.Service
-          const session = yield* Session.Service
-
-          const info = yield* session.create({ title: "first" })
-          yield* share.init()
-          yield* Effect.sleep(50)
-          const { db } = yield* Database.Service
-          yield* db
-            .insert(SessionShareTable)
-            .values({
-              session_id: info.id,
-              id: "shr_abc",
-              url: "https://legacy-share.example.com/share/abc",
-              secret: "sec_123",
+            yield* events.publish(Session.Event.Diff, {
+              sessionID: info.id,
+              diff: [
+                {
+                  file: "a.ts",
+                  patch:
+                    "Index: a.ts\n===================================================================\n--- a.ts\t\n+++ a.ts\t\n@@ -1,1 +1,1 @@\n-one\n\\ No newline at end of file\n+two\n\\ No newline at end of file\n",
+                  additions: 1,
+                  deletions: 1,
+                  status: "modified",
+                },
+              ],
             })
-            .run()
-            .pipe(Effect.orDie)
+            yield* Effect.sleep(200)
 
-          yield* events.publish(Session.Event.Diff, {
-            sessionID: info.id,
-            diff: [
-              {
-                file: "a.ts",
-                patch:
-                  "Index: a.ts\n===================================================================\n--- a.ts\t\n+++ a.ts\t\n@@ -1,1 +1,1 @@\n-one\n\\ No newline at end of file\n+two\n\\ No newline at end of file\n",
-                additions: 1,
-                deletions: 1,
-                status: "modified",
-              },
-            ],
-          })
-          yield* events.publish(Session.Event.Diff, {
-            sessionID: info.id,
-            diff: [
-              {
-                file: "b.ts",
-                patch:
-                  "Index: b.ts\n===================================================================\n--- b.ts\t\n+++ b.ts\t\n@@ -1,1 +1,1 @@\n-old\n\\ No newline at end of file\n+new\n\\ No newline at end of file\n",
-                additions: 2,
-                deletions: 0,
-                status: "modified",
-              },
-            ],
-          })
-          yield* pollWithTimeout(
-            Effect.sync(() => (seen.length === 1 ? true : undefined)),
-            "timed out waiting for share sync",
-            "5 seconds",
-          )
-
-          expect(seen).toHaveLength(1)
-          expect(seen[0].url).toBe("https://legacy-share.example.com/api/share/shr_abc/sync")
-
-          const body = JSON.parse(seen[0].body) as {
-            secret: string
-            data: Array<{
-              type: string
-              data: Array<{
-                file: string
-                patch: string
-                additions: number
-                deletions: number
-                status?: string
-              }>
-            }>
-          }
-          expect(body.secret).toBe("sec_123")
-          expect(body.data).toHaveLength(1)
-          expect(body.data[0].type).toBe("session_diff")
-          expect(body.data[0].data).toEqual([
-            {
-              file: "b.ts",
-              patch:
-                "Index: b.ts\n===================================================================\n--- b.ts\t\n+++ b.ts\t\n@@ -1,1 +1,1 @@\n-old\n\\ No newline at end of file\n+new\n\\ No newline at end of file\n",
-              additions: 2,
-              deletions: 0,
-              status: "modified",
-            },
-          ])
-        }).pipe(Effect.provide(integrationLayer(client)))
-      },
-      { config: { enterprise: { url: "https://legacy-share.example.com" } } },
-    ),
-  )
+            // HSCode: disabled 时事件监听不生效，sync 请求数为 0
+            expect(seen).toHaveLength(0)
+          }).pipe(Effect.provide(integrationLayer(client)))
+        },
+        { config: { enterprise: { url: "https://legacy-share.example.com" } } },
+      ),
+    )
 })

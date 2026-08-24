@@ -49,17 +49,8 @@ import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
+import { APP_IDS, APP_NAMES } from "./app-identity"
 
-const APP_NAMES: Record<string, string> = {
-  dev: "HSCode Dev",
-  beta: "HSCode Beta",
-  prod: "HSCode",
-}
-const APP_IDS: Record<string, string> = {
-  dev: "ai.hscode.desktop.dev",
-  beta: "ai.hscode.desktop.beta",
-  prod: "ai.hscode.desktop",
-}
 const TEST_ONBOARDING = process.env.OPENCODE_TEST_ONBOARDING === "1"
 const SIDECAR_VERSION = process.env.OPENCODE_SIDECAR_V2 === "1" ? "v2" : "v1"
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"

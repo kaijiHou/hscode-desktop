@@ -688,7 +688,7 @@ it.instance("handles command configuration", () =>
   }),
 )
 
-it.instance("migrates autoshare to share field", () =>
+it.instance("HSCode: autoshare cannot override share=disabled", () =>
   Effect.gen(function* () {
     const test = yield* TestInstance
     yield* writeConfigEffect(test.directory, {
@@ -696,7 +696,8 @@ it.instance("migrates autoshare to share field", () =>
       autoshare: true,
     })
     const config = yield* Config.use.get()
-    expect(config.share).toBe("auto")
+    // HSCode: Session Share 硬禁用 — 即使 autoshare: true，share 仍被强制为 disabled
+    expect(config.share).toBe("disabled")
     expect(config.autoshare).toBe(true)
   }),
 )
