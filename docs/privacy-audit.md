@@ -51,6 +51,8 @@ Phase 1 清除了运行时代码；Phase 1.9 补清了构建期与元数据残�
 - Config：`packages/opencode/src/config/config.ts` 强制 `result.share = "disabled"`，
   UI 层 `config.share === "disabled"` 守卫生效，`/share` `/unshare` `Copy Share Link` 不显示。
 - 保留 `Export Session` 本地导出能力。
+- 保留 `opencode import <share URL>`：用户主动输入远程 Share URL 读取分享数据
+  属于显式行为（非被动上传、非遥测），不在此禁用范围内。
 
 ### 2.4 模型元数据（models.opencode.ai）— HSCode 默认禁用
 
@@ -59,6 +61,10 @@ Phase 1 清除了运行时代码；Phase 1.9 补清了构建期与元数据残�
   `process.env.OPENCODE_DISABLE_MODELS_FETCH = "true"`，sidecar 继承后：
   - `populate()` 短路返回 `{}`，不产生 fetch；
   - 周期 refresh 定时器不启动。
+- **表述边界**：默认启动与后台周期刷新不会访问 `models.opencode.ai`。
+  但用户主动执行某些 Provider 管理/登录流程触发显式 `refresh(true)` force refresh 时，
+  仍可能访问配置的模型元数据源（`OPENCODE_MODELS_URL` 覆盖源或默认源）。
+  因此不能说"models.opencode.ai 永远无法访问"——它是默认禁用，不是物理屏蔽。
 - 保留用户手动加载能力：`OPENCODE_MODELS_PATH`（本地文件）/ `OPENCODE_MODELS_URL`（自定义源）仍生效。
 - 记录：HSCode 默认禁用模型元数据联网；后续 Phase 2 由自定义 Provider 提供模型配置。
 
@@ -97,8 +103,8 @@ HSCode 没有 hscode.dev 服务。Phase 1 曾把 `opencode.ai` URL 简单替换�
 | 域名 | Phase 1.9 后普通启动是否请求 | 触发条件 | 是否用户主动 | 传输内容 | 是否保留 |
 |---|---|---|---|---|---|
 | `sentry.io`（含 @sentry 全家桶） | **否（0 请求）** | — | — | — | 已移除 |
-| `opncd.ai`（Session Share） | **否（0 请求）** | 硬禁用，无法触发 | — | — | 已禁用 |
-| `models.opencode.ai` | **否（0 请求）** | HSCode 默认注入禁用 flag | — | 模型元数据（只读） | 默认禁用，可本地加载 |
+| `opncd.ai`（Session Share） | 普通启动 **0 请求** | Share 上传永久禁用（`disabled = true`）；用户主动 `opencode import <share URL>` 读取远程 Share 属显式行为 | ✅（仅用户主动 Import 时） | Share 数据（仅用户主动 Import 时读取） | 上传已禁用；Import 保留 |
+| `models.opencode.ai` | 默认启动/后台周期 **0 请求** | HSCode 默认注入禁用 flag；用户主动 force refresh（Provider 管理流程）可能访问配置的元数据源 | ⚠️ 部分主动 | 模型元数据（只读） | 默认禁用，可本地加载 |
 | `hscode.dev` | **否（0 请求）** | — | — | — | 已移除 |
 | `opencode.ai` | 仅用户点击 UI 外链 | 用户点击 ExternalLink | ✅ | — | 保留（品牌链接逐步处理） |
 | `api.opencode.ai` | 仅用户主动 GitHub 集成 | 用户操作 | ✅ | GitHub OAuth | 保留 |

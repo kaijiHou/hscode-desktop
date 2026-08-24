@@ -14,13 +14,13 @@ OpenCode 是一个 Bun workspace monorepo，核心包在 `packages/` 下：
 | `desktop` | **Electron 桌面壳**（HSCode 套皮主战场） |
 | `app` | SolidJS 前端应用（渲染层），被 desktop 和 web 复用 |
 | `ui` | 共享 UI 组件库 |
-| `client` / `sdk` / `sdk-next` | 客户端 SDK |
-| `console` | 控制台相关 |
-| `web` | Web 版入口 |
+| `client` / `sdk` | 客户端 SDK |
 | `tui` | 终端 UI |
-| `docs` / `storybook` | 文档/组件演示 |
 
-根 `package.json` 的 `workspaces` 覆盖 `packages/*`、`packages/console/*`、`packages/stats/*`、`packages/sdk/js`、`packages/slack`。
+> HSCode 已裁剪（CHANGE-005）：console、web、stats、storybook、slack、sdk-next、
+> enterprise、containers、docs、function、httpapi-codegen、identity 等非 Desktop 包已删除。
+
+根 `package.json` 的 `workspaces` 覆盖 `packages/*` 与 `packages/sdk/js`。
 
 ## 2. Desktop（Electron 壳）
 
@@ -61,8 +61,8 @@ OpenCode 是一个 Bun workspace monorepo，核心包在 `packages/` 下：
 
 真正的上传逻辑在 `packages/opencode/src/share/share-next.ts`：
 - 上传目标：`https://opncd.ai`（可通过 `enterprise.url` 覆盖）
-- 开关：环境变量 `OPENCODE_DISABLE_SHARE`
-- **HSCode 已改为默认禁用**（除非显式设 `OPENCODE_DISABLE_SHARE=false`）
+- **HSCode 已硬禁用**：`const disabled = true`，环境变量无法恢复上传；
+  config 强制 `share = "disabled"`，UI 命令隐藏。`opencode import <share URL>` 保留（用户主动）。
 
 数据库表：`packages/core/src/share/sql.ts` 定义 `SessionShareTable`。
 
@@ -71,7 +71,8 @@ OpenCode 是一个 Bun workspace monorepo，核心包在 `packages/` 下：
 `packages/core/src/models-dev.ts`：
 - 默认从 `https://models.opencode.ai/api.json` 拉取模型元数据（模型名/定价等公开信息）
 - 可用环境变量 `OPENCODE_MODELS_URL` 覆盖、`OPENCODE_MODELS_PATH` 指向本地文件
-- **只读拉取，不上传用户数据**，保留（详见隐私审计）
+- **HSCode 默认禁用联网**：Desktop 启动注入 `OPENCODE_DISABLE_MODELS_FETCH=true`；
+  默认启动与后台周期刷新不请求；用户主动 force refresh 仍可能访问配置的源
 
 ## 6. 外部域名一览
 

@@ -281,7 +281,20 @@ Phase 2 接 llama.cpp / Qwen 依赖它。
 PASS
 
 ### 对应 Git Commit
-见本轮 7 个细粒度 commit（`fix(privacy): remove remaining Sentry build integration` 等）。
+Phase 1.9 实际新增 **7 个 commit**（自起始基线 `982fcc5` 之后）：
+
+```
+b09a0c6 fix(privacy): remove remaining Sentry build integration
+c97ce7f fix(privacy): disable passive remote metadata and release requests
+57f7251 fix(privacy): hard-disable session sharing in HSCode
+39e4827 fix(branding): isolate HSCode app data and runtime paths
+b5ca371 fix(branding): correct desktop metadata and repository links
+4a5eca6 chore(repo): clean dead workspace scripts after package pruning
+8543275 docs: record Phase 1.9 repair and privacy closure
+```
+
+若把 Phase 1.9 起始基线 `982fcc5`（docs: update repo URL）一起显示，列表共 8 条；
+Phase 1.9 自身新增为 7 commits。
 
 ---
 
