@@ -13,8 +13,7 @@ const channel = (() => {
 
 const nodePtyPkg = `@lydell/node-pty-${process.platform}-${process.arch}`
 
-// HSCode: Sentry sourcemap 上传插件已移除（隐私清理），构建产物不再上传到 Sentry
-const sentry = false
+// HSCode: Sentry sourcemap 上传插件已彻底移除（隐私清理），构建产物不再上传到 Sentry
 
 export default defineConfig({
   main: {
@@ -76,7 +75,7 @@ const require = __cjs_mod__.createRequire(import.meta.url);
     },
   },
   renderer: {
-    plugins: [appPlugin, sentry],
+    plugins: [appPlugin],
     publicDir: "../../../app/public",
     root: "src/renderer",
     build: {
