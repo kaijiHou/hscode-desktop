@@ -279,19 +279,19 @@ export const DESKTOP_MENU: DesktopMenu[] = [
     id: "help",
     labelKey: "desktop.menu.help",
     items: [
-      { type: "item", labelKey: "desktop.menu.documentation", href: "https://hscode.dev/docs" },
-      { type: "item", labelKey: "desktop.menu.supportForum", href: "https://github.com/kaijiHou/hscode/discussions" },
+      // HSCode: 文档链接指向 GitHub 仓库（无独立文档站）；Discussions 未启用，不保留无效菜单
+      { type: "item", labelKey: "desktop.menu.documentation", href: "https://github.com/kaijiHou/hscode-desktop" },
       { type: "item", labelKey: "desktop.menu.exportLogs", command: "logs.export" },
       { type: "separator" },
       {
         type: "item",
         labelKey: "desktop.menu.shareFeedback",
-        href: "https://github.com/kaijiHou/hscode/issues/new?template=feature_request.yml",
+        href: "https://github.com/kaijiHou/hscode-desktop/issues/new",
       },
       {
         type: "item",
         labelKey: "desktop.menu.reportBug",
-        href: "https://github.com/kaijiHou/hscode/issues/new?template=bug_report.yml",
+        href: "https://github.com/kaijiHou/hscode-desktop/issues/new",
       },
     ],
   },

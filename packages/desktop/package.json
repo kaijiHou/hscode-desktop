@@ -4,11 +4,10 @@
   "version": "1.18.21",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://opencode.ai",
-  "author": {
-    "name": "OpenCode",
-    "email": "hello@opencode.ai"
-  },
+  "homepage": "https://github.com/kaijiHou/hscode-desktop",
+    "author": {
+      "name": "HSCode"
+    },
   "scripts": {
     "typecheck": "tsgo -b",
     "predev": "bun ./scripts/predev.ts",
