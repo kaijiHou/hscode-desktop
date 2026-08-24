@@ -14,7 +14,20 @@ HSCode 是基于 [OpenCode](https://github.com/anomalyco/opencode) 的自用修�
 2. **隐私**：
    - 移除 Sentry 崩溃上报；
    - 禁用自动更新；
-   - 默认禁用 Session Share（不上传会话到 `opncd.ai`）。
+   - 默认禁用 Session Share（不上传会话到 `opncd.ai`）；
+   - 默认禁用模型元数据联网（`models.opencode.ai`）。
+3. **数据隔离**：App ID `ai.hscode.desktop.*`，core 数据目录 `hscode`，与 OpenCode 完全隔离。
+
+## Network Inspector（实验性，Windows）
+
+内置抓包面板（命令面板输入 "Network Inspector" 打开）：
+
+- TCP/UDP 包捕获（WinDivert 引擎，需管理员权限）
+- IP/端口/协议过滤（`tcp`、`udp.port == 22122`、`src.ip == 192.168.1.10`）
+- 实时包列表与详情（Overview / Payload / HEX / ASCII）
+- 明文 HTTP 请求基础识别（单包内完整请求头）
+
+HTTPS 解密与完整 TCP 流重组暂不支持（见 [docs/network-inspector-architecture.md](docs/network-inspector-architecture.md)）。
 
 ## 开发
 

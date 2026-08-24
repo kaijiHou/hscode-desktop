@@ -5,6 +5,24 @@ HSCode 是基于 [OpenCode](https://github.com/anomalyco/opencode) 的自用修�
 
 ## [Unreleased]
 
+### Added（Phase 2A）
+
+- 实验性 Windows Network Inspector（命令面板 "Network Inspector" 打开）
+  - TCP/UDP 包捕获（WinDivert 2.2.2 引擎，管理员权限）
+  - 包过滤（`tcp` / `udp` / `tcp.port == 22122` / `src.ip == ...` / `dst.ip == ...`）
+  - 实时包列表 + 详情（Overview / Payload / HEX / ASCII）
+  - 明文 HTTP/1.x 请求单包识别（GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS）
+- Phase 1.9 隐私/隔离回归测试（share 硬禁用、models 被动拉取禁用、数据路径隔离、App ID、highlights 无远程拉取）
+
+### Changed（Phase 1.9）
+
+- Sentry 构建期插件与残留常量彻底移除
+- models.opencode.ai 默认禁用被动拉取
+- Session Share 硬禁用（环境变量无法恢复上传）
+- 文档/审计同步真实网络语义
+
+## [Unreleased]
+
 ### Changed（Phase 1.9 Baseline Repair & Privacy Closure）
 
 - 品牌：窗口标题、webmanifest、favicon 标题 → HSCode；帮助菜单链接 → GitHub 仓库；

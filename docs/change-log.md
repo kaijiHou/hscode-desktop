@@ -308,6 +308,93 @@ Phase 1.9 自身新增为 7 commits。
    仅在 GitHub Actions Windows 签名时需要，本地打包无碍。
 5. 早期本地细粒度 commit（fc1b8d5 等）在首次公开 push 时被 squash；当前以 GitHub 可追溯 commit 为准。
 
+---
+
+## CHANGE-007：Phase 2A — Baseline Verification + Native Network Inspector MVP
+
+**日期**：2026-08-24
+
+### 目标
+1. 为 Phase 1.9 关键隐私/隔离修改补齐真正自动化测试（Part A）。
+2. 新增 HSCode 原生抓包功能 Network Inspector（Part B，Windows 第一版）。
+
+### Part A — Phase 1.9 Verification Closure
+
+**新增/修改**：
+- `packages/opencode/test/share/share-next.test.ts`：改写为 HSCode disabled 语义——
+  create/remove 零 HTTP 请求、diff 事件不同步、`OPENCODE_DISABLE_SHARE=false` 无法恢复上传（8 PASS）
+- `packages/opencode/test/config/config.test.ts`：autoshare 断言更正（share 强制 disabled）
+- `packages/core/src/global-path-isolation.test.ts`（新增）：data/cache/config/state/tmp 全 hscode 命名空间（7 PASS）
+- `packages/desktop/src/main/app-identity.ts` + test（新增）：APP_IDS 抽为可测纯模块
+  （dev/beta/prod → ai.hscode.desktop.*，极小重构，main 行为不变）（5 PASS）
+- `packages/app/src/context/highlights.tsx` + test（新增）：抽 `createHighlights` 工厂，
+  真实 start 逻辑 0 远程 fetch（2 PASS）
+- Test B（models 被动拉取禁用）由既有 `packages/core/test/models.test.ts` 覆盖
+  （preload 全局 `OPENCODE_DISABLE_MODELS_FETCH=true`，9 PASS）
+
+**测试结果**：62 PASS / 0 FAIL / 0 SKIPPED。无 skip/todo/空值兜底/核心 mock；
+仅 HTTP 边界用计数 fake。
+
+### Part B — Network Inspector（Windows MVP）
+
+**新增文件**：
+```
+packages/desktop/src/main/network/parser.ts          包解析（IPv4/IPv6/TCP/UDP/ICMP/HTTP/HEX）
+packages/desktop/src/main/network/filter.ts          HSCode filter → WinDivert filter 映射 + 校验
+packages/desktop/src/main/network/native.ts          koffi FFI 封装 WinDivert（open/recv/shutdown/close）
+packages/desktop/src/main/network/capture-worker.ts  worker_threads 抓包循环（不阻塞 main）
+packages/desktop/src/main/network/capture-service-core.ts  状态机 + ring buffer + detail cache
+packages/desktop/src/main/network/capture-service.ts       协调层（生命周期/广播）
+packages/desktop/src/main/network/network-ipc.ts     IPC 注册（start/stop/clear/get-*）
+packages/desktop/src/preload/types.ts + index.ts     NetworkAPI preload 桥
+packages/app/src/components/network/network-panel.tsx    抓包 UI（列表/详情/HEX/ASCII）
+packages/app/src/components/network/network-host.tsx     命令面板入口（network.toggle）
+packages/desktop/resources/win/WinDivert.dll         官方 2.2.2-A x64 二进制
+packages/desktop/resources/win/WinDivert64.sys       （LGPLv3/GPLv2 双许可）
+packages/desktop/resources/win/WinDivert-LICENSE.txt
+docs/network-inspector-architecture.md               架构文档
+scripts/native-smoke-test.cjs                        原生边界 smoke（错误映射验证）
+scripts/native-capture-test.cjs/.bat                 真抓包验证（管理员）
+```
+
+**修改**：`packages/desktop/src/main/index.ts`（注册 Network IPC）、`packages/app/src/app.tsx`
+（挂载 NetworkInspectorHost）、`packages/desktop/package.json`（koffi devDep）。
+
+**架构决策**：
+- WinDivert 2.2.2 官方预构建（LGPL v3 / GPL v2 双许可，可随个人项目集成）
+- koffi 3.1.6 FFI（prebuilt 零编译）替代 C++ N-API addon（本机无 MSVC）与
+  npm `windivert` 1.0.2（2015 年 9 年未维护）
+- 抓包循环在 worker_threads，不阻塞 Electron main event loop
+- Native 错误结构化：ADMIN_REQUIRED / DLL_NOT_FOUND / DRIVER_MISSING / RECV_FAILED
+- Renderer 不持有 native handle，只走 IPC（可序列化 payload）
+- ring buffer 上限 5000、detail cache 上限 500（超限丢最旧）
+
+**权限行为**：`WinDivertOpen()` 需管理员。非管理员 → ADMIN_REQUIRED 明确提示
+（真实驱动验证：error 5 ACCESS_DENIED），不 crash；DLL 缺失 → "engine unavailable"。
+
+**HTTP MVP 边界**：单包完整请求头识别（GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS +
+path + version + Host）。不承诺完整 TCP 流重组：
+> HTTP parser currently detects complete request headers contained in one
+> captured TCP payload. TCP stream reassembly is planned for a later phase.
+
+**真实验证（管理员权限）**：
+```
+capture open OK
+UDP 127.0.0.1:52532→42896 payload="hello-hscode-udp"     ✔
+TCP GET /hscode-network-test HTTP/1.1 Host:               ✔（HTTP 识别）
+recv count: 142, seen: {tcp:137, udp:5, http:6} → PASS
+```
+非管理员 smoke：`WinDivertOpen=-1, GetLastError=5 → ADMIN_REQUIRED` ✔
+
+### 已知问题
+1. 抓包会话需管理员权限（普通启动提示重开为管理员）
+2. IPv6 地址压缩为 best-effort；过滤器仅限 IPv4 地址形式
+3. `scripts/native-capture-test.cjs` 为本地验证脚本，不进 release
+4. electron-builder 打包需将 resources/win 纳入 extraResources（未验证打包流程）
+
+### 对应 Git Commit
+见 Phase 2A 各 commit（test/docs/parser/native/service/ipc/ui）。
+
 ## 全局待提交清单（截至 Phase 1.9）
 
 CHANGE-005/006 完成后，剩余待提交：
