@@ -22,13 +22,14 @@ function tauriDir(id: string) {
 }
 
 // The Tauri app identifier changes between dev/beta/prod builds.
+// HSCode: 使用 hscode 命名空间，不与原版 OpenCode 数据目录互通。
 const TAURI_APP_IDS: Record<string, string> = {
-  dev: "ai.opencode.desktop.dev",
-  beta: "ai.opencode.desktop.beta",
-  prod: "ai.opencode.desktop",
+  dev: "ai.hscode.desktop.dev",
+  beta: "ai.hscode.desktop.beta",
+  prod: "ai.hscode.desktop",
 }
 function tauriAppId() {
-  return app.isPackaged ? TAURI_APP_IDS[CHANNEL] : "ai.opencode.desktop.dev"
+  return app.isPackaged ? TAURI_APP_IDS[CHANNEL] : "ai.hscode.desktop.dev"
 }
 
 // Migrate a single Tauri .dat file into the corresponding electron-store.

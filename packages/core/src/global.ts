@@ -7,7 +7,8 @@ import { Flock } from "./util/flock"
 import { Flag } from "./flag/flag"
 import { makeGlobalNode } from "./effect/app-node"
 
-const app = "opencode"
+// HSCode: 数据目录与 OpenCode 隔离 —— data/cache/config/state/tmp 全部使用 hscode 命名空间
+const app = "hscode"
 const data = path.join(xdgData!, app)
 const cache = path.join(xdgCache!, app)
 const config = path.join(xdgConfig!, app)
