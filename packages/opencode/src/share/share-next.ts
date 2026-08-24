@@ -20,10 +20,11 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { EventV2 } from "@opencode-ai/core/event"
 
-// HSCode: 默认禁用 session 分享（隐私清理）。
+// HSCode: Session Share 彻底禁用（隐私清理）。
 // 上游行为：默认开启，上传到 https://opncd.ai。
-// HSCode 改为默认关闭；如需恢复，设 OPENCODE_DISABLE_SHARE=false。
-const disabled = process.env["OPENCODE_DISABLE_SHARE"] !== "false"
+// HSCode 硬编码禁用，任何环境变量都无法恢复；所有 share 操作（sync/create/remove/init）保持短路。
+// 不使用 HSCode Desktop 的 OpenCode → 绝不上传 Session/Message/Part/diff/model 到 opncd.ai。
+const disabled = true
 
 export type Api = {
   create: string

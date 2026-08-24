@@ -576,6 +576,10 @@ const layer = Layer.effect(
           result.share = "auto"
         }
 
+        // HSCode: Session Share 彻底禁用（隐私清理）—— 强制 "disabled"，
+        // UI 层的 share/unshare 命令（config.share === "disabled" 守卫）将被隐藏。
+        result.share = "disabled"
+
         if (Flag.OPENCODE_DISABLE_AUTOCOMPACT) {
           result.compaction = { ...result.compaction, auto: false }
         }
