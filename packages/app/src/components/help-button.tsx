@@ -6,8 +6,6 @@ import { Drawer, DrawerClose, DrawerContent } from "@/components/ui/drawer"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
 import { useLanguage } from "@/context/language"
-import introducingTabsVideo from "@/assets/help/introducing-tabs.mp4"
-import homeImage from "@/assets/help/home.png"
 import tabsImage from "@/assets/help/tabs.png"
 
 // TODO: wire to changelog / seen-state when available
@@ -54,16 +52,12 @@ export function TabsInfoPopup() {
               setDrawerOpen(true)
             }}
           >
-            <video
-              src={introducingTabsVideo}
-              class="absolute inset-0 h-full w-full object-cover"
-              loop
-              muted
-              autoplay
-              playsinline
-              aria-hidden="true"
-              onContextMenu={(event) => event.preventDefault()}
-            />
+            <img
+                          src={tabsImage}
+                          class="absolute inset-0 h-full w-full object-cover"
+                          alt=""
+                          onContextMenu={(event) => event.preventDefault()}
+                        />
             <div class="absolute inset-x-0 bottom-0 flex w-full flex-col items-start gap-1.5 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,#000000_100%)] px-3 py-5">
               <p class="w-full select-none text-[13px] font-[530] leading-none tracking-[-0.04px] text-[#FFFFFF]">
                 {language.t("help.tabs.title")}
@@ -132,7 +126,6 @@ export function TabsInfoPopup() {
             <p>{language.t("help.tabs.sessions")}</p>
             <p>{language.t("help.tabs.organize")}</p>
             <p>{language.t("help.tabs.home")}</p>
-            <img src={homeImage} alt="" class="aspect-video w-full rounded-[6px] object-cover" />
             <p>{language.t("help.tabs.persistence")}</p>
             <p>{language.t("help.tabs.worktrees")}</p>
           </div>
