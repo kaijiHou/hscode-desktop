@@ -5,16 +5,26 @@ HSCode 是基于 [OpenCode](https://github.com/anomalyco/opencode) 的自用修�
 
 ## [Unreleased]
 
-### Changed
+### Changed（Phase 1.9 Baseline Repair & Privacy Closure）
 
-- 品牌套皮：应用名、deep-link 协议（`hscode://`）、打包产物名、本地存储 key、
-  菜单外链等从 OpenCode 改为 HSCode。
+- 品牌：窗口标题、webmanifest、favicon 标题 → HSCode；帮助菜单链接 → GitHub 仓库；
+  Discussions 未启用，无效菜单已删。
+- 数据隔离：Electron App ID → `ai.hscode.desktop[*]`；core 数据目录 →
+  `data|cache|config|state|tmp/hscode`，与原版 OpenCode 完全隔离。
+- 仓库裁剪：删除 12 个非 Desktop 包与大型资产（CHANGE-005），清理死脚本与
+  workspace 引用。
+- electron-builder：appId / protocol（`hscode://`）/ publish repo 修正；
+  desktop package metadata → HSCode。
 
 ### Privacy
 
-- 移除 Sentry 崩溃/错误上报（渲染入口、app 入口、错误页上报按钮、构建期 sourcemap 上传）。
-- 禁用自动更新（`UPDATER_ENABLED = false`）。
-- 默认禁用 Session Share（会话不再上传到 `opncd.ai`；可用 `OPENCODE_DISABLE_SHARE=false` 恢复）。
+- **Sentry 彻底移除**：代码 + 依赖（`@sentry/solid`、`@sentry/vite-plugin`）+
+  构建插件（`vite.config.ts` / `electron.vite.config.ts`）+ `VITE_SENTRY_*` 声明。
+- **Session Share 硬禁用**：`disabled = true`，环境变量无法恢复；UI 命令隐藏。
+- **models.opencode.ai 默认禁用**：普通启动不请求（保留本地/自定义源加载能力）。
+- **远程 Release Notes 禁用**：不再请求任何远程 changelog。
+- 自动更新禁用（`UPDATER_ENABLED = false`）。
+- OpenTelemetry 默认不启用；Electron CrashReporter 本地保存不上传。
 
 ## 上游基线
 

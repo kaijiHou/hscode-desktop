@@ -1,80 +1,87 @@
 # HSCode 交接文档（Handoff）
 
 > 本文档供下一个接手的 Agent 阅读，必须始终保持最新。
-> 最后更新：2026-08-22。
+> 最后更新：2026-08-24（Phase 1.9 Baseline Repair & Privacy Closure 完成）
 
 ## 当前状态
 
-- **阶段**：Phase 1 全部完成（套皮 + 隐私清理 + 文档 + 验证 + 提交）
+- **阶段**：Phase 1.9 完成（Baseline Repair & Privacy Closure）
 - **工作目录**：`D:/hscode`（所有操作必须在 D 盘）
 - **上游**：`https://github.com/anomalyco/opencode`，分支 `dev`，commit `e00890c`
 - **仓库**：`kaijiHou/hscode-desktop`（public）
-- **活跃模型**：`mimo-v2.5` via `opencode-go`
+- **下一阶段**：Phase 2 — 自定义 OpenAI Compatible Provider（llama.cpp / Qwen）
+  （未开始，收到 Phase 2 任务书前不要动）
 
-## Git 提交记录
+## Git 提交记录（GitHub 可追溯）
 
 ```
-2ef3134 feat(branding): rebrand OpenCode → HSCode — CHANGE-001
-3686da1 feat(privacy): disable session share by default — CHANGE-004
-be81563 feat(privacy): disable auto-updater — CHANGE-003
-f443752 chore(deps): remove Sentry dependencies — CHANGE-002
-fc1b8d5 feat(privacy): remove Sentry crash reporting — CHANGE-002
+当前 HEAD 见 git log；早期本地细粒度 commit（fc1b8d5 等）在首次公开 push 时被 squash，
+当前以 GitHub 可追溯 commit 为准。
 ```
 
-## 已完成
+## 已完成（Phase 1 + 1.9）
 
-### Phase 1.1-1.3: 基线 + 架构 + 隐私审计
-- `docs/upstream-baseline.md`：上游仓库/分支/commit 记录
-- `docs/architecture-notes.md`：monorepo 结构、桌面端渲染、打包流程、关键文件索引
-- `docs/privacy-audit.md`：Sentry/updater/share/models.dev/api.opencode 逐项分析
+### 品牌套皮
+- 应用名 HSCode Dev/Beta/HSCode、`hscode://` deep-link、存储 key、外链
+- HTML `<title>`、webmanifest、favicon apple-title → HSCode
+- 内部 `@opencode-ai/*` 包名**未动**（任务书明确禁止）
 
-### Phase 1.5: 品牌套皮（CHANGE-001）
-- 6 个文件改动，应用名/deep-link/存储 key/外链全部从 OpenCode 改为 HSCode
-- Dev 启动验证通过：Electron 窗口正常显示，onboarding 完成
+### 隐私清理（Phase 1.9 后状态）
+- **Sentry**：代码 + 依赖 + 构建插件 + env.d.ts 全部移除（`git grep sentry` 仅剩注释/图标）
+- **Auto updater**：`UPDATER_ENABLED=false`，check() 短路
+- **Session Share**：`disabled = true` 硬禁用 + config 强制 `share="disabled"`（UI 隐藏）
+- **models.opencode.ai**：Desktop 启动注入 `OPENCODE_DISABLE_MODELS_FETCH=true` 默认禁用
+- **远程 Release Notes / hscode.dev**：全部禁用/移除
+- **OpenTelemetry**：默认不启用（仅用户配置 OTEL_EXPORTER_OTLP_ENDPOINT 才发送）
+- **Electron CrashReporter**：`uploadToServer=false` 保留（本地 crash dump）
+- 普通启动被动外联 = 0 请求（sentry/opncd/models.opencode.ai/hscode.dev 全无）
 
-### Phase 1.6: 隐私清理（CHANGE-002~004）
-- Sentry：6 个代码文件 + 3 个 package.json + bun.lock（代码移除 + 依赖清理）
-- 自动更新：`UPDATER_ENABLED=false`，`check()` 在 disabled 时短路
-- Session Share：默认禁用，`OPENCODE_DISABLE_SHARE !== "false"` 才启用
+### 数据隔离
+- Electron App ID：`ai.hscode.desktop[.dev|.beta]`（index/migrate/background-cli/copy-metainfo/deep-links）
+- Core 数据目录：`data/hscode`、`cache/hscode`、`config/hscode`、`state/hscode`、`tmp/hscode`
+- 与原版 OpenCode 完全隔离，不读其数据
 
-### Phase 1.7: 文档
-- `docs/change-log.md`：4 条 CHANGE 记录，含 Git Commit hash
-- `CHANGELOG.md`：面向用户的版本记录
-- `README.md`：保留上游内容，开头加 HSCode 说明
+### 仓库裁剪（CHANGE-005）
+- 删除 12 个非 Desktop 包 + 大文件（mp4/测试图）+ 21 个多语言 README + 上游配置
+- 根 package.json 清死脚本、workspace 修引用
+- `patches/` 已恢复（18 个，含 @ai-sdk/openai-compatible）
 
-### Phase 1.8: 验证
-- typecheck：app + desktop + opencode 三包全部通过
-- dev 启动：`electron-vite dev` 成功，Electron 窗口正常，sidecar 连接
-- 需要 `NODE_OPTIONS=--max-old-space-size=8192`（Vite SSR bundle 含 37MB sidecar）
+## 验证记录（Phase 1.9 实测）
 
-## 正在做
-
-无（Phase 1 全部完成，等待 push）。
-
-## 下一步
-
-1. `git push` 到 `kaijiHou/hscode`（private）
-2. 给出 GitHub 链接供下一个 Agent 接手
-3. **不要进入 Phase 2**（不重写 OpenCode 核心）
+- `bun install`：PASS（workspace 解析正常）
+- typecheck：app / desktop / opencode / core 四包全部 PASS
+- `electron-vite dev`：PASS（窗口启动、crash reporter 路径 `ai.hscode.desktop.dev`、
+  sidecar 连接、loading 完成）
+- 网络日志：无 sentry/opncd/models.opencode.ai/hscode.dev 请求
 
 ## 已知问题
 
-1. Dev 启动需 `NODE_OPTIONS=--max-old-space-size=8192`（Vite SSR OOM）
-2. `electron.exe` 路径：`node_modules/.bun/electron@42.3.3+759ce506b1ed1a42/node_modules/electron/dist/electron.exe`
-3. `path.txt` 内容为 `electron.exe`（无换行），index.js 会拼 `dist/` 前缀
-4. Windows `core.symlinks=false`：60 个符号链接需通过 `scripts/hscode-materialize-symlinks.sh` 实体化
-5. `models-api.json`（4.2MB，从 `models.opencode.ai` 下载）已加入 `.gitignore`
+1. 设置组件/`dialog-connect-provider.tsx` 仍残留 `opencode.ai` 外链（Zen 宣传/docs），
+   均为用户主动点击的 ExternalLink，非被动外联——可后续处理
+2. Windows `core.symlinks=false`：60 个符号链接需 `scripts/hscode-materialize-symlinks.sh` 实体化
+3. Dev 启动需 `NODE_OPTIONS=--max-old-space-size=8192`（Vite SSR OOM）
+4. `electron-builder.config.ts` 引用 `script/sign-windows.ps1`（CI 签名脚本），`script/`
+   目录已裁剪，仅 GitHub Actions Windows 签名时需要
+5. `packages/ui/src/theme/themes/opencode.json` 主题名保留 OpenCode（内部 theme ID，未改）
 
 ## 不要修改的东西
 
-- `packages/core/src/` 除 `models-dev.ts` 外的核心逻辑
-- `packages/opencode/src/` 的 tool calling、session 管理、agent 核心
-- 用户自己的 `/d/todo-app`（与 HSCode 无关）
-- 已提交的 5 个 commit 的内容（除非有明确 bug）
+- `packages/core/src/` 核心逻辑（除已改的 global.ts 数据目录）
+- `packages/opencode/src/` 的 tool calling、session、agent 核心
+- `@opencode-ai/*` 内部包名（任务书禁止）
+- 用户自己的 `/d/todo-app`
 
 ## 环境配置
 
-- Bun：`D:/bun-bin/bun.exe`，版本 `1.4.0`
-- Bun cache：`/d/bun-cache`（`C:\Users\13772\.bunfig.toml` 已配置）
-- Electron：`electron@42.3.3`，通过 npmmirror 下载
-- C 盘剩余空间有限，避免写入 C 盘
+- Bun：`D:/bun-bin/bun.exe` 1.4.0；cache `/d/bun-cache`
+- Electron：`electron@42.3.3`（npmmirror），`path.txt` = `electron.exe`（无换行）
+- 代理：`git config --global http.proxy http://127.0.0.1:7890`（push 需要）
+
+## Dev 启动命令
+
+```bash
+cd D:/hscode/packages/desktop
+PATH="/d/bun-bin:$PATH" NODE_OPTIONS=--max-old-space-size=8192 \
+  ELECTRON_SKIP_BINARY_DOWNLOAD=1 MSYS_NO_PATHCONV=1 \
+  bun electron-vite dev
+```
