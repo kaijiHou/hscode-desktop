@@ -234,9 +234,9 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
       if (focused) return
 
       const notification = new Notification(title, {
-        body: description ?? "",
-        icon: "https://hscode.dev/favicon-96x96-v3.png",
-      })
+              body: description ?? "",
+              // HSCode: 通知不使用远程图标（避免外联 HTTP 请求）
+            })
       notification.onclick = () => {
         void window.api.showWindow()
         void window.api.setWindowFocus()

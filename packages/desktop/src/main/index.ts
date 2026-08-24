@@ -56,9 +56,9 @@ const APP_NAMES: Record<string, string> = {
   prod: "HSCode",
 }
 const APP_IDS: Record<string, string> = {
-  dev: "ai.opencode.desktop.dev",
-  beta: "ai.opencode.desktop.beta",
-  prod: "ai.opencode.desktop",
+  dev: "ai.hscode.desktop.dev",
+  beta: "ai.hscode.desktop.beta",
+  prod: "ai.hscode.desktop",
 }
 const TEST_ONBOARDING = process.env.OPENCODE_TEST_ONBOARDING === "1"
 const SIDECAR_VERSION = process.env.OPENCODE_SIDECAR_V2 === "1" ? "v2" : "v1"
@@ -122,7 +122,12 @@ const main = Effect.gen(function* () {
 
   process.env.OPENCODE_DISABLE_EMBEDDED_WEB_UI = "true"
 
-  const appId = app.isPackaged ? APP_IDS[CHANNEL] : "ai.opencode.desktop.dev"
+  // HSCode: 默认禁用模型元数据联网（models.opencode.ai），不主动外联。
+  // 用户仍可通过 OPENCODE_MODELS_PATH / OPENCODE_MODELS_URL 加载本地或自定义模型配置。
+  // Phase 2 将由自定义 OpenAI Compatible Provider（llama.cpp / Qwen）提供模型配置。
+  process.env.OPENCODE_DISABLE_MODELS_FETCH = "true"
+
+  const appId = app.isPackaged ? APP_IDS[CHANNEL] : "ai.hscode.desktop.dev"
   const onboardingTestRoot = ((): string | undefined => {
     if (!TEST_ONBOARDING) return
 
