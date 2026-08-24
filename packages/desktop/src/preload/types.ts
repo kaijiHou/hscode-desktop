@@ -42,11 +42,73 @@ export type FatalRendererError = {
   os?: string
 }
 
+// ---- HSCode Network Inspector ---------------------------------------------
+export type NetworkCaptureState = "idle" | "starting" | "capturing" | "stopping" | "error"
+export type NetworkDirection = "inbound" | "outbound"
+export type NetworkProtocol = "TCP" | "UDP" | "ICMP" | "OTHER"
+
+export type NetworkPacketSummary = {
+  id: string
+  timestamp: number
+  direction: NetworkDirection
+  ipVersion: 4 | 6
+  protocol: NetworkProtocol
+  sourceIp: string
+  destinationIp: string
+  sourcePort?: number
+  destinationPort?: number
+  length: number
+  tcp?: {
+    syn: boolean
+    ack: boolean
+    fin: boolean
+    rst: boolean
+    psh: boolean
+    urg: boolean
+  }
+  payloadLength: number
+  application?: {
+    protocol?: "HTTP"
+    method?: string
+    path?: string
+    host?: string
+  }
+}
+
+export type NetworkStateSnapshot = {
+  state: NetworkCaptureState
+  error?: { code: string; message: string; winError?: number }
+  packetCount: number
+  startTime?: number
+}
+
+export type NetworkDetailPayload = {
+  summary: NetworkPacketSummary
+  hex: string
+  ascii: string
+  payloadLength: number
+  payloadPreview: string
+}
+
+export type NetworkAPI = {
+  getState: () => Promise<NetworkStateSnapshot>
+  getPackets: () => Promise<NetworkPacketSummary[]>
+  getDetail: (id: string) => Promise<NetworkDetailPayload | null>
+  start: (filter: string) => Promise<NetworkStateSnapshot>
+  stop: () => Promise<NetworkStateSnapshot>
+  clear: () => Promise<NetworkStateSnapshot>
+  validateFilter: (filter: string) => Promise<{ ok: boolean; display?: string; error?: string }>
+  onPacket: (cb: (packet: NetworkPacketSummary) => void) => () => void
+  onState: (cb: (snapshot: NetworkStateSnapshot) => void) => () => void
+  onCleared: (cb: () => void) => () => void
+}
+
 export type ElectronAPI = {
   killSidecar: () => Promise<void>
   installCli: () => Promise<string>
   awaitInitialization: () => Promise<ServerReadyData>
   wslServers: WslServersAPI
+  network: NetworkAPI
   updater: UpdaterAPI
   consumeInitialDeepLinks: () => Promise<string[]>
   getDefaultServerUrl: () => Promise<string | null>

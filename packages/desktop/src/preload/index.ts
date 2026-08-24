@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
-import type { ElectronAPI, WslServersEvent } from "./types"
+import type { ElectronAPI, NetworkAPI, NetworkPacketSummary, NetworkStateSnapshot, WslServersEvent } from "./types"
 import type { UpdaterState } from "@opencode-ai/app/updater"
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
@@ -10,9 +10,35 @@ const updaterHandler = (_: unknown, state: UpdaterState) => {
   updaterCallbacks.forEach((callback) => callback(state))
 }
 
+const networkApi: NetworkAPI = {
+  getState: () => ipcRenderer.invoke("network-get-state"),
+  getPackets: () => ipcRenderer.invoke("network-get-packets"),
+  getDetail: (id: string) => ipcRenderer.invoke("network-get-detail", id),
+  start: (filter: string) => ipcRenderer.invoke("network-start", filter),
+  stop: () => ipcRenderer.invoke("network-stop"),
+  clear: () => ipcRenderer.invoke("network-clear"),
+  validateFilter: (filter: string) => ipcRenderer.invoke("network-validate-filter", filter),
+  onPacket: (cb) => {
+    const handler = (_: unknown, packet: NetworkPacketSummary) => cb(packet)
+    ipcRenderer.on("network-packet", handler)
+    return () => ipcRenderer.removeListener("network-packet", handler)
+  },
+  onState: (cb) => {
+    const handler = (_: unknown, state: NetworkStateSnapshot) => cb(state)
+    ipcRenderer.on("network-state", handler)
+    return () => ipcRenderer.removeListener("network-state", handler)
+  },
+  onCleared: (cb) => {
+    const handler = () => cb()
+    ipcRenderer.on("network-cleared", handler)
+    return () => ipcRenderer.removeListener("network-cleared", handler)
+  },
+}
+
 const api: ElectronAPI = {
   killSidecar: () => ipcRenderer.invoke("kill-sidecar"),
   installCli: () => ipcRenderer.invoke("install-cli"),
+  network: networkApi,
   awaitInitialization: () => ipcRenderer.invoke("await-initialization"),
   wslServers: {
     getState: () => ipcRenderer.invoke("wsl-servers-get-state"),
