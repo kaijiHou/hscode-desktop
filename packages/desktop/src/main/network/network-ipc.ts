@@ -1,0 +1,96 @@
+// HSCode Network Inspector — IPC wiring between renderer and main.
+// Registers ipcMain handlers on a bridge injected by the desktop main.
+
+import { BrowserWindow, ipcMain } from "electron"
+import { Worker } from "node:worker_threads"
+
+import { CaptureService } from "./capture-service"
+import type { WorkerSpawner } from "./capture-service"
+
+export interface NetworkIpcDeps {
+  service: CaptureService
+  getResourcesDir: () => string
+}
+
+export function registerNetworkIpc(deps: NetworkIpcDeps): () => void {
+  const { service } = deps
+  service.setResourcesDir(deps.getResourcesDir())
+
+  const onState = (snapshot: unknown) => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send("network-state", snapshot)
+    }
+  }
+  const onPacket = (summary: unknown) => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send("network-packet", summary)
+    }
+  }
+  const onCleared = () => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send("network-cleared")
+    }
+  }
+
+  service.on("state", onState)
+  service.on("packet", onPacket)
+  service.on("cleared", onCleared)
+
+  ipcMain.handle("network-get-state", () => service.snapshot())
+  ipcMain.handle("network-get-packets", () => service.packets)
+  ipcMain.handle("network-get-detail", (_event, id: string) => {
+    const detail = service.detail(id)
+    if (!detail) return null
+    return {
+      summary: detail.summary,
+      hex: detail.hex,
+      ascii: detail.ascii,
+      payloadLength: detail.payload.length,
+      payloadPreview: new TextDecoder().decode(detail.payload.slice(0, 512)),
+    }
+  })
+  ipcMain.handle("network-start", (_event, filter: string) => {
+    service.start(filter ?? "")
+    return service.snapshot()
+  })
+  ipcMain.handle("network-stop", () => {
+    service.stop()
+    return service.snapshot()
+  })
+  ipcMain.handle("network-clear", () => {
+    service.clear()
+    return service.snapshot()
+  })
+  ipcMain.handle("network-validate-filter", (_event, filter: string) => {
+    try {
+      return { ok: true as const, display: service.validateFilter(filter) }
+    } catch (error) {
+      return { ok: false as const, error: (error as Error).message }
+    }
+  })
+
+  return () => {
+    service.removeAllListeners()
+    for (const channel of [
+      "network-get-state",
+      "network-get-packets",
+      "network-get-detail",
+      "network-start",
+      "network-stop",
+      "network-clear",
+      "network-validate-filter",
+    ]) {
+      ipcMain.removeHandler(channel)
+    }
+  }
+}
+
+/** Default worker spawner using node:worker_threads (used by desktop main). */
+export function createWorkerSpawner(): WorkerSpawner {
+  return (input) => {
+    const worker = new Worker(new URL("./capture-worker.ts", import.meta.url), {
+      workerData: input,
+    })
+    return worker as unknown as ReturnType<WorkerSpawner>
+  }
+}

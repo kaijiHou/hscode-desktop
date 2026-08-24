@@ -50,6 +50,10 @@ import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 import { APP_IDS, APP_NAMES } from "./app-identity"
+import { registerNetworkIpc, createWorkerSpawner } from "./network/network-ipc"
+import { CaptureService } from "./network/capture-service"
+
+export const networkService = new CaptureService({}, createWorkerSpawner())
 
 const TEST_ONBOARDING = process.env.OPENCODE_TEST_ONBOARDING === "1"
 const SIDECAR_VERSION = process.env.OPENCODE_SIDECAR_V2 === "1" ? "v2" : "v1"
@@ -308,6 +312,12 @@ const main = Effect.gen(function* () {
     },
   })
   registerWslIpcHandlers(wslServers)
+  registerNetworkIpc({
+    service: networkService,
+    // dev: out/main → ../.. = packages/desktop（resources/win 在其下）
+    // packaged: electron-builder 把 resources/win 复制到 resourcesPath
+    getResourcesDir: () => (app.isPackaged ? process.resourcesPath : join(import.meta.dirname, "../..")),
+  })
   void updater.start()
   const updateTimer = setInterval(() => void updater.check(), 10 * 60 * 1000)
   updateTimer.unref()
