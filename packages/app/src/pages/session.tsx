@@ -506,12 +506,13 @@ export default function Page() {
   })
   const centered = createMemo(() => isDesktop() && (newSessionDesign() || !desktopReviewOpen()))
   const desktopV2PanelLayout = createMemo(() =>
-    sessionPanelLayout({
-      review: desktopV2ReviewOpen(),
-      terminal: desktopTerminalOpen(),
-      files: desktopFileTreeOpen(),
-    }),
-  )
+      sessionPanelLayout({
+        review: desktopV2ReviewOpen(),
+        terminal: desktopTerminalOpen(),
+        network: desktopNetworkOpen(),
+        files: desktopFileTreeOpen(),
+      }),
+    )
 
   function normalizeTab(tab: string) {
     if (!tab.startsWith("file://")) return tab
