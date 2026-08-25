@@ -13,7 +13,12 @@ import { useLanguage } from "@/context/language"
 import { ModelTooltip } from "./model-tooltip"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
-const featuredProviders = ["opencode", "opencode-go", "openai", "anthropic", "google", "github-copilot"]
+
+// HSCode: three primary provider entries for the model selector.
+// OpenCode Go, DeepSeek are real providers from the catalog.
+// Custom Model opens the custom provider form for self-hosted OpenAI Compatible.
+const PRIMARY_PROVIDERS = ["opencode-go", "deepseek"]
+
 const displayModelName = (name: string) => name.replace(/\s+(?:\(free\)|free)$/i, "")
 
 export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (props) => {
@@ -33,6 +38,11 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
     item.provider.id === "opencode" && (!item.cost || item.cost.input === 0)
   const freeModels = createMemo(() => model.list().filter(isFree))
 
+  // Models from primary providers (OpenCode Go + DeepSeek)
+  const primaryModels = createMemo(() =>
+    model.list().filter((item) => PRIMARY_PROVIDERS.includes(item.provider.id) && !isFree(item)),
+  )
+
   const openProviders = (provider?: string) => {
     void import("./dialog-connect-provider").then((x) => {
       const controller = x.useProviderConnectController()
@@ -41,13 +51,17 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
     })
   }
 
+  const openCustomProvider = () => {
+    void import("./dialog-custom-provider").then((x) => {
+      void dialog.show(() => <x.DialogCustomProvider onBack={() => dialog.close()} />)
+    })
+  }
+
   const selectModel = (item: ReturnType<ModelState["list"]>[number]) => {
     model.set({ modelID: item.id, providerID: item.provider.id }, { recent: true })
     dialog.close()
   }
 
-  // Focus starts on the dialog's close button, outside the list, so listen at the
-  // document level while the dialog is mounted instead of on the list container.
   let listEl: HTMLDivElement | undefined
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,98 +89,129 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
         <DialogTitle>{language.t("dialog.model.select.title")}</DialogTitle>
       </DialogHeader>
       <DialogBody class="max-h-[calc(100vh_-_68px)] min-h-0 flex-none gap-0 overflow-y-auto px-2 pb-2">
-        <div ref={listEl} class="flex min-h-0 flex-col">
-          <div data-section="free-models" class="flex w-full flex-col items-start pb-3">
-            <div class="flex h-8 w-full flex-none select-none flex-row items-center px-3 pb-2">
-              <div class="flex h-5 items-center text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variant-numeric:tabular-nums] [font-variation-settings:'slnt'_0]">
-                {language.t("dialog.model.unpaid.freeModels.title")}
-              </div>
-            </div>
-            <For each={freeModels()}>
-              {(item) => (
-                <TooltipV2
-                  class="w-full"
-                  placement="right-start"
-                  gutter={6}
-                  openDelay={0}
-                  contentStyle={{ "font-family": "var(--v2-font-family-sans)" }}
-                  value={
-                    <ModelTooltip
-                      model={{ ...item, name: displayModelName(item.name) }}
-                      latest={item.latest}
-                      free={isFree(item)}
-                      v2
-                    />
-                  }
-                >
-                  <button
-                    type="button"
-                    class="flex w-full scroll-my-3.5 flex-row items-center gap-1.5 rounded-md px-3 py-2 text-left text-[13px] font-[530] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-overlay-simple-overlay-hover focus:bg-v2-overlay-simple-overlay-hover focus:outline-none"
-                    onClick={() => selectModel(item)}
-                  >
-                    <span class="min-w-0 truncate">{displayModelName(item.name)}</span>
-                    <Tag class="shrink-0">{language.t("model.tag.free")}</Tag>
-                    <Show when={item.latest}>
-                      <Tag class="shrink-0">{language.t("model.tag.latest")}</Tag>
-                    </Show>
-                    <Show when={currentKey() === modelKey(item)}>
-                      <Icon name="check" class="ml-auto size-4 shrink-0 text-v2-icon-icon-base" />
-                    </Show>
-                  </button>
-                </TooltipV2>
-              )}
-            </For>
-          </div>
-
-          <div class="flex w-full flex-col">
-            <div class="flex w-full flex-col items-start rounded-lg border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-layer-02 p-2.5 pt-2">
-              <div class="flex h-8 w-full select-none items-center px-0.5 pb-2">
-                <div class="flex h-5 items-center text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variant-numeric:tabular-nums] [font-variation-settings:'slnt'_0]">
-                  {language.t("dialog.model.unpaid.addMore.title")}
+        <div ref={listEl} class="flex min-h-0 flex-col gap-2">
+          {/* Free models section — only show if there are free models */}
+          <Show when={freeModels().length > 0}>
+            <div data-section="free-models" class="flex w-full flex-col items-start">
+              <div class="flex h-8 w-full flex-none select-none flex-row items-center px-3 pb-2">
+                <div class="flex h-5 items-center text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variant-numeric:tabular-nums]">
+                  {language.t("dialog.model.unpaid.freeModels.title")}
                 </div>
               </div>
-              <div class="grid w-full grid-cols-1 gap-y-1.5 gap-x-2 sm:grid-cols-2">
-                <For
-                  each={[...providers.popular()]
-                    .filter((provider) => featuredProviders.includes(provider.id))
-                    .sort((a, b) => featuredProviders.indexOf(a.id) - featuredProviders.indexOf(b.id))}
-                >
-                  {(provider) => (
+              <For each={freeModels()}>
+                {(item) => (
+                  <TooltipV2
+                    class="w-full"
+                    placement="right-start"
+                    gutter={6}
+                    openDelay={0}
+                    contentStyle={{ "font-family": "var(--v2-font-family-sans)" }}
+                    value={
+                      <ModelTooltip
+                        model={{ ...item, name: displayModelName(item.name) }}
+                        latest={item.latest}
+                        free={isFree(item)}
+                        v2
+                      />
+                    }
+                  >
                     <button
                       type="button"
-                      data-provider-id={provider.id}
-                      class="flex min-h-11 w-full scroll-my-3.5 flex-row items-start gap-2 rounded-md bg-v2-background-bg-base px-3 py-2.5 text-left text-[13px] font-[530] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-background-bg-layer-01 focus:bg-v2-background-bg-layer-01 focus:outline-none"
-                      classList={{
-                        "border-[0.5px] border-transparent shadow-[var(--v2-elevation-raised)]":
-                          theme.mode() !== "dark",
-                        "border-[0.5px] border-v2-border-border-strong": theme.mode() === "dark",
-                      }}
-                      onClick={() => openProviders(provider.id)}
+                      class="flex w-full scroll-my-3.5 flex-row items-center gap-1.5 rounded-md px-3 py-2 text-left text-[13px] font-[530] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-overlay-simple-overlay-hover focus:bg-v2-overlay-simple-overlay-hover focus:outline-none"
+                      onClick={() => selectModel(item)}
                     >
-                      <ProviderIcon id={provider.id} class="mt-0.5 size-4 shrink-0 text-v2-icon-icon-base" />
-                      <span class="flex min-w-0 flex-col">
-                        <span class="truncate">{provider.name}</span>
-                        <Show when={provider.id === "opencode" || provider.id === "opencode-go"}>
-                          <span class="truncate font-[440] text-v2-text-text-muted">
-                            {language.t(
-                              provider.id === "opencode"
-                                ? "dialog.provider.opencode.tagline"
-                                : "dialog.provider.opencodeGo.tagline",
-                            )}
-                          </span>
-                        </Show>
-                      </span>
+                      <span class="min-w-0 truncate">{displayModelName(item.name)}</span>
+                      <Tag class="shrink-0">{language.t("model.tag.free")}</Tag>
+                      <Show when={item.latest}>
+                        <Tag class="shrink-0">{language.t("model.tag.latest")}</Tag>
+                      </Show>
+                      <Show when={currentKey() === modelKey(item)}>
+                        <Icon name="check" class="ml-auto size-4 shrink-0 text-v2-icon-icon-base" />
+                      </Show>
                     </button>
-                  )}
-                </For>
-                <button
-                  type="button"
-                  class="col-span-full flex h-8 w-full scroll-my-3.5 items-center justify-start rounded-md px-3 text-left text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-overlay-simple-overlay-hover focus:bg-v2-overlay-simple-overlay-hover focus:outline-none"
-                  onClick={() => openProviders()}
-                >
-                  {language.t("dialog.model.unpaid.viewMoreProviders")}
-                </button>
+                  </TooltipV2>
+                )}
+              </For>
+            </div>
+          </Show>
+
+          {/* HSCode: Primary provider entries — OpenCode Go, DeepSeek, Custom Model */}
+          <div class="flex w-full flex-col items-start rounded-lg border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-layer-02 p-2.5 pt-2">
+            <div class="flex h-8 w-full select-none items-center px-0.5 pb-2">
+              <div class="flex h-5 items-center text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variant-numeric:tabular-nums]">
+                {language.t("dialog.model.unpaid.addMore.title")}
               </div>
+            </div>
+            <div class="grid w-full grid-cols-1 gap-y-1.5 gap-x-2 sm:grid-cols-2">
+              {/* Primary provider cards: OpenCode Go + DeepSeek */}
+              <For
+                each={[...providers.popular()]
+                  .filter((provider) => PRIMARY_PROVIDERS.includes(provider.id))
+                  .sort((a, b) => PRIMARY_PROVIDERS.indexOf(a.id) - PRIMARY_PROVIDERS.indexOf(b.id))}
+              >
+                {(provider) => (
+                  <button
+                    type="button"
+                    data-provider-id={provider.id}
+                    class="flex min-h-11 w-full scroll-my-3.5 flex-row items-start gap-2 rounded-md bg-v2-background-bg-base px-3 py-2.5 text-left text-[13px] font-[530] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-background-bg-layer-01 focus:bg-v2-background-bg-layer-01 focus:outline-none"
+                    classList={{
+                      "border-[0.5px] border-transparent shadow-[var(--v2-elevation-raised)]":
+                        theme.mode() !== "dark",
+                      "border-[0.5px] border-v2-border-border-strong": theme.mode() === "dark",
+                    }}
+                    onClick={() => openProviders(provider.id)}
+                  >
+                    <ProviderIcon id={provider.id} class="mt-0.5 size-4 shrink-0 text-v2-icon-icon-base" />
+                    <span class="flex min-w-0 flex-col">
+                      <span class="truncate">{provider.name}</span>
+                      <Show when={provider.id === "opencode" || provider.id === "opencode-go"}>
+                        <span class="truncate font-[440] text-v2-text-text-muted">
+                          {language.t(
+                            provider.id === "opencode"
+                              ? "dialog.provider.opencode.tagline"
+                              : "dialog.provider.opencodeGo.tagline",
+                          )}
+                        </span>
+                      </Show>
+                      <Show when={provider.id === "deepseek"}>
+                        <span class="truncate font-[440] text-v2-text-text-muted">
+                          DeepSeek 官方 API
+                        </span>
+                      </Show>
+                    </span>
+                  </button>
+                )}
+              </For>
+
+              {/* HSCode: Custom Model entry — opens self-hosted OpenAI Compatible form */}
+              <button
+                type="button"
+                data-provider-id="custom-model"
+                class="flex min-h-11 w-full scroll-my-3.5 flex-row items-start gap-2 rounded-md bg-v2-background-bg-base px-3 py-2.5 text-left text-[13px] font-[530] leading-5 tracking-[-0.04px] text-v2-text-text-base [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-background-bg-layer-01 focus:bg-v2-background-bg-layer-01 focus:outline-none"
+                classList={{
+                  "border-[0.5px] border-transparent shadow-[var(--v2-elevation-raised)]":
+                    theme.mode() !== "dark",
+                  "border-[0.5px] border-v2-border-border-strong": theme.mode() === "dark",
+                }}
+                onClick={openCustomProvider}
+              >
+                <Icon name="plus" class="mt-0.5 size-4 shrink-0 text-v2-icon-icon-base" />
+                <span class="flex min-w-0 flex-col">
+                  <span class="truncate">自定义模型</span>
+                  <span class="truncate font-[440] text-v2-text-text-muted">
+                    连接自己部署的 OpenAI-Compatible 服务
+                  </span>
+                </span>
+              </button>
+
+              {/* Secondary: View more providers (advanced) */}
+              <button
+                type="button"
+                class="col-span-full flex h-8 w-full scroll-my-3.5 items-center justify-start rounded-md px-3 text-left text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted [font-family:var(--v2-font-family-sans)] [font-variation-settings:'slnt'_0] hover:bg-v2-overlay-simple-overlay-hover focus:bg-v2-overlay-simple-overlay-hover focus:outline-none"
+                onClick={() => openProviders()}
+              >
+                {language.t("dialog.model.unpaid.viewMoreProviders")}
+              </button>
             </div>
           </div>
         </div>
