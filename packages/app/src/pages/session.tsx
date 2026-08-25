@@ -90,6 +90,7 @@ import { ReviewPanelV2 } from "@/pages/session/v2/review-panel-v2"
 import { createReviewPanelV2State } from "@/pages/session/v2/review-panel-v2-state"
 import { reviewDiffDirectory, reviewDiffNeedsLoad, reviewRootDirectory } from "@/pages/session/v2/review-diff-kinds"
 import { TerminalPanel } from "@/pages/session/terminal-panel"
+import { NetworkPanel } from "@/components/network/network-panel"
 import { TerminalPanelV2 } from "@/pages/session/terminal-panel-v2"
 import { useComposerCommands } from "@/pages/session/use-composer-commands"
 import { useSessionCommands } from "@/pages/session/use-session-commands"
@@ -451,6 +452,8 @@ export default function Page() {
   const desktopV2ReviewOpen = createMemo(() => newSessionDesign() && desktopReviewOpen() && !!params.id)
   const terminalOpen = createMemo(() => view().terminal.opened())
   const desktopTerminalOpen = createMemo(() => isDesktop() && terminalOpen())
+  const networkOpen = createMemo(() => view().network.opened())
+  const desktopNetworkOpen = createMemo(() => isDesktop() && networkOpen())
   const desktopInlineTerminalOnlyOpen = createMemo(
     () => newSessionDesign() && desktopTerminalOpen() && !desktopV2ReviewOpen(),
   )
@@ -2378,6 +2381,16 @@ export default function Page() {
                   <TerminalPanelV2 stacked={desktopV2PanelLayout().stacked} />
                 </div>
               </Show>
+              <Show when={networkOpen()}>
+                <div
+                  classList={{
+                    "min-h-0 shrink-0": desktopV2PanelLayout().stacked,
+                    "min-h-0 flex-1": !desktopV2PanelLayout().stacked,
+                  }}
+                >
+                  <NetworkPanel />
+                </div>
+              </Show>
             </div>
           </Show>
         </Show>
@@ -2385,6 +2398,7 @@ export default function Page() {
 
       <Show when={!newSessionDesign()}>
         <TerminalPanel />
+        <NetworkPanel />
       </Show>
     </SessionRouteFrame>
   )

@@ -1,10 +1,11 @@
-// HSCode Network Inspector — renderer panel.
-// Accessible via the command palette ("network.toggle") and rendered as an
-// overlay panel inside the app chrome. Talks only to window.api.network.
+// HSCode Network Inspector — bottom tool panel content.
+// Rendered by the session layout (Terminal │ Network). The parent controls
+// visibility via view().network; this panel fills the given space (100% w/h).
 
 import { For, Show, createMemo, createSignal, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { JSX } from "solid-js"
+import { useSessionLayout } from "@/pages/session/session-layout"
 
 // ---- HSCode Network Inspector renderer-side types (mirror of preload) ----
 export type NetworkCaptureState = "idle" | "starting" | "capturing" | "stopping" | "error"
@@ -55,19 +56,17 @@ export type NetworkApiSurface = {
   onCleared: (cb: () => void) => () => void
 }
 
-function networkApi(): NetworkApiSurface {
+function networkApi(): NetworkApiSurface | undefined {
   const api = (window as unknown as { api?: { network?: NetworkApiSurface } }).api
-  if (!api?.network) {
-    throw new Error("network engine unavailable")
-  }
-  return api.network
+  return api?.network
 }
 
 type ViewTab = "overview" | "payload" | "hex" | "ascii"
 
-export function NetworkPanel(props: { open: () => boolean; close: () => void }) {
+export function NetworkPanel() {
+  const { view } = useSessionLayout()
   const api = networkApi()
-  void api // used inside effects; keep a stable reference
+  const engineUnavailable = !api
 
   const [snapshot, setSnapshot] = createStore<NetworkStateSnapshot>({ state: "idle", packetCount: 0 })
   const [packets, setPackets] = createSignal<NetworkPacketSummary[]>([])
@@ -76,34 +75,47 @@ export function NetworkPanel(props: { open: () => boolean; close: () => void }) 
   const [selectedId, setSelectedId] = createSignal<string | undefined>()
   const [detail, setDetail] = createSignal<NetworkDetailPayload | undefined>()
   const [viewTab, setViewTab] = createSignal<ViewTab>("overview")
+  const [loadError, setLoadError] = createSignal("")
 
   const isCapturing = () => snapshot.state === "capturing" || snapshot.state === "starting"
 
   const loadPackets = async () => {
+    if (!api) return
     try {
       setPackets(await api.getPackets())
-    } catch {
-      setPackets([])
+      setLoadError("")
+    } catch (error) {
+      // Real engine errors must be surfaced, not swallowed as "no data".
+      setLoadError(`Failed to load packets: ${String(error)}`)
     }
   }
 
   const loadDetail = async (id: string) => {
+    if (!api) return
     try {
       const d = await api.getDetail(id)
       setDetail(d ?? undefined)
-    } catch {
+    } catch (error) {
+      setLoadError(`Failed to load packet detail: ${String(error)}`)
       setDetail(undefined)
     }
   }
 
   onMount(() => {
+    if (!api) {
+      setSnapshot({
+        state: "error",
+        packetCount: 0,
+        error: { code: "ENGINE_UNAVAILABLE", message: "Network capture engine is unavailable in this environment." },
+      })
+      return
+    }
     void (async () => {
       try {
         setSnapshot(await api.getState())
         await loadPackets()
-      } catch {
-        // network engine unavailable — panel still shows the error state
-        setSnapshot({ state: "error", packetCount: 0, error: { code: "UNSUPPORTED_PLATFORM", message: "Network capture engine is unavailable." } })
+      } catch (error) {
+        setSnapshot({ state: "error", packetCount: 0, error: { code: "UNKNOWN", message: String(error) } })
       }
     })()
 
@@ -130,6 +142,7 @@ export function NetworkPanel(props: { open: () => boolean; close: () => void }) 
   })
 
   const start = async () => {
+    if (!api) return
     setFilterError("")
     if (filter().trim()) {
       const validation = await api.validateFilter(filter())
@@ -140,16 +153,29 @@ export function NetworkPanel(props: { open: () => boolean; close: () => void }) 
     }
     try {
       setSnapshot(await api.start(filter()))
+      setLoadError("")
     } catch (error) {
       setFilterError(String(error))
     }
   }
-  const stop = async () => setSnapshot(await api.stop())
+  const stop = async () => {
+    if (!api) return
+    try {
+      setSnapshot(await api.stop())
+    } catch (error) {
+      setLoadError(`Stop failed: ${String(error)}`)
+    }
+  }
   const clear = async () => {
-    await api.clear()
-    setPackets([])
-    setSelectedId(undefined)
-    setDetail(undefined)
+    if (!api) return
+    try {
+      await api.clear()
+      setPackets([])
+      setSelectedId(undefined)
+      setDetail(undefined)
+    } catch (error) {
+      setLoadError(`Clear failed: ${String(error)}`)
+    }
   }
 
   const selectPacket = async (id: string) => {
@@ -191,128 +217,151 @@ export function NetworkPanel(props: { open: () => boolean; close: () => void }) 
   })
 
   return (
-    <Show when={props.open()}>
-      <div class="network-panel" style={{ position: "fixed", inset: "0 0 40% 0", "z-index": 90, display: "flex", "flex-direction": "column", background: "var(--surface-1, #1e1e1e)", color: "var(--text-1, #e8e8e8)", "font-family": "var(--font-mono, monospace)", "font-size": "12px" }}>
-        <div style={{ display: "flex", "align-items": "center", gap: "8px", padding: "6px 10px", "border-bottom": "1px solid var(--border-1, #333)", "flex-shrink": "0" }}>
-          <span style={{ "font-weight": 600 }}>Network Inspector</span>
-          <span style={{ opacity: 0.7 }}>·</span>
-          <span class="network-state" style={{ color: isCapturing() ? "#4caf50" : snapshot.state === "error" ? "#f44336" : "inherit" }}>
-            {snapshot.state}
-          </span>
-          <span style={{ "margin-left": "auto", opacity: 0.7 }}>{packets().length} packets</span>
+    <div
+      id="network-panel"
+      data-component="network-panel"
+      role="region"
+      aria-label="Network Inspector"
+      class="network-panel relative w-full h-full min-h-0 flex flex-col overflow-hidden bg-background-stronger text-14-regular border-t border-border-weak-base"
+    >
+      <div class="flex items-center gap-2 px-2 h-9 border-b border-border-weaker-base bg-background-stronger shrink-0">
+        <span class="font-semibold">Network Inspector</span>
+        <span
+          data-slot="network-state"
+          class="text-12-regular"
+          style={{ color: isCapturing() ? "#4caf50" : snapshot.state === "error" ? "#f44336" : undefined }}
+        >
+          {snapshot.state}
+        </span>
+        <span class="ml-auto opacity-70">{packets().length} packets</span>
+        <button
+          onClick={() => view().network.close()}
+          aria-label="Close Network Inspector"
+          class="titlebar-icon w-6 h-6 p-0 box-border shrink-0"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 px-2 h-9 border-b border-border-weaker-base shrink-0">
+        <input
+          value={filter()}
+          onInput={(e) => setFilter(e.currentTarget.value)}
+          placeholder="filter: tcp · udp · tcp.port == 22122 · src.ip == 192.168.1.10"
+          aria-label="Network filter"
+          class="flex-1 min-w-0 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-14-regular"
+        />
+        <button onClick={() => void start()} disabled={isCapturing() || !api} class="btn-outline btn-sm" style={btnStyle}>
+          Start
+        </button>
+        <button onClick={() => void stop()} disabled={!isCapturing() || !api} class="btn-outline btn-sm" style={btnStyle}>
+          Stop
+        </button>
+        <button onClick={() => void clear()} class="btn-outline btn-sm" style={btnStyle}>
+          Clear
+        </button>
+      </div>
+
+      <Show when={engineUnavailable}>
+        <div class="px-3 py-2 text-12-regular" style={{ color: "#f44336" }}>
+          Network capture engine is unavailable. This feature requires the HSCode desktop build.
+        </div>
+      </Show>
+      <Show when={filterError()}>
+        <div class="px-3 py-1" style={{ color: "#f44336" }}>{filterError()}</div>
+      </Show>
+      <Show when={loadError()}>
+        <div class="px-3 py-1" style={{ color: "#f44336" }}>{loadError()}</div>
+      </Show>
+      <Show when={snapshot.state === "error" && snapshot.error}>
+        <div class="px-3 py-2 border-b border-border-weaker-base" style={{ color: "#f44336", "white-space": "pre-wrap" }}>
+          {snapshot.error?.message ?? "capture error"}
+        </div>
+      </Show>
+
+      <div class="flex-1 min-h-0 flex">
+        {/* packet list */}
+        <div class="flex-1 overflow-auto" data-slot="network-packet-list">
+          <table class="w-full border-collapse text-13-regular">
+            <thead>
+              <tr class="sticky top-0 bg-background-stronger text-left">
+                <th class="px-2 py-1 font-semibold">Time</th>
+                <th class="px-2 py-1 font-semibold">Dir</th>
+                <th class="px-2 py-1 font-semibold">Src</th>
+                <th class="px-2 py-1 font-semibold">Dst</th>
+                <th class="px-2 py-1 font-semibold">Proto</th>
+                <th class="px-2 py-1 font-semibold">Len</th>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={packets()}>
+                {(p) => (
+                  <tr
+                    onClick={() => void selectPacket(p.id)}
+                    class="cursor-pointer"
+                    style={{ background: p.id === selectedId() ? "var(--accent-1, #2f5f8f)" : undefined }}
+                  >
+                    <td class="px-2 py-0.5">{fmtTime(p.timestamp)}</td>
+                    <td class="px-2 py-0.5">{p.direction === "outbound" ? "→" : "←"}</td>
+                    <td class="px-2 py-0.5 max-w-56 truncate">{fmtEndpoint(p.sourceIp, p.sourcePort)}</td>
+                    <td class="px-2 py-0.5 max-w-56 truncate">{fmtEndpoint(p.destinationIp, p.destinationPort)}</td>
+                    <td class="px-2 py-0.5">{protoLabel(p)}</td>
+                    <td class="px-2 py-0.5">{p.length}</td>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
         </div>
 
-        <div style={{ display: "flex", "align-items": "center", gap: "8px", padding: "6px 10px", "border-bottom": "1px solid var(--border-1, #333)", "flex-shrink": "0" }}>
-          <input
-            value={filter()}
-            onInput={(e) => setFilter(e.currentTarget.value)}
-            placeholder="filter: tcp · udp · tcp.port == 22122 · src.ip == 192.168.1.10"
-            style={{ flex: 1, background: "var(--surface-2, #2a2a2a)", color: "inherit", border: "1px solid var(--border-1, #444)", "border-radius": "4px", padding: "4px 8px" }}
-          />
-          <button onClick={start} disabled={isCapturing()} style={btnStyle}>Start</button>
-          <button onClick={stop} disabled={!isCapturing()} style={btnStyle}>Stop</button>
-          <button onClick={clear} style={btnStyle}>Clear</button>
-          <button onClick={props.close} title="Close" style={btnStyle}>✕</button>
-        </div>
-
-        <Show when={filterError()}>
-          <div style={{ padding: "4px 10px", color: "#f44336", "border-bottom": "1px solid var(--border-1, #333)" }}>{filterError()}</div>
-        </Show>
-
-        <Show when={snapshot.state === "error" && snapshot.error}>
-          <div style={{ padding: "6px 10px", color: "#f44336", "border-bottom": "1px solid var(--border-1, #333)" }}>
-            {snapshot.error?.message}
+        {/* detail */}
+        <div class="w-[38%] min-w-70 flex flex-col border-l border-border-weaker-base" data-slot="network-detail">
+          <div class="flex gap-1 px-2 py-1 border-b border-border-weaker-base">
+            {(["overview", "payload", "hex", "ascii"] as ViewTab[]).map((tab) => (
+              <button
+                onClick={() => setViewTab(tab)}
+                class="px-2 py-0.5 rounded text-12-regular"
+                style={{ background: viewTab() === tab ? "var(--accent-1, #2f5f8f)" : undefined }}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
-        </Show>
-
-        <div style={{ display: "flex", flex: 1, "min-height": 0 }}>
-          {/* packet list */}
-          <div style={{ flex: 1, overflow: "auto", "border-right": "1px solid var(--border-1, #333)" }}>
-            <table style={{ width: "100%", "border-collapse": "collapse" }}>
-              <thead>
-                <tr style={{ position: "sticky", top: 0, background: "var(--surface-1, #1e1e1e)", "text-align": "left" }}>
-                  <th style={thStyle}>Time</th>
-                  <th style={thStyle}>Dir</th>
-                  <th style={thStyle}>Src</th>
-                  <th style={thStyle}>Dst</th>
-                  <th style={thStyle}>Proto</th>
-                  <th style={thStyle}>Len</th>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={packets()}>
-                  {(p) => (
-                    <tr
-                      onClick={() => void selectPacket(p.id)}
-                      style={{ cursor: "pointer", background: p.id === selectedId() ? "var(--accent-1, #2f5f8f)" : undefined }}
-                    >
-                      <td style={tdStyle}>{fmtTime(p.timestamp)}</td>
-                      <td style={tdStyle}>{p.direction === "outbound" ? "→" : "←"}</td>
-                      <td style={tdStyle}>{fmtEndpoint(p.sourceIp, p.sourcePort)}</td>
-                      <td style={tdStyle}>{fmtEndpoint(p.destinationIp, p.destinationPort)}</td>
-                      <td style={tdStyle}>{protoLabel(p)}</td>
-                      <td style={tdStyle}>{p.length}</td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
-          </div>
-
-          {/* detail */}
-          <div style={{ width: "38%", "min-width": "280px", display: "flex", "flex-direction": "column" }}>
-            <div style={{ display: "flex", gap: "4px", padding: "4px 8px", "border-bottom": "1px solid var(--border-1, #333)" }}>
-              {(["overview", "payload", "hex", "ascii"] as ViewTab[]).map((tab) => (
-                <button
-                  onClick={() => setViewTab(tab)}
-                  style={{
-                    ...btnSmallStyle,
-                    background: viewTab() === tab ? "var(--accent-1, #2f5f8f)" : undefined,
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            <div style={{ flex: 1, overflow: "auto", padding: "8px", "white-space": "pre-wrap", "word-break": "break-all" }}>
-              <Show when={viewTab() === "overview" && detailRows().length > 0} fallback={<span style={{ opacity: 0.5 }}>select a packet</span>}>
-                <For each={detailRows()}>
-                  {([k, v]) => (
-                    <div style={{ display: "flex", gap: "8px", "margin-bottom": "4px" }}>
-                      <span style={{ width: "120px", opacity: 0.7, "flex-shrink": 0 }}>{k}</span>
-                      <span>{v}</span>
-                    </div>
-                  )}
-                </For>
-              </Show>
-              <Show when={viewTab() === "payload" && detail()}>
-                <pre style={{ margin: 0 }}>{detail()?.payloadPreview ?? ""}</pre>
-              </Show>
-              <Show when={viewTab() === "hex" && detail()}>
-                <pre style={{ margin: 0 }}>{detail()?.hex ?? ""}</pre>
-              </Show>
-              <Show when={viewTab() === "ascii" && detail()}>
-                <pre style={{ margin: 0 }}>{detail()?.ascii ?? ""}</pre>
-              </Show>
-              <Show when={["payload", "hex", "ascii"].includes(viewTab()) && !detail()}>
-                <span style={{ opacity: 0.5 }}>no payload data</span>
-              </Show>
-            </div>
+          <div class="flex-1 overflow-auto p-2 whitespace-pre-wrap break-all" data-slot="network-detail-body">
+            <Show when={viewTab() === "overview" && detailRows().length > 0} fallback={<span class="opacity-50">select a packet</span>}>
+              <For each={detailRows()}>
+                {([k, v]) => (
+                  <div class="flex gap-2 mb-1">
+                    <span class="w-30 opacity-70 shrink-0">{k}</span>
+                    <span>{v}</span>
+                  </div>
+                )}
+              </For>
+            </Show>
+            <Show when={viewTab() === "payload" && detail()}>
+              <pre class="m-0">{detail()?.payloadPreview ?? ""}</pre>
+            </Show>
+            <Show when={viewTab() === "hex" && detail()}>
+              <pre class="m-0">{detail()?.hex ?? ""}</pre>
+            </Show>
+            <Show when={viewTab() === "ascii" && detail()}>
+              <pre class="m-0">{detail()?.ascii ?? ""}</pre>
+            </Show>
+            <Show when={["payload", "hex", "ascii"].includes(viewTab()) && !detail()}>
+              <span class="opacity-50">no payload data</span>
+            </Show>
           </div>
         </div>
       </div>
-    </Show>
+    </div>
   )
 }
 
 const btnStyle: JSX.CSSProperties = {
-  padding: "4px 12px",
+  padding: "2px 10px",
   background: "var(--surface-2, #2a2a2a)",
   color: "inherit",
   border: "1px solid var(--border-1, #444)",
   "border-radius": "4px",
   cursor: "pointer",
 }
-const btnSmallStyle: JSX.CSSProperties = { padding: "2px 10px", background: "transparent", color: "inherit", border: "1px solid var(--border-1, #444)", "border-radius": "3px", cursor: "pointer" }
-const thStyle: JSX.CSSProperties = { padding: "4px 8px", "font-weight": 600 }
-const tdStyle: JSX.CSSProperties = { padding: "3px 8px", "max-width": "220px", overflow: "hidden", "text-overflow": "ellipsis", "white-space": "nowrap" }

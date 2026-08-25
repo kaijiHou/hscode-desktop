@@ -281,6 +281,10 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           height: DEFAULT_TERMINAL_HEIGHT,
           opened: false,
         },
+        network: {
+          height: DEFAULT_TERMINAL_HEIGHT,
+          opened: false,
+        },
         review: {
           diffStyle: "split" as ReviewDiffStyle,
           panelOpened: DEFAULT_REVIEW_PANEL_OPENED,
@@ -691,6 +695,12 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           setStore("terminal", "height", height)
         },
       },
+      network: {
+        height: createMemo(() => store.network?.height ?? DEFAULT_TERMINAL_HEIGHT),
+        resize(height: number) {
+          setStore("network", "height", height)
+        },
+      },
       review: {
         diffStyle: createMemo(() => store.review?.diffStyle ?? "split"),
         setDiffStyle(diffStyle: ReviewDiffStyle) {
@@ -818,6 +828,7 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           if (typeof file === "string") return file
         })
         const terminalOpened = createMemo(() => store.terminal?.opened ?? false)
+        const networkOpened = createMemo(() => store.network?.opened ?? false)
         const reviewPanelOpened = createMemo(() => store.review?.panelOpened ?? DEFAULT_REVIEW_PANEL_OPENED)
         const reviewPanelSource = createMemo(() => (reviewPanelOpened() ? ephemeral.reviewPanelSource : "other"))
 
@@ -831,6 +842,18 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           const value = current.opened ?? false
           if (value === next) return
           setStore("terminal", "opened", next)
+        }
+
+        function setNetworkOpened(next: boolean) {
+          const current = store.network
+          if (!current) {
+            setStore("network", { height: DEFAULT_TERMINAL_HEIGHT, opened: next })
+            return
+          }
+
+          const value = current.opened ?? false
+          if (value === next) return
+          setStore("network", "opened", next)
         }
 
         function setReviewPanelOpened(next: boolean, source: ReviewPanelSource) {
@@ -878,12 +901,28 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
             opened: terminalOpened,
             open() {
               setTerminalOpened(true)
+              setNetworkOpened(false)
             },
             close() {
               setTerminalOpened(false)
             },
             toggle() {
               setTerminalOpened(!terminalOpened())
+              if (!terminalOpened()) setNetworkOpened(false)
+            },
+          },
+          network: {
+            opened: networkOpened,
+            open() {
+              setNetworkOpened(true)
+              setTerminalOpened(false)
+            },
+            close() {
+              setNetworkOpened(false)
+            },
+            toggle() {
+              setNetworkOpened(!networkOpened())
+              if (!networkOpened()) setTerminalOpened(false)
             },
           },
           reviewPanel: {
