@@ -241,6 +241,9 @@ export function SessionHeader() {
   const v2ActionsState = createMemo<SessionHeaderV2ActionsState>(() => ({
     statusVisible: status(),
     statusLabel: language.t("status.popover.trigger"),
+    terminalLabel: language.t("command.terminal.toggle"),
+    terminalOpened: view().terminal.opened(),
+    onTerminalToggle: () => view().terminal.toggle(),
     reviewLabel: language.t("command.review.toggle"),
     reviewKeybind: reviewTooltipKeybind(command),
     reviewVisible: isDesktop(),
@@ -542,6 +545,9 @@ export function SessionHeader() {
 type SessionHeaderV2ActionsState = {
   statusVisible: boolean
   statusLabel: string
+  terminalLabel: string
+  terminalOpened: boolean
+  onTerminalToggle: () => void
   reviewLabel: string
   reviewKeybind: string[]
   reviewVisible: boolean
@@ -589,6 +595,19 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
           />
         </TooltipV2>
       </Show>
+      {/* HSCode: Terminal text button — prominent entry */}
+      <Button
+        variant="ghost"
+        class="!h-8 shrink-0 px-2 gap-1 text-[12px]"
+        state={props.state.terminalOpened ? "pressed" : undefined}
+        onClick={props.state.onTerminalToggle}
+        aria-label={props.state.terminalLabel}
+        aria-expanded={props.state.terminalOpened}
+        aria-controls="terminal-panel"
+      >
+        <IconV2 name={props.state.terminalOpened ? "terminal-active" : "terminal"} />
+        <span class="text-12-regular">Terminal</span>
+      </Button>
       <Show when={props.state.networkVisible}>
         <TooltipV2
           class="shrink-0"
@@ -597,18 +616,18 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
             <>{language.t("command.network.toggle")}</>
           }
         >
-          <IconButtonV2
-            type="button"
-            variant="ghost-muted"
-            size="large"
-            class="!w-9 shrink-0"
+          <Button
+            variant="ghost"
+            class="!h-8 shrink-0 px-2 gap-1 text-[12px]"
             state={props.state.networkOpened ? "pressed" : undefined}
             onClick={props.state.onNetworkToggle}
             aria-label={language.t("command.network.toggle")}
             aria-expanded={props.state.networkOpened}
             aria-controls="network-panel"
-            icon={<IconV2 name="network-active" />}
-          />
+          >
+            <IconV2 name="network-active" />
+            <span class="text-12-regular">Network</span>
+          </Button>
         </TooltipV2>
       </Show>
     </div>
