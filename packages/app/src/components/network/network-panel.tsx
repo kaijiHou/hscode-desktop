@@ -197,22 +197,22 @@ export function NetworkPanel() {
     const d = detail()
     if (!s) return []
     const rows: Array<[string, string]> = [
-      ["Protocol", protoLabel(s)],
-      ["Source", fmtEndpoint(s.sourceIp, s.sourcePort)],
-      ["Destination", fmtEndpoint(s.destinationIp, s.destinationPort)],
-      ["Length", String(s.length)],
-      ["Payload Length", String(s.payloadLength)],
-      ["Direction", s.direction],
-      ["IP Version", String(s.ipVersion)],
+      ["协议", protoLabel(s)],
+      ["源地址", fmtEndpoint(s.sourceIp, s.sourcePort)],
+      ["目标地址", fmtEndpoint(s.destinationIp, s.destinationPort)],
+      ["长度", String(s.length)],
+      ["载荷长度", String(s.payloadLength)],
+      ["方向", s.direction],
+      ["IP 版本", String(s.ipVersion)],
     ]
     if (s.tcp) {
-      rows.push(["TCP Flags", `SYN=${s.tcp.syn} ACK=${s.tcp.ack} FIN=${s.tcp.fin} RST=${s.tcp.rst} PSH=${s.tcp.psh} URG=${s.tcp.urg}`])
+      rows.push(["TCP 标志", `SYN=${s.tcp.syn} ACK=${s.tcp.ack} FIN=${s.tcp.fin} RST=${s.tcp.rst} PSH=${s.tcp.psh} URG=${s.tcp.urg}`])
     }
     if (s.application) {
       rows.push(["HTTP", `${s.application.method ?? ""} ${s.application.path ?? ""} ${s.application.version ?? ""}`])
-      if (s.application.host) rows.push(["Host", s.application.host])
+      if (s.application.host) rows.push(["主机", s.application.host])
     }
-    if (d && d.payloadPreview) rows.push(["Payload Preview", d.payloadPreview.slice(0, 200)])
+    if (d && d.payloadPreview) rows.push(["载荷预览", d.payloadPreview.slice(0, 200)])
     return rows
   })
 
@@ -221,22 +221,25 @@ export function NetworkPanel() {
       id="network-panel"
       data-component="network-panel"
       role="region"
-      aria-label="Network Inspector"
+      aria-label="网络抓包"
       class="network-panel relative w-full h-full min-h-0 flex flex-col overflow-hidden bg-background-stronger text-14-regular border-t border-border-weak-base"
     >
+      <div class="px-2 py-1 text-12-regular opacity-60 border-b border-border-weaker-base">
+        捕获并分析当前电脑的 TCP / UDP / ICMP 网络数据包
+      </div>
       <div class="flex items-center gap-2 px-2 h-9 border-b border-border-weaker-base bg-background-stronger shrink-0">
-        <span class="font-semibold">Network Inspector</span>
+        <span class="font-semibold">网络抓包</span>
         <span
           data-slot="network-state"
           class="text-12-regular"
           style={{ color: isCapturing() ? "#4caf50" : snapshot.state === "error" ? "#f44336" : undefined }}
         >
-          {snapshot.state}
+          {{ "idle": "未开始", "starting": "正在启动", "capturing": "正在抓包", "stopping": "正在停止", "error": "抓包失败" }[snapshot.state] ?? snapshot.state}
         </span>
-        <span class="ml-auto opacity-70">{packets().length} packets</span>
+        <span class="ml-auto opacity-70">{packets().length} 个数据包</span>
         <button
           onClick={() => view().network.close()}
-          aria-label="Close Network Inspector"
+          aria-label="关闭网络抓包"
           class="titlebar-icon w-6 h-6 p-0 box-border shrink-0"
         >
           ✕
@@ -247,24 +250,24 @@ export function NetworkPanel() {
         <input
           value={filter()}
           onInput={(e) => setFilter(e.currentTarget.value)}
-          placeholder="filter: tcp · udp · tcp.port == 22122 · src.ip == 192.168.1.10"
+          placeholder="高级筛选: tcp / udp / tcp.port == 22122"
           aria-label="Network filter"
           class="flex-1 min-w-0 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-14-regular"
         />
         <button onClick={() => void start()} disabled={isCapturing() || !api} class="btn-outline btn-sm" style={btnStyle}>
-          Start
+          开始抓包
         </button>
         <button onClick={() => void stop()} disabled={!isCapturing() || !api} class="btn-outline btn-sm" style={btnStyle}>
-          Stop
+          停止抓包
         </button>
         <button onClick={() => void clear()} class="btn-outline btn-sm" style={btnStyle}>
-          Clear
+          清空
         </button>
       </div>
 
       <Show when={engineUnavailable}>
         <div class="px-3 py-2 text-12-regular" style={{ color: "#f44336" }}>
-          Network capture engine is unavailable. This feature requires the HSCode desktop build.
+          网络抓包引擎不可用。此功能需要 HSCode 桌面版。
         </div>
       </Show>
       <Show when={filterError()}>
@@ -275,22 +278,28 @@ export function NetworkPanel() {
       </Show>
       <Show when={snapshot.state === "error" && snapshot.error}>
         <div class="px-3 py-2 border-b border-border-weaker-base" style={{ color: "#f44336", "white-space": "pre-wrap" }}>
-          {snapshot.error?.message ?? "capture error"}
+          {snapshot.error?.message ?? "抓包错误"}
         </div>
       </Show>
 
       <div class="flex-1 min-h-0 flex">
         {/* packet list */}
         <div class="flex-1 overflow-auto" data-slot="network-packet-list">
+          <Show when={packets().length === 0 && snapshot.state === "idle"}>
+            <div class="p-3 text-12-regular opacity-50">点击「开始抓包」捕获本机 TCP/UDP/ICMP 网络数据</div>
+          </Show>
+          <Show when={snapshot.state === "capturing" && packets().length === 0}>
+            <div class="p-3 text-12-regular opacity-50">正在监听网络流量，暂未捕获到数据包</div>
+          </Show>
           <table class="w-full border-collapse text-13-regular">
             <thead>
               <tr class="sticky top-0 bg-background-stronger text-left">
-                <th class="px-2 py-1 font-semibold">Time</th>
-                <th class="px-2 py-1 font-semibold">Dir</th>
-                <th class="px-2 py-1 font-semibold">Src</th>
-                <th class="px-2 py-1 font-semibold">Dst</th>
-                <th class="px-2 py-1 font-semibold">Proto</th>
-                <th class="px-2 py-1 font-semibold">Len</th>
+                <th class="px-2 py-1 font-semibold">时间</th>
+                <th class="px-2 py-1 font-semibold">方向</th>
+                <th class="px-2 py-1 font-semibold">源地址</th>
+                <th class="px-2 py-1 font-semibold">目标地址</th>
+                <th class="px-2 py-1 font-semibold">协议</th>
+                <th class="px-2 py-1 font-semibold">长度</th>
               </tr>
             </thead>
             <tbody>
@@ -328,7 +337,7 @@ export function NetworkPanel() {
             ))}
           </div>
           <div class="flex-1 overflow-auto p-2 whitespace-pre-wrap break-all" data-slot="network-detail-body">
-            <Show when={viewTab() === "overview" && detailRows().length > 0} fallback={<span class="opacity-50">select a packet</span>}>
+            <Show when={viewTab() === "overview" && detailRows().length > 0} fallback={<span class="opacity-50">请选择数据包</span>}>
               <For each={detailRows()}>
                 {([k, v]) => (
                   <div class="flex gap-2 mb-1">
@@ -348,7 +357,7 @@ export function NetworkPanel() {
               <pre class="m-0">{detail()?.ascii ?? ""}</pre>
             </Show>
             <Show when={["payload", "hex", "ascii"].includes(viewTab()) && !detail()}>
-              <span class="opacity-50">no payload data</span>
+              <span class="opacity-50">无载荷数据</span>
             </Show>
           </div>
         </div>

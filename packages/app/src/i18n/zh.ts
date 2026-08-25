@@ -165,8 +165,8 @@ export const dict = {
 
   "command.input.focus": "聚焦输入框",
 
-  "command.terminal.toggle": "切换终端",
-  "command.network.toggle": "切换网络检查器",
+  "command.terminal.toggle": "终端",
+  "command.network.toggle": "网络抓包",
 
   "command.fileTree.toggle": "切换文件树",
 

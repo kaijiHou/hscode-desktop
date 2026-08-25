@@ -242,6 +242,7 @@ export function SessionHeader() {
     statusVisible: status(),
     statusLabel: language.t("status.popover.trigger"),
     terminalLabel: language.t("command.terminal.toggle"),
+    networkLabel: language.t("command.network.toggle"),
     terminalOpened: view().terminal.opened(),
     onTerminalToggle: () => view().terminal.toggle(),
     reviewLabel: language.t("command.review.toggle"),
@@ -554,6 +555,7 @@ type SessionHeaderV2ActionsState = {
   reviewOpened: boolean
   onReviewToggle: () => void
   networkVisible: boolean
+  networkLabel: string
   networkOpened: boolean
   onNetworkToggle: () => void
 }
@@ -606,7 +608,7 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
         aria-controls="terminal-panel"
       >
         <IconV2 name={props.state.terminalOpened ? "terminal-active" : "terminal"} />
-        <span class="text-12-regular">Terminal</span>
+        <span class="text-12-regular">{props.state.terminalLabel}</span>
       </Button>
       <Show when={props.state.networkVisible}>
         <TooltipV2
@@ -626,7 +628,7 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
             aria-controls="network-panel"
           >
             <IconV2 name="network-active" />
-            <span class="text-12-regular">Network</span>
+            <span class="text-12-regular">{props.state.networkLabel}</span>
           </Button>
         </TooltipV2>
       </Show>
