@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Supportforum",
   "desktop.menu.shareFeedback": "Skicka feedback",
   "desktop.menu.reportBug": "Rapportera ett fel",
-  "desktop.menu.ariaLabel": "OpenCode-meny",
+  "desktop.menu.ariaLabel": "HSCode-meny",
   "desktop.updater.dialog.checkFailed.message": "Det gick inte att söka efter uppdateringar.",
   "desktop.updater.dialog.checkFailed.title": "Uppdateringsfel",
   "desktop.updater.dialog.upToDate.message": "Du har den senaste versionen.",

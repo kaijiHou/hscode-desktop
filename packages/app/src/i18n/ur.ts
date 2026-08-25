@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "معاونتی فورم",
   "desktop.menu.shareFeedback": "رائے کا اشتراک کریں",
   "desktop.menu.reportBug": "خرابی کی اطلاع دیں",
-  "desktop.menu.ariaLabel": "OpenCode مینو",
+  "desktop.menu.ariaLabel": "HSCode مینو",
 
   "desktop.updater.dialog.checkFailed.message": "اپ ڈیٹ کی جانچ ناکام ہو گئی۔",
   "desktop.updater.dialog.checkFailed.title": "اپ ڈیٹ کی خرابی",

@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "انجمن پشتیبانی",
   "desktop.menu.shareFeedback": "بازخورد را به اشتراک بگذارید",
   "desktop.menu.reportBug": "گزارش یک اشکال",
-  "desktop.menu.ariaLabel": "منوی OpenCode",
+  "desktop.menu.ariaLabel": "منوی HSCode",
   "desktop.updater.dialog.checkFailed.message": "بررسی به‌روزرسانی انجام نشد.",
   "desktop.updater.dialog.checkFailed.title": "خطای آپدیت",
   "desktop.updater.dialog.upToDate.message": "شما به روز هستید.",

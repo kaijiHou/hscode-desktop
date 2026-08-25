@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "ပံ့ပိုးမှုဖိုရမ်",
   "desktop.menu.shareFeedback": "အကြံပြုချက်ကို မျှဝေပါ။",
   "desktop.menu.reportBug": "ချွတ်ယွင်းချက်တစ်ခုကို သတင်းပို့ပါ။",
-  "desktop.menu.ariaLabel": "OpenCode မီနူး",
+  "desktop.menu.ariaLabel": "HSCode မီနူး",
   "desktop.updater.dialog.checkFailed.message": "အပ်ဒိတ်စစ်ဆေးမှု မအောင်မြင်ပါ။",
   "desktop.updater.dialog.checkFailed.title": "အပ်ဒိတ် အမှား",
   "desktop.updater.dialog.upToDate.message": "သင်သည် ခေတ်မီနေပါသည်။",

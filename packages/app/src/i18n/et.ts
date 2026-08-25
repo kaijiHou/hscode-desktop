@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Tugifoorum",
   "desktop.menu.shareFeedback": "Jaga tagasisidet",
   "desktop.menu.reportBug": "Teatage veast",
-  "desktop.menu.ariaLabel": "OpenCode menüü",
+  "desktop.menu.ariaLabel": "HSCode menüü",
   "desktop.updater.dialog.checkFailed.message": "Värskenduskontroll ebaõnnestus.",
   "desktop.updater.dialog.checkFailed.title": "Värskendusviga",
   "desktop.updater.dialog.upToDate.message": "Oled kursis.",

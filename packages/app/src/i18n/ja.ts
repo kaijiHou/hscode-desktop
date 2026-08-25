@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "サポートフォーラム",
   "desktop.menu.shareFeedback": "フィードバックを送信",
   "desktop.menu.reportBug": "バグを報告",
-  "desktop.menu.ariaLabel": "OpenCodeメニュー",
+  "desktop.menu.ariaLabel": "HSCodeメニュー",
 
   "desktop.updater.dialog.checkFailed.message": "アップデートを確認できませんでした。",
   "desktop.updater.dialog.checkFailed.title": "アップデートエラー",

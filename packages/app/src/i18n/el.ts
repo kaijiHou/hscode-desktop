@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Φόρουμ υποστήριξης",
   "desktop.menu.shareFeedback": "Κοινή χρήση σχολίων",
   "desktop.menu.reportBug": "Αναφορά σφάλματος",
-  "desktop.menu.ariaLabel": "OpenCode μενού",
+  "desktop.menu.ariaLabel": "HSCode μενού",
   "desktop.updater.dialog.checkFailed.message": "Ο έλεγχος ενημέρωσης απέτυχε.",
   "desktop.updater.dialog.checkFailed.title": "Σφάλμα ενημέρωσης",
   "desktop.updater.dialog.upToDate.message": "Είστε ενημερωμένοι.",

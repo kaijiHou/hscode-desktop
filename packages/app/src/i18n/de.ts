@@ -1117,7 +1117,7 @@ export const dict = {
   "desktop.menu.supportForum": "Supportforum",
   "desktop.menu.shareFeedback": "Feedback senden",
   "desktop.menu.reportBug": "Fehler melden",
-  "desktop.menu.ariaLabel": "OpenCode-Menü",
+  "desktop.menu.ariaLabel": "HSCode-Menü",
   "desktop.updater.dialog.checkFailed.message": "Die Suche nach Updates ist fehlgeschlagen.",
   "desktop.updater.dialog.checkFailed.title": "Updatefehler",
   "desktop.updater.dialog.upToDate.message": "Sie sind auf dem neuesten Stand.",

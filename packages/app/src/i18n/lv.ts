@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Atbalsta forums",
   "desktop.menu.shareFeedback": "Sniegt atsauksmi",
   "desktop.menu.reportBug": "Ziņot par kļūdu",
-  "desktop.menu.ariaLabel": "OpenCode izvēlne",
+  "desktop.menu.ariaLabel": "HSCode izvēlne",
   "desktop.updater.dialog.checkFailed.message": "Neizdevās pārbaudīt atjauninājumus.",
   "desktop.updater.dialog.checkFailed.title": "Atjaunināšanas kļūda",
   "desktop.updater.dialog.upToDate.message": "Jums ir jaunākā versija.",

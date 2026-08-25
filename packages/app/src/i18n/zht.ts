@@ -47,7 +47,7 @@ export const dict = {
   "desktop.menu.supportForum": "支援論壇",
   "desktop.menu.shareFeedback": "提供意見回饋",
   "desktop.menu.reportBug": "回報錯誤",
-  "desktop.menu.ariaLabel": "OpenCode 選單",
+  "desktop.menu.ariaLabel": "HSCode 選單",
 
   "desktop.updater.dialog.checkFailed.message": "檢查更新失敗。",
   "desktop.updater.dialog.checkFailed.title": "更新錯誤",
@@ -156,6 +156,7 @@ export const dict = {
   "command.context.addSelection.description": "加入目前檔案中選取的行",
   "command.input.focus": "聚焦輸入框",
   "command.terminal.toggle": "切換終端機",
+  "command.network.toggle": "切換網路檢查器",
   "command.fileTree.toggle": "切換檔案樹",
   "command.review.toggle": "切換檢閱",
   "command.terminal.new": "新增終端機",
@@ -676,7 +677,8 @@ export const dict = {
   "error.page.action.checking": "檢查中...",
   "error.page.action.checkUpdates": "檢查更新",
   "error.page.action.updateTo": "更新到 {{version}}",
-  "error.page.report.prefix": "請將此錯誤回報給 OpenCode 團隊",
+  "error.page.report.prefix": "請將此錯誤回報給 HSCode 維護者",
+  "error.page.report.email": "1377295397@qq.com (houkaij)",
   "error.page.report.discord": "在 Discord 上",
   "error.page.version": "版本: {{version}}",
 

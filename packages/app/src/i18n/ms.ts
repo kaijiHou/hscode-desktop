@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Forum Sokongan",
   "desktop.menu.shareFeedback": "Kongsi Maklum Balas",
   "desktop.menu.reportBug": "Laporkan Pepijat",
-  "desktop.menu.ariaLabel": "Menu OpenCode",
+  "desktop.menu.ariaLabel": "Menu HSCode",
   "desktop.updater.dialog.checkFailed.message": "Semakan kemas kini gagal.",
   "desktop.updater.dialog.checkFailed.title": "Ralat Kemas Kini",
   "desktop.updater.dialog.upToDate.message": "Anda menggunakan versi terkini.",

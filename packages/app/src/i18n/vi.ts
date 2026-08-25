@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Diễn đàn hỗ trợ",
   "desktop.menu.shareFeedback": "Chia sẻ phản hồi",
   "desktop.menu.reportBug": "Báo cáo lỗi",
-  "desktop.menu.ariaLabel": "Menu OpenCode",
+  "desktop.menu.ariaLabel": "Menu HSCode",
 
   "desktop.updater.dialog.checkFailed.message": "Không kiểm tra được bản cập nhật.",
   "desktop.updater.dialog.checkFailed.title": "Lỗi cập nhật",

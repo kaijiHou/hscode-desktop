@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Fòrum de suport",
   "desktop.menu.shareFeedback": "Comparteix comentaris",
   "desktop.menu.reportBug": "Informar d'un error",
-  "desktop.menu.ariaLabel": "menú OpenCode.",
+  "desktop.menu.ariaLabel": "menú HSCode.",
   "desktop.updater.dialog.checkFailed.message": "La comprovació d'actualització ha fallat.",
   "desktop.updater.dialog.checkFailed.title": "Error d'actualització",
   "desktop.updater.dialog.upToDate.message": "Estàs al dia.",

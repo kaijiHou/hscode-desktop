@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "ސަޕޯޓް ފޯރަމް",
   "desktop.menu.shareFeedback": "ޝެއާ ފީޑްބެކް",
   "desktop.menu.reportBug": "ބަގެއް ރިޕޯޓްކުރުން",
-  "desktop.menu.ariaLabel": "OpenCode މެނޫ",
+  "desktop.menu.ariaLabel": "HSCode މެނޫ",
   "desktop.updater.dialog.checkFailed.message": "އަޕްޑޭޓް ޗެކް ފެއިލްވެއްޖެއެވެ.",
   "desktop.updater.dialog.checkFailed.title": "އަޕްޑޭޓް އެރަރ",
   "desktop.updater.dialog.upToDate.message": "ޔޫ އާ އަޕް ޓު ޑޭޓް.",

@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Forum za podporo",
   "desktop.menu.shareFeedback": "Delite povratne informacije",
   "desktop.menu.reportBug": "Prijavi napako",
-  "desktop.menu.ariaLabel": "OpenCode meni",
+  "desktop.menu.ariaLabel": "HSCode meni",
   "desktop.updater.dialog.checkFailed.message": "Preverjanje posodobitve ni uspelo.",
   "desktop.updater.dialog.checkFailed.title": "Napaka posodobitve",
   "desktop.updater.dialog.upToDate.message": "Ste na tekočem.",

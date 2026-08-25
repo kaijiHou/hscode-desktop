@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "ກະດານສະຫນັບສະຫນູນ",
   "desktop.menu.shareFeedback": "ແບ່ງປັນຄວາມຄິດເຫັນ",
   "desktop.menu.reportBug": "ລາຍງານຂໍ້ຜິດພາດ",
-  "desktop.menu.ariaLabel": "ເມນູ OpenCode",
+  "desktop.menu.ariaLabel": "ເມນູ HSCode",
   "desktop.updater.dialog.checkFailed.message": "ກວດສອບການອັບເດດບໍ່ສຳເລັດ.",
   "desktop.updater.dialog.checkFailed.title": "ອັບເດດຜິດພາດ",
   "desktop.updater.dialog.upToDate.message": "ທ່ານອັບເດດແລ້ວ.",

@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Форуми дастгирӣ",
   "desktop.menu.shareFeedback": "Мубодилаи фикру ақида",
   "desktop.menu.reportBug": "Дар бораи хато хабар диҳед",
-  "desktop.menu.ariaLabel": "OpenCode меню",
+  "desktop.menu.ariaLabel": "HSCode меню",
   "desktop.updater.dialog.checkFailed.message": "Санҷиши навсозӣ ноком шуд.",
   "desktop.updater.dialog.checkFailed.title": "Хатои навсозӣ",
   "desktop.updater.dialog.upToDate.message": "Шумо навсозӣ доред.",

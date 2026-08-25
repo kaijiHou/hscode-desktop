@@ -43,7 +43,7 @@ export const dict: Record<string, string> = {
   "desktop.menu.supportForum": "ආධාරක සංසදය",
   "desktop.menu.shareFeedback": "ප්‍රතිපෝෂණ බෙදා ගන්න",
   "desktop.menu.reportBug": "දෝෂයක් වාර්තා කරන්න",
-  "desktop.menu.ariaLabel": "OpenCode මෙනුව",
+  "desktop.menu.ariaLabel": "HSCode මෙනුව",
   "desktop.updater.dialog.checkFailed.message": "යාවත්කාලීන පරීක්ෂාව අසාර්ථක විය.",
   "desktop.updater.dialog.checkFailed.title": "යාවත්කාලීන දෝෂයකි",
   "desktop.updater.dialog.upToDate.message": "ඔබ යාවත්කාලීනයි.",

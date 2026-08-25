@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Fórum podpory",
   "desktop.menu.shareFeedback": "Sdílejte zpětnou vazbu",
   "desktop.menu.reportBug": "Nahlásit chybu",
-  "desktop.menu.ariaLabel": "Nabídka OpenCode",
+  "desktop.menu.ariaLabel": "Nabídka HSCode",
   "desktop.updater.dialog.checkFailed.message": "Kontrola aktualizace se nezdařila.",
   "desktop.updater.dialog.checkFailed.title": "Chyba aktualizace",
   "desktop.updater.dialog.upToDate.message": "Jste aktuální.",

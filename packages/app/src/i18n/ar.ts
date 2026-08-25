@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "منتدى الدعم",
   "desktop.menu.shareFeedback": "إرسال الملاحظات",
   "desktop.menu.reportBug": "الإبلاغ عن خلل",
-  "desktop.menu.ariaLabel": "قائمة OpenCode",
+  "desktop.menu.ariaLabel": "قائمة HSCode",
 
   "desktop.updater.dialog.checkFailed.message": "فشل التحقق من وجود تحديثات.",
   "desktop.updater.dialog.checkFailed.title": "خطأ في التحديث",

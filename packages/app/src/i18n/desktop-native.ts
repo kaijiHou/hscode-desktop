@@ -247,6 +247,7 @@ export const DESKTOP_NATIVE_ENGLISH = {
   "desktop.menu.selectAll": "Select All",
   "desktop.menu.toggleSidebar": "Toggle Sidebar",
   "desktop.menu.toggleTerminal": "Toggle Terminal",
+  "desktop.menu.toggleNetwork": "Network Inspector",
   "desktop.menu.toggleFileTree": "Toggle File Tree",
   "desktop.menu.reload": "Reload",
   "desktop.menu.toggleDeveloperTools": "Toggle Developer Tools",
@@ -266,7 +267,7 @@ export const DESKTOP_NATIVE_ENGLISH = {
   "desktop.menu.supportForum": "Support Forum",
   "desktop.menu.shareFeedback": "Share Feedback",
   "desktop.menu.reportBug": "Report a Bug",
-  "desktop.menu.ariaLabel": "OpenCode menu",
+  "desktop.menu.ariaLabel": "HSCode menu",
 
   "desktop.updater.dialog.checkFailed.message": "Update check failed.",
   "desktop.updater.dialog.checkFailed.title": "Update Error",

@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Qo'llab-quvvatlash forumi",
   "desktop.menu.shareFeedback": "Fikr-mulohaza ulashing",
   "desktop.menu.reportBug": "Xato haqida xabar berish",
-  "desktop.menu.ariaLabel": "OpenCode menyusi",
+  "desktop.menu.ariaLabel": "HSCode menyusi",
   "desktop.updater.dialog.checkFailed.message": "Yangilanish tekshiruvi amalga oshmadi.",
   "desktop.updater.dialog.checkFailed.title": "Yangilash xatosi",
   "desktop.updater.dialog.upToDate.message": "Siz yangilangansiz.",

@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "ฟอรัมสนับสนุน",
   "desktop.menu.shareFeedback": "ส่งข้อคิดเห็น",
   "desktop.menu.reportBug": "รายงานข้อบกพร่อง",
-  "desktop.menu.ariaLabel": "เมนู OpenCode",
+  "desktop.menu.ariaLabel": "เมนู HSCode",
 
   "desktop.updater.dialog.checkFailed.message": "การตรวจหาการอัปเดตล้มเหลว",
   "desktop.updater.dialog.checkFailed.title": "ข้อผิดพลาดในการอัปเดต",

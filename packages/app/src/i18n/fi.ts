@@ -1100,7 +1100,7 @@ export const dict = {
   "desktop.menu.supportForum": "Tukifoorumi",
   "desktop.menu.shareFeedback": "Anna palautetta",
   "desktop.menu.reportBug": "Ilmoita ohjelmavirheestä",
-  "desktop.menu.ariaLabel": "OpenCode-valikko",
+  "desktop.menu.ariaLabel": "HSCode-valikko",
   "desktop.updater.dialog.checkFailed.message": "Päivitysten tarkistus epäonnistui.",
   "desktop.updater.dialog.checkFailed.title": "Päivitysvirhe",
   "desktop.updater.dialog.upToDate.message": "Olet ajan tasalla.",

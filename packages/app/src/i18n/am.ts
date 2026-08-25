@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "የድጋፍ መድረክ",
   "desktop.menu.shareFeedback": "አጋራ ግብረመልስ",
   "desktop.menu.reportBug": "ስህተትን ሪፖርት አድርግ",
-  "desktop.menu.ariaLabel": "OpenCodeምናሌ",
+  "desktop.menu.ariaLabel": "HSCodeምናሌ",
   "desktop.updater.dialog.checkFailed.message": "የዝማኔ ማረጋገጫ አልተሳካም።",
   "desktop.updater.dialog.checkFailed.title": "ስህተት ማዘመን",
   "desktop.updater.dialog.upToDate.message": "ወቅታዊ ነዎት።",

@@ -43,7 +43,7 @@ export const dict: Record<string, string> = {
   "desktop.menu.supportForum": "সমর্থন ফোরাম",
   "desktop.menu.shareFeedback": "মতামত শেয়ার করুন",
   "desktop.menu.reportBug": "একটি বাগ রিপোর্ট করুন",
-  "desktop.menu.ariaLabel": "OpenCode মেনু",
+  "desktop.menu.ariaLabel": "HSCode মেনু",
   "desktop.updater.dialog.checkFailed.message": "আপডেট চেক ব্যর্থ হয়েছে.",
   "desktop.updater.dialog.checkFailed.title": "আপডেট ত্রুটি",
   "desktop.updater.dialog.upToDate.message": "আপনি আপ টু ডেট.",

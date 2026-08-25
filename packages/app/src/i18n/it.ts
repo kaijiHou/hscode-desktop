@@ -1124,7 +1124,7 @@ export const dict = {
   "desktop.menu.supportForum": "Forum di supporto",
   "desktop.menu.shareFeedback": "Invia feedback",
   "desktop.menu.reportBug": "Segnala un bug",
-  "desktop.menu.ariaLabel": "Menu OpenCode",
+  "desktop.menu.ariaLabel": "Menu HSCode",
   "desktop.updater.dialog.checkFailed.message": "Impossibile verificare la disponibilità di aggiornamenti.",
   "desktop.updater.dialog.checkFailed.title": "Errore di aggiornamento",
   "desktop.updater.dialog.upToDate.message": "La versione è aggiornata.",

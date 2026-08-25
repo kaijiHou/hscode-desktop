@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "მხარდაჭერის ფორუმი",
   "desktop.menu.shareFeedback": "გაზიარება გამოხმაურება",
   "desktop.menu.reportBug": "შეცდომის შესახებ შეტყობინება",
-  "desktop.menu.ariaLabel": "OpenCode მენიუ",
+  "desktop.menu.ariaLabel": "HSCode მენიუ",
   "desktop.updater.dialog.checkFailed.message": "განახლების შემოწმება ვერ მოხერხდა.",
   "desktop.updater.dialog.checkFailed.title": "განახლების შეცდომა",
   "desktop.updater.dialog.upToDate.message": "თქვენ განახლებული ხართ.",

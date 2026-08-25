@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Forumi i Mbështetjes",
   "desktop.menu.shareFeedback": "Ndani komentet",
   "desktop.menu.reportBug": "Raportoni një gabim",
-  "desktop.menu.ariaLabel": "Menuja OpenCode",
+  "desktop.menu.ariaLabel": "Menuja HSCode",
   "desktop.updater.dialog.checkFailed.message": "Kontrolli i përditësimit dështoi.",
   "desktop.updater.dialog.checkFailed.title": "Gabim i përditësimit",
   "desktop.updater.dialog.upToDate.message": "Ju jeni të përditësuar.",

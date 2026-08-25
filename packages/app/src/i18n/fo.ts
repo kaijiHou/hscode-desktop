@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Stuðulsforum",
   "desktop.menu.shareFeedback": "Deil afturmeldingar",
   "desktop.menu.reportBug": "Melda ein feil",
-  "desktop.menu.ariaLabel": "OpenCode valmynd",
+  "desktop.menu.ariaLabel": "HSCode valmynd",
   "desktop.updater.dialog.checkFailed.message": "Dagføringarkanningin miseydnaðist.",
   "desktop.updater.dialog.checkFailed.title": "Dagføring feilur",
   "desktop.updater.dialog.upToDate.message": "Tú ert dagførdur.",

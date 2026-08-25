@@ -57,6 +57,7 @@ export const dict = {
   "command.context.addSelection.description": "Add selected lines from the current file",
   "command.input.focus": "Focus input",
   "command.terminal.toggle": "Toggle terminal",
+  "command.network.toggle": "Toggle Network Inspector",
   "command.fileTree.toggle": "Toggle file tree",
   "command.review.toggle": "Toggle review",
   "command.terminal.new": "New terminal",
@@ -597,7 +598,8 @@ export const dict = {
   "error.page.action.checkUpdates": "Check for updates",
   "error.page.action.updateTo": "Update to {{version}}",
   "error.page.circular": "[Circular]",
-  "error.page.report.prefix": "Please report this error to the OpenCode team",
+  "error.page.report.prefix": "Please report this error to the HSCode maintainer",
+  "error.page.report.email": "1377295397@qq.com (houkaij)",
   "error.page.report.discord": "on Discord",
   "error.page.version": "Version: {{version}}",
 

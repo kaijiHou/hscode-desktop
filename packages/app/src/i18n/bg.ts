@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Форум за поддръжка",
   "desktop.menu.shareFeedback": "Споделете обратна връзка",
   "desktop.menu.reportBug": "Докладване за грешка",
-  "desktop.menu.ariaLabel": "OpenCode меню",
+  "desktop.menu.ariaLabel": "HSCode меню",
   "desktop.updater.dialog.checkFailed.message": "Проверката на актуализацията е неуспешна.",
   "desktop.updater.dialog.checkFailed.title": "Грешка при актуализиране",
   "desktop.updater.dialog.upToDate.message": "Вие сте в крак с времето.",

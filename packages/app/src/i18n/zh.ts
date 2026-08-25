@@ -47,7 +47,7 @@ export const dict = {
   "desktop.menu.supportForum": "支持论坛",
   "desktop.menu.shareFeedback": "提供反馈",
   "desktop.menu.reportBug": "报告错误",
-  "desktop.menu.ariaLabel": "OpenCode 菜单",
+  "desktop.menu.ariaLabel": "HSCode 菜单",
 
   "desktop.updater.dialog.checkFailed.message": "检查更新失败。",
   "desktop.updater.dialog.checkFailed.title": "更新错误",
@@ -166,6 +166,7 @@ export const dict = {
   "command.input.focus": "聚焦输入框",
 
   "command.terminal.toggle": "切换终端",
+  "command.network.toggle": "切换网络检查器",
 
   "command.fileTree.toggle": "切换文件树",
 
@@ -683,7 +684,8 @@ export const dict = {
   "error.page.action.checking": "检查中...",
   "error.page.action.checkUpdates": "检查更新",
   "error.page.action.updateTo": "更新到 {{version}}",
-  "error.page.report.prefix": "请将此错误报告给 OpenCode 团队",
+  "error.page.report.prefix": "请将此错误报告给 HSCode 维护者",
+  "error.page.report.email": "1377295397@qq.com (houkaij)",
   "error.page.report.discord": "在 Discord 上",
   "error.page.version": "版本：{{version}}",
   "error.dev.rootNotFound": "未找到根元素。你是不是忘了把它添加到 index.html？或者 id 属性拼写错了？",

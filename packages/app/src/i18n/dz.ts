@@ -43,7 +43,7 @@ export const dict: Record<string, string> = {
   "desktop.menu.supportForum": "རྒྱབ་སྐྱོར་གླེང་སྟེགས།",
   "desktop.menu.shareFeedback": "བསམ་འཆར་བརྗེ་རེས།",
   "desktop.menu.reportBug": "རྐྱེན་ཅིག་སྙན་ཞུ་འབད།",
-  "desktop.menu.ariaLabel": "OpenCode དཀར་ཆག།",
+  "desktop.menu.ariaLabel": "HSCode དཀར་ཆག།",
   "desktop.updater.dialog.checkFailed.message": "དུས་མཐུན་ཞིབ་དཔྱད་འཐུས་ཤོར་འབྱུང་ཡོདཔ།",
   "desktop.updater.dialog.checkFailed.title": "དུས་མཐུན་འཛོལ་བ།",
   "desktop.updater.dialog.upToDate.message": "ཁྱོད་དུས་དང་བསྟུན།",

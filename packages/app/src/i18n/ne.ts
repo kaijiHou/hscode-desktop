@@ -43,7 +43,7 @@ export const dict: Record<string, string> = {
   "desktop.menu.supportForum": "समर्थन फोरम",
   "desktop.menu.shareFeedback": "प्रतिक्रिया साझा गर्नुहोस्",
   "desktop.menu.reportBug": "बग रिपोर्ट गर्नुहोस्",
-  "desktop.menu.ariaLabel": "OpenCode मेनु",
+  "desktop.menu.ariaLabel": "HSCode मेनु",
   "desktop.updater.dialog.checkFailed.message": "अद्यावधिक जाँच असफल भयो।",
   "desktop.updater.dialog.checkFailed.title": "अपडेट त्रुटि",
   "desktop.updater.dialog.upToDate.message": "तपाईं अद्यावधिक हुनुहुन्छ।",

@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Goldaw forumy",
   "desktop.menu.shareFeedback": "Pikir alyşma",
   "desktop.menu.reportBug": "Bug barada habar beriň",
-  "desktop.menu.ariaLabel": "OpenCode menýusy",
+  "desktop.menu.ariaLabel": "HSCode menýusy",
   "desktop.updater.dialog.checkFailed.message": "Täzelenme şowsuz boldy.",
   "desktop.updater.dialog.checkFailed.title": "Täzelenme säwligi",
   "desktop.updater.dialog.upToDate.message": "Döwrebap",

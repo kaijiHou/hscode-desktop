@@ -43,7 +43,7 @@ export const dict = {
   "desktop.menu.supportForum": "Fórum de suporte",
   "desktop.menu.shareFeedback": "Enviar comentários",
   "desktop.menu.reportBug": "Relatar um bug",
-  "desktop.menu.ariaLabel": "Menu do OpenCode",
+  "desktop.menu.ariaLabel": "Menu do HSCode",
 
   "desktop.updater.dialog.checkFailed.message": "Falha ao verificar atualizações.",
   "desktop.updater.dialog.checkFailed.title": "Erro de atualização",

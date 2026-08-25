@@ -1111,7 +1111,7 @@ export const dict = {
   "desktop.menu.supportForum": "지원 포럼",
   "desktop.menu.shareFeedback": "피드백 보내기",
   "desktop.menu.reportBug": "버그 신고",
-  "desktop.menu.ariaLabel": "OpenCode 메뉴",
+  "desktop.menu.ariaLabel": "HSCode 메뉴",
 
   "desktop.updater.dialog.checkFailed.message": "업데이트를 확인하지 못했습니다.",
   "desktop.updater.dialog.checkFailed.title": "업데이트 오류",
