@@ -63,12 +63,12 @@ export function NewSessionView(props: {
                       onDone={props.input.restoreFocus}
                     />
                   </Show>
+      <div class="absolute bottom-2 inset-x-0 text-center text-[11px] text-v2-text-text-faint/50 select-none pointer-events-none">武汉环声海洋科技有限公司 版权所有</div>
                 </div>
               </Show>
             </div>
           </div>
         </div>
-        <ProviderTip />
       </div>
     </div>
   )
@@ -92,71 +92,3 @@ export function NewSessionStatus(props: { mount: Accessor<HTMLElement | null>; v
   )
 }
 
-function ProviderTip() {
-  const language = useLanguage()
-  const dialog = useDialog()
-  const sdk = useSDK()
-  const serverSync = useServerSync()
-  const providers = useProviders(() => sdk().directory)
-  const [persistedState, setPersistedState, , persistedReady] = persisted(
-    Persist.global("new-session.provider-tip"),
-    createStore({ dismissedAt: 0 }),
-  )
-  const visible = createMemo(
-    () =>
-      serverSync().child(sdk().directory)[0].provider_ready &&
-      persistedReady() &&
-      providers.paid().length === 0 &&
-      Date.now() - persistedState.dismissedAt >= providerTipDismissalDuration,
-  )
-  const [ref, setRef] = createSignal<HTMLDivElement>()
-  const presence = createPresence({
-    show: visible,
-    element: () => ref() ?? null,
-  })
-  const openProviders = () => {
-    void import("@/components/dialog-connect-provider").then(({ DialogConnectProvider }) => {
-      void dialog.show(() => <DialogConnectProvider directory={() => sdk().directory} />)
-    })
-  }
-
-  return (
-    <Show when={presence.present()}>
-      <div class="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-10">
-        <div
-          ref={setRef}
-          data-component="provider-tip"
-          data-visible={visible()}
-          class="group/provider-tip pointer-events-auto relative flex h-6 max-w-full items-center transition-[opacity,transform] duration-[250ms] ease-[cubic-bezier(0.215,0.61,0.355,1)] motion-reduce:transition-none"
-          classList={{ "data-[visible=false]:animate-out fade-out slide-out-to-bottom-4": true }}
-        >
-          <button
-            type="button"
-            class="flex h-6 min-w-0 items-center rounded-[4px] pl-1.5 text-[13px] leading-none tracking-[-0.04px] text-v2-text-text-faint transition-[background-color,color] duration-150 ease-in-out hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-muted focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:text-v2-text-text-muted focus-visible:outline-none"
-            onClick={openProviders}
-          >
-            <span class="truncate">{language.t("home.providerTip")}</span>
-            <span class="flex size-6 shrink-0 items-center justify-center" aria-hidden="true">
-              <IconV2 name="chevron-down" size="small" class="-rotate-90" />
-            </span>
-          </button>
-          <TooltipV2
-            class="hover-reveal absolute left-full top-0 flex h-6 w-7 items-center justify-end delay-0 duration-0 group-hover/provider-tip:delay-[250ms] group-hover/provider-tip:duration-150 group-hover/provider-tip:opacity-100 focus-within:delay-0 focus-within:duration-0 focus-within:opacity-100"
-            placement="top"
-            openDelay={1000}
-            value={language.t("common.dismiss")}
-          >
-            <button
-              type="button"
-              class="flex size-6 items-center justify-center rounded-[4px] text-v2-icon-icon-muted transition-[background-color,color] duration-150 ease-in-out hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-icon-icon-base focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:text-v2-icon-icon-base focus-visible:outline-none"
-              aria-label={language.t("common.dismiss")}
-              onClick={() => setPersistedState("dismissedAt", Date.now())}
-            >
-              <IconV2 name="xmark-small" />
-            </button>
-          </TooltipV2>
-        </div>
-      </div>
-    </Show>
-  )
-}
