@@ -243,10 +243,11 @@ export function ModelSelectorPopoverV2(props: {
       current={controller.current}
       select={controller.select}
       onManage={() => {
-        void import("./dialog-manage-models").then((module) => {
-          void dialog.show(() => <module.DialogManageModelsV2 />)
-        })
-      }}
+              // HSCode: "Manage" button now opens Custom Provider form for adding self-hosted models.
+              void import("./dialog-custom-provider").then((module) => {
+                void dialog.show(() => <module.DialogCustomProvider onBack={() => dialog.close()} />)
+              })
+            }}
       onClose={() => props.onClose?.()}
     />
   )
@@ -258,6 +259,11 @@ function createModelSelectorController(input: {
   onSelect: () => void
 }) {
   const model = input.model ?? useLocal().model
+
+  // HSCode: only show three primary providers in the main selector.
+  // Other providers remain available via "More Providers" / advanced settings.
+  const PRIMARY_PROVIDER_IDS = new Set(["opencode-go", "deepseek"])
+
   const allModels = createMemo(() =>
     model
       .list()
@@ -265,13 +271,26 @@ function createModelSelectorController(input: {
       .filter((item) => (input.provider() ? item.provider.id === input.provider() : true)),
   )
 
+  // Models for the three primary entries (OpenCode Go + DeepSeek)
+  const primaryModels = createMemo(() =>
+    allModels().filter((item) => PRIMARY_PROVIDER_IDS.has(item.provider.id)),
+  )
+
+  // Custom providers (user-configured OpenAI Compatible)
+  const customModels = createMemo(() =>
+    allModels().filter((item) => !PRIMARY_PROVIDER_IDS.has(item.provider.id) && item.provider.id !== "opencode"),
+  )
+
   return {
     models: (search: string) => {
       const query = search.trim()
-      const filtered = query
-        ? allModels().filter((item) => matchesModelSearch(query, [item.name, item.id, item.provider.name]))
-        : allModels()
-      return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
+      // When searching, include all providers for discoverability
+      if (query) {
+        const filtered = allModels().filter((item) => matchesModelSearch(query, [item.name, item.id, item.provider.name]))
+        return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
+      }
+      // When not searching, show only primary + custom providers
+      return [...primaryModels(), ...customModels()].sort((a, b) => a.name.localeCompare(b.name))
     },
     groups: (models: ModelItem[]) => {
       const byProvider = new Map<string, ModelItem[]>()

@@ -1,11 +1,7 @@
 // HSCode: load models.dev catalog for build.
-// Priority:
-//  1. MODELS_DEV_API_JSON env var → read that file
-//  2. Local standalone snapshot → read if exists (cached from previous fetch)
-//  3. Fetch from models.dev API → save for future offline builds
-//
-// The catalog is provider metadata (names, model IDs, npm packages).
-// It does NOT contain API keys or user data.
+// Privacy: NEVER fetch from models.dev at build time.
+// The bundled snapshot (models-dev-standalone.json) must contain all provider data.
+// If missing, the build should fail with a clear error, not silently fetch.
 
 import path from "path"
 import { fileURLToPath } from "url"
@@ -13,8 +9,6 @@ import { fileURLToPath } from "url"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const dir = path.resolve(__dirname, "..")
-
-const MODELS_DEV_URL = "https://models.dev/api.json"
 
 const standalone = path.resolve(dir, "scripts/models-dev-standalone.json")
 
@@ -27,12 +21,12 @@ if (process.env.MODELS_DEV_API_JSON) {
   modelsData = await Bun.file(standalone).text()
   console.log("Loaded models.dev snapshot (local, offline)")
 } else {
-  console.log(`Fetching models.dev catalog from ${MODELS_DEV_URL}...`)
-  const resp = await fetch(MODELS_DEV_URL)
-  if (!resp.ok) throw new Error(`Failed to fetch models.dev: ${resp.status} ${resp.statusText}`)
-  modelsData = await resp.text()
-  await Bun.write(standalone, modelsData)
-  console.log(`Fetched and cached models.dev (${modelsData.length} bytes)`)
+  throw new Error(
+    `HSCode build error: models-dev-standalone.json not found at ${standalone}\n` +
+    `This file contains provider metadata for offline use.\n` +
+    `Generate it by running: cd packages/opencode && bun script/generate.ts --fetch\n` +
+    `Then commit the file to the repository.`
+  )
 }
 
 export { modelsData }
