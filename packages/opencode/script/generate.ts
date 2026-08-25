@@ -7,8 +7,11 @@ const dir = path.resolve(__dirname, "..")
 
 process.chdir(dir)
 
-const modelsUrl = process.env.OPENCODE_MODELS_URL || "https://models.dev"
+// HSCode privacy: never fetch remote models.dev at build time. Use a local
+// standalone snapshot (empty by default) unless MODELS_DEV_API_JSON points to
+// a real file. This keeps the build offline and self-contained.
+const standalone = path.resolve(dir, "scripts/models-dev-standalone.json")
 export const modelsData = process.env.MODELS_DEV_API_JSON
   ? await Bun.file(process.env.MODELS_DEV_API_JSON).text()
-  : await fetch(`${modelsUrl}/api.json`).then((x) => x.text())
-console.log("Loaded models.dev snapshot")
+  : await Bun.file(standalone).text()
+console.log("Loaded models.dev snapshot (local, offline)")
