@@ -87,6 +87,25 @@ async function killSidecar() {
   await current.stop()
 }
 
+/** Read the repo's current git short SHA for runtime identity logging.
+ *  Synchronous: called at startup inside a non-async block.
+ *  Returns undefined when not in a git repo (e.g. packaged build without repo),
+ *  in which case HSCODE_BUILD_SHA is expected to be injected at build time. */
+function hscodeGitMetaSync(): string | undefined {
+  try {
+    const { execFileSync } = require("node:child_process") as typeof import("node:child_process")
+    const out = execFileSync("git", ["rev-parse", "--short", "HEAD"], {
+      cwd: join(import.meta.dirname, "../.."),
+      windowsHide: true,
+      timeout: 3000,
+      encoding: "utf8",
+    })
+    return out.trim() || undefined
+  } catch {
+    return undefined
+  }
+}
+
 function ensureLoopbackNoProxy() {
   const loopback = ["127.0.0.1", "localhost", "::1"]
   const upsert = (key: string) => {
@@ -187,6 +206,18 @@ const main = Effect.gen(function* () {
     packaged: app.isPackaged,
     onboardingTest: Boolean(onboardingTestRoot),
   })
+
+  // HSCode Runtime identity — the log must be able to prove which commit this
+  // window came from, so a stale build/process can be detected immediately.
+  {
+    const shortSha = process.env.HSCODE_BUILD_SHA ?? hscodeGitMetaSync() ?? "unknown"
+    logger.log("[HSCode Runtime]", {
+      branch: process.env.HSCODE_BUILD_BRANCH ?? "master",
+      commit: shortSha,
+      buildMode: app.isPackaged ? "production" : "development",
+      appName: app.isPackaged ? "HSCode" : "HSCode Dev",
+    })
+  }
 
   ensureLoopbackNoProxy()
   useEnvProxy()

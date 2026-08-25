@@ -606,11 +606,34 @@ type TitlebarV2RightState = {
 }
 
 function TitlebarV2Right(props: { state: TitlebarV2RightState }) {
+  const layout = useLayout()
+  const language = useLanguage()
   return (
     <div class="relative z-20 flex shrink-0 items-center justify-end gap-0 overflow-visible">
       <Show when={props.state.update.visible}>
         <TitlebarUpdateIconButton state={props.state.update} />
       </Show>
+      {/* HSCode: Network Inspector toggle — always visible in V2 titlebar */}
+      <TooltipV2
+        class="shrink-0"
+        placement="bottom"
+        value={<>{language.t("command.network.toggle")}</>}
+      >
+        <IconButtonV2
+          type="button"
+          variant="ghost-muted"
+          size="large"
+          class="!w-auto shrink-0 px-2 gap-1"
+          state={layout.view("hscode-default").network.opened() ? "pressed" : undefined}
+          onClick={() => layout.view("hscode-default").network.toggle()}
+          aria-label={language.t("command.network.toggle")}
+          aria-expanded={layout.view("hscode-default").network.opened()}
+          aria-controls="network-panel"
+        >
+          <IconV2 name="network-active" />
+          <span class="text-12-regular">Network</span>
+        </IconButtonV2>
+      </TooltipV2>
       <div id="opencode-titlebar-right" class="flex shrink-0 items-center justify-end gap-0" />
     </div>
   )
