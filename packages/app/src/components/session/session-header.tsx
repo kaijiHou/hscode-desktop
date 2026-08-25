@@ -217,6 +217,10 @@ export function SessionHeader() {
     focusTerminalById(id)
   }
 
+  const toggleNetwork = () => {
+    view().network.toggle()
+  }
+
   const [prefs, setPrefs] = persisted(Persist.global("open.app"), createStore({ app: "finder" as OpenApp }))
   const [menu, setMenu] = createStore({ open: false })
   const [openRequest, setOpenRequest] = createStore({
@@ -242,6 +246,9 @@ export function SessionHeader() {
     reviewVisible: isDesktop(),
     reviewOpened: view().reviewPanel.opened(),
     onReviewToggle: () => view().reviewPanel.toggle(),
+    networkVisible: isDesktop(),
+    networkOpened: view().network.opened(),
+    onNetworkToggle: () => view().network.toggle(),
   }))
 
   const selectApp = (app: OpenApp) => {
@@ -461,6 +468,22 @@ export function SessionHeader() {
                       </Button>
                     </TooltipKeybind>
 
+
+                    <TooltipKeybind
+                      title={language.t("command.network.toggle")}
+                      keybind={command.keybind("network.toggle")}
+                    >
+                      <Button
+                        variant="ghost"
+                        class="group/network-toggle titlebar-icon w-8 h-6 p-0 box-border shrink-0"
+                        onClick={toggleNetwork}
+                        aria-label={language.t("command.network.toggle")}
+                        aria-expanded={view().network.opened()}
+                        aria-controls="network-panel"
+                      >
+                        <Icon size="small" name={view().network.opened() ? "network-active" : "network"} />
+                      </Button>
+                    </TooltipKeybind>
                     <div class="hidden md:flex items-center gap-1 shrink-0">
                       <TooltipKeybind
                         title={language.t("command.review.toggle")}
@@ -524,6 +547,9 @@ type SessionHeaderV2ActionsState = {
   reviewVisible: boolean
   reviewOpened: boolean
   onReviewToggle: () => void
+  networkVisible: boolean
+  networkOpened: boolean
+  onNetworkToggle: () => void
 }
 
 function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
@@ -560,6 +586,28 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
             aria-expanded={props.state.reviewOpened}
             aria-controls="review-panel"
             icon={<IconV2 name="sidebar-right" />}
+          />
+        </TooltipV2>
+      </Show>
+      <Show when={props.state.networkVisible}>
+        <TooltipV2
+          class="shrink-0"
+          placement="bottom"
+          value={
+            <>{language.t("command.network.toggle")}</>
+          }
+        >
+          <IconButtonV2
+            type="button"
+            variant="ghost-muted"
+            size="large"
+            class="!w-9 shrink-0"
+            state={props.state.networkOpened ? "pressed" : undefined}
+            onClick={props.state.onNetworkToggle}
+            aria-label={language.t("command.network.toggle")}
+            aria-expanded={props.state.networkOpened}
+            aria-controls="network-panel"
+            icon={<IconV2 name="network-active" />}
           />
         </TooltipV2>
       </Show>

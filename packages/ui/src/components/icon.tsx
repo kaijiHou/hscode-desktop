@@ -104,14 +104,18 @@ const icons = {
   providers: `<path d="M10.0001 4.37562V2.875M13 4.37793V2.87793M7.00014 4.37793V2.875M10 17.1279V15.6279M13 17.1279V15.6279M7 17.1279V15.6279M15.625 13.0029H17.125M15.625 7.00293H17.125M15.625 10.0029H17.125M2.875 10.0029H4.375M2.875 13.0029H4.375M2.875 7.00293H4.375M4.375 4.37793H15.625V15.6279H4.375V4.37793ZM12.6241 10.0022C12.6241 11.4519 11.4488 12.6272 9.99908 12.6272C8.54934 12.6272 7.37408 11.4519 7.37408 10.0022C7.37408 8.55245 8.54934 7.3772 9.99908 7.3772C11.4488 7.3772 12.6241 8.55245 12.6241 10.0022Z" stroke="currentColor" stroke-linecap="square"/>`,
   models: `<path fill-rule="evenodd" clip-rule="evenodd" d="M17.5 10C12.2917 10 10 12.2917 10 17.5C10 12.2917 7.70833 10 2.5 10C7.70833 10 10 7.70833 10 2.5C10 7.70833 12.2917 10 17.5 10Z" stroke="currentColor"/>`,
   "arrow-undo-down": `<path d="M4.08333 11.0859L1.75 8.7526L4.08333 6.41927M2.33333 8.7526L12.5417 8.7526L12.5417 3.21094L7 3.21094" stroke="currentColor" stroke-width="1" stroke-linecap="square"/>`,
-}
+    network: `<path d="M4.16667 4.16667H15.8333V15.8333H4.16667V4.16667Z" stroke="currentColor" stroke-linecap="square"/><path d="M8.33333 8.33333H11.6667V11.6667H8.33333V8.33333Z" stroke="currentColor" stroke-linecap="square"/><path d="M8.33333 4.16667V8.33333M11.6667 8.33333V11.6667M8.33333 11.6667V15.8333M4.16667 8.33333H8.33333M11.6667 11.6667H15.8333" stroke="currentColor" stroke-linecap="square"/>`,
+    "network-active": `<path d="M4.16667 4.16667H15.8333V15.8333H4.16667V4.16667Z" fill="currentColor" fill-opacity="0.1"/><path d="M8.33333 8.33333H11.6667V11.6667H8.33333V8.33333Z" fill="currentColor"/><path d="M8.33333 4.16667V8.33333M11.6667 8.33333V11.6667M8.33333 11.6667V15.8333M4.16667 8.33333H8.33333M11.6667 11.6667H15.8333" stroke="currentColor" stroke-linecap="square"/>`,
+  }
 
 const spriteID = "opencode-icon-sprite"
 const symbol = (name: keyof typeof icons) => `opencode-icon-${name}`
 let spriteInserted = false
 
 function viewBox(name: keyof typeof icons) {
-  return name === "magnifying-glass" || name === "arrow-undo-down" || name === "subagent" ? "0 0 16 16" : "0 0 20 20"
+  return name === "magnifying-glass" || name === "arrow-undo-down" || name === "subagent" || name === "network" || name === "network-active"
+    ? "0 0 16 16"
+    : "0 0 20 20"
 }
 
 function ensureSprite() {

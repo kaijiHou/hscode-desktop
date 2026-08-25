@@ -7,7 +7,6 @@ import { Font } from "@opencode-ai/ui/font"
 import { Splash } from "@opencode-ai/ui/logo"
 import { ThemeProvider } from "@opencode-ai/ui/theme/context"
 import { MetaProvider } from "@solidjs/meta"
-import { NetworkInspectorHost } from "@/components/network/network-host"
 import {
   type BaseRouterProps,
   Navigate,
@@ -593,8 +592,7 @@ export function AppInterface(props: {
                     <PermissionProvider>
                       <NotificationProvider>
                         <ServerShell>
-                                                  <NetworkInspectorHost />
-                                                  <Show when={useSettings().general.newLayoutDesigns()} fallback={routerProps.children}>
+                          <Show when={useSettings().general.newLayoutDesigns()} fallback={routerProps.children}>
                             <NewAppLayout serverScoped={props.serverScoped}>{routerProps.children}</NewAppLayout>
                           </Show>
                         </ServerShell>
