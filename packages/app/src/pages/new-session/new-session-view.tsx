@@ -63,7 +63,6 @@ export function NewSessionView(props: {
                       onDone={props.input.restoreFocus}
                     />
                   </Show>
-      <div class="absolute bottom-2 inset-x-0 text-center text-[11px] text-v2-text-text-faint/50 select-none pointer-events-none">武汉环声海洋科技有限公司 版权所有</div>
                 </div>
               </Show>
             </div>
