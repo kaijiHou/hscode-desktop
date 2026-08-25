@@ -145,7 +145,7 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
             <div class="grid w-full grid-cols-1 gap-y-1.5 gap-x-2 sm:grid-cols-2">
               {/* Primary provider cards: OpenCode Go + DeepSeek */}
               <For
-                each={[...providers.popular()]
+                each={[...providers.all()]
                   .filter((provider) => PRIMARY_PROVIDERS.includes(provider.id))
                   .sort((a, b) => PRIMARY_PROVIDERS.indexOf(a.id) - PRIMARY_PROVIDERS.indexOf(b.id))}
               >
