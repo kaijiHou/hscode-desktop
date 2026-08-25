@@ -1161,4 +1161,8 @@ export const dict = {
   "workspace.reset.archived.one": "1 سیشن آرکائیو کیا جائے گا۔",
   "workspace.reset.archived.many": "{{count}} سیشنز آرکائیو کیے جائیں گے۔",
   "workspace.reset.note": "یہ ڈیفالٹ برانچ سے ملنے کے لیے ورک اسپیس کو دوبارہ ترتیب دے گا۔",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

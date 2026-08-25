@@ -1165,4 +1165,8 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} сессийг архивлах болно.",
   "workspace.reset.note": "Энэ нь ажлын талбарыг анхдагч салбартай тааруулахын тулд дахин тохируулах болно.",
   "dialog.usageExceeded.dontShowAgain": "Дахин бүү харуул",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

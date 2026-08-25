@@ -1257,4 +1257,8 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "Kalıcı proje simgesi oluşturulamadı",
   "error.childStore.storeCreateFailed": "Depo oluşturulamadı",
   "terminal.connectionLost.abnormalClose": "WebSocket anormal şekilde kapandı: {{code}}",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 } satisfies Partial<Record<Keys, string>>

@@ -1152,4 +1152,8 @@ export const dict = {
   "workspace.reset.archived.many": "جلسات {{count}} بایگانی خواهد شد.",
   "workspace.reset.note": "این کار فضای کاری را برای مطابقت با شاخه پیش فرض بازنشانی می کند.",
   "dialog.usageExceeded.dontShowAgain": "دیگر نشان نده",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

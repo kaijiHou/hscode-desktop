@@ -1166,4 +1166,8 @@ export const dict = {
   "workspace.reset.archived.one": "1 phiên sẽ được lưu trữ.",
   "workspace.reset.archived.many": "{{count}} phiên sẽ được lưu trữ.",
   "workspace.reset.note": "Điều này sẽ thiết lập lại không gian làm việc để phù hợp với nhánh mặc định.",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

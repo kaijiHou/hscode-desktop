@@ -1168,4 +1168,8 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} seanslari arxivlanadi.",
   "workspace.reset.note": "Bu standart filialga mos keladigan ish maydonini tiklaydi.",
   "dialog.usageExceeded.dontShowAgain": "Boshqa ko‘rsatma",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

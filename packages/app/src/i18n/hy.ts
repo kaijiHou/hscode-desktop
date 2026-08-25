@@ -1162,4 +1162,8 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} նիստերը կարխիվացվեն։",
   "workspace.reset.note": "Սա կվերակայի աշխատանքային տարածքը, որպեսզի համապատասխանի լռելյայն ճյուղին:",
   "dialog.usageExceeded.dontShowAgain": "Այլևս չցուցադրել",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

@@ -1156,4 +1156,8 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sessiýalary arhiwlener.",
   "workspace.reset.note": "Bu workspace-i adaty şaha gabat getirmek üçin täzeden düzer.",
   "dialog.usageExceeded.dontShowAgain": "Gaýtadan görkezme",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

@@ -1154,4 +1154,8 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sesi akan diarkibkan.",
   "workspace.reset.note": "Ini akan menetap semula ruang kerja agar sepadan dengan cawangan lalai.",
   "dialog.usageExceeded.dontShowAgain": "Jangan tunjukkan lagi",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

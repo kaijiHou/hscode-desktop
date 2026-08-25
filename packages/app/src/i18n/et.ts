@@ -1148,4 +1148,8 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} seanssi arhiivitakse.",
   "workspace.reset.note": "See lähtestab tööruumi, et see vastaks vaikeharule.",
   "dialog.usageExceeded.dontShowAgain": "Ära kuva enam",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

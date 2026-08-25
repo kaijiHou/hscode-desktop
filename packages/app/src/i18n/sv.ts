@@ -1157,4 +1157,8 @@ export const dict = {
   "workspace.reset.archived.one": "1 session kommer att arkiveras.",
   "workspace.reset.archived.many": "{{count}} sessioner kommer att arkiveras.",
   "workspace.reset.note": "Detta kommer att återställa arbetsytan så att den matchar standardgrenen.",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

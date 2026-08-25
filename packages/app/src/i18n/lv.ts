@@ -1159,4 +1159,8 @@ export const dict = {
   "workspace.reset.archived.many": "Tiks arhivētas {{count}} sesijas.",
   "workspace.reset.note": "Darbvieta tiks atiestatīta uz noklusējuma zara stāvokli.",
   "dialog.usageExceeded.dontShowAgain": "Vairs nerādīt",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

@@ -1154,4 +1154,8 @@ export const dict: Record<string, string> = {
   "workspace.reset.archived.many": "{{count}} सत्रहरू अभिलेख गरिनेछ।",
   "workspace.reset.note": "यसले पूर्वनिर्धारित शाखासँग मिलाउन कार्यस्थान रिसेट गर्नेछ।",
   "dialog.usageExceeded.dontShowAgain": "फेरि नदेखाउनुहोस्",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

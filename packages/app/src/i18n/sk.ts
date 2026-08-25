@@ -1156,4 +1156,8 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} relácií bude archivovaných.",
   "workspace.reset.note": "Týmto sa pracovný priestor obnoví podľa predvolenej vetvy.",
   "dialog.usageExceeded.dontShowAgain": "Znova nezobrazovať",
+
+  "command.network.toggle": "Toggle Network Inspector",
+  "desktop.menu.toggleNetwork": "Network Inspector",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
 }

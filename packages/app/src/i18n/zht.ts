@@ -678,7 +678,7 @@ export const dict = {
   "error.page.action.checkUpdates": "檢查更新",
   "error.page.action.updateTo": "更新到 {{version}}",
   "error.page.report.prefix": "請將此錯誤回報給 HSCode 維護者",
-  "error.page.report.email": "1377295397@qq.com (houkaij)",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
   "error.page.report.discord": "在 Discord 上",
   "error.page.version": "版本: {{version}}",
 
@@ -1222,4 +1222,6 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "建立持續性專案圖示失敗",
   "error.childStore.storeCreateFailed": "建立儲存區失敗",
   "terminal.connectionLost.abnormalClose": "WebSocket 異常關閉：{{code}}",
+
+  "desktop.menu.toggleNetwork": "Network Inspector",
 } satisfies Partial<Record<Keys, string>>

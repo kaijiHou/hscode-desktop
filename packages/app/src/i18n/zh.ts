@@ -685,7 +685,7 @@ export const dict = {
   "error.page.action.checkUpdates": "检查更新",
   "error.page.action.updateTo": "更新到 {{version}}",
   "error.page.report.prefix": "请将此错误报告给 HSCode 维护者",
-  "error.page.report.email": "1377295397@qq.com (houkaij)",
+  "error.page.report.email": "1377295397@qq.com (houkaiji)",
   "error.page.report.discord": "在 Discord 上",
   "error.page.version": "版本：{{version}}",
   "error.dev.rootNotFound": "未找到根元素。你是不是忘了把它添加到 index.html？或者 id 属性拼写错了？",
@@ -1226,4 +1226,6 @@ export const dict = {
   "error.childStore.persistedProjectIconCreateFailed": "创建持久化项目图标失败",
   "error.childStore.storeCreateFailed": "创建存储失败",
   "terminal.connectionLost.abnormalClose": "WebSocket 异常关闭：{{code}}",
+
+  "desktop.menu.toggleNetwork": "Network Inspector",
 } satisfies Partial<Record<Keys, string>>
