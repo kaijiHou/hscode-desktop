@@ -907,8 +907,9 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
               setTerminalOpened(false)
             },
             toggle() {
-              setTerminalOpened(!terminalOpened())
-              if (!terminalOpened()) setNetworkOpened(false)
+              const next = !terminalOpened()
+              setTerminalOpened(next)
+              if (next) setNetworkOpened(false)
             },
           },
           network: {
@@ -921,8 +922,9 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
               setNetworkOpened(false)
             },
             toggle() {
-              setNetworkOpened(!networkOpened())
-              if (!networkOpened()) setTerminalOpened(false)
+              const next = !networkOpened()
+              setNetworkOpened(next)
+              if (next) setTerminalOpened(false)
             },
           },
           reviewPanel: {
