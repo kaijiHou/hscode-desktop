@@ -44,6 +44,7 @@ export default function NewLayout(props: ParentProps) {
       {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
       <TabsInfoPopup />
       <ToastRegion v2 />
+      <div class="absolute bottom-1 inset-x-0 text-center text-[10px] text-v2-text-text-faint/40 select-none pointer-events-none z-50">武汉环声海洋科技有限公司 版权所有</div>
     </div>
   )
 }
