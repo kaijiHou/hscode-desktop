@@ -276,11 +276,6 @@ function createModelSelectorController(input: {
     allModels().filter((item) => PRIMARY_PROVIDER_IDS.has(item.provider.id)),
   )
 
-  // Custom providers (user-configured OpenAI Compatible)
-  const customModels = createMemo(() =>
-    allModels().filter((item) => !PRIMARY_PROVIDER_IDS.has(item.provider.id) && item.provider.id !== "opencode"),
-  )
-
   return {
     models: (search: string) => {
       const query = search.trim()
@@ -289,8 +284,10 @@ function createModelSelectorController(input: {
         const filtered = allModels().filter((item) => matchesModelSearch(query, [item.name, item.id, item.provider.name]))
         return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
       }
-      // When not searching, show only primary + custom providers
-      return [...primaryModels(), ...customModels()].sort((a, b) => a.name.localeCompare(b.name))
+      // When not searching, show only primary providers (OpenCode Go + DeepSeek).
+      // User-defined providers appear once configured via CustomProviderForm.
+      // Do NOT misclassify built-in providers (OpenAI, Anthropic, etc.) as custom.
+      return primaryModels().sort((a, b) => a.name.localeCompare(b.name))
     },
     groups: (models: ModelItem[]) => {
       const byProvider = new Map<string, ModelItem[]>()
