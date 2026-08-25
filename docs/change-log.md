@@ -400,3 +400,57 @@ recv count: 142, seen: {tcp:137, udp:5, http:6} → PASS
 CHANGE-005/006 完成后，剩余待提交：
 - 本轮全部修复代码（见各 commit）
 - `docs/` 更新（privacy-audit、change-log、handoff、architecture-notes、CHANGELOG、README）
+
+
+---
+
+## CHANGE-008 — Network UI Integration & Visible Branding Closure（Phase 2A.1）
+
+**日期**：2026-08-26
+
+### 背景
+Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后暴露两个严重可用性问题：
+1. 完全找不到进入 Network Inspector 的入口（仅藏在 Command Palette）。
+2. 主界面/首页背景仍是巨大的 OpenCode 字样，HSCode 品牌未完成。
+
+本轮不再扩展协议能力（不做 TCP Stream / HTTPS / Qwen），只收尾：
+- #Network Inspector 正式 UI 接入
+- #HSCode 用户可见品牌收尾
+
+### Added
+- **Network bottom panel tab**：`view().network` 全局状态（与 terminal 互斥），
+  session header 工具栏新增 `Network` 按钮，New/Legacy 布局均渲染 `NetworkPanel`。
+- **View 菜单入口**：`desktop-menu.ts` View 菜单新增 `Network Inspector` → `network.toggle`。
+- `command.network.toggle` / `desktop.menu.toggleNetwork` i18n（en/zh/zht/desktop-native）。
+- `network` / `network-active` 图标（`packages/ui/src/components/icon.tsx`）。
+- 品牌组件 `HSCodeWordmark` / `HSCodeLogo` / `HSCodeSplash`
+  （`packages/app/src/components/brand/hscode-logo.tsx`，CSS wordmark，主题变量，aria-label）。
+- `docs/branding-audit.md` 可见品牌审计表。
+
+### Modified
+- `NetworkPanel` 从 full-screen `position: fixed` overlay → `relative w-full h-full`
+  的 bottom tool panel content，由父级（session layout）控制尺寸。
+- `network.toggle` 命令从 overlay host 移到 session command provider
+  （`use-session-commands.tsx`），操作统一 `view().network`；`NetworkInspectorHost`
+  改为零 context 空组件（修复 "Layout context must be used within a context provider" 崩溃）。
+- Legacy Home / Error 页 `OpenCode Logo` → `HSCodeSplash`（大号 HSCode 水印）。
+- Error 页 feedback 外链 `opencode.ai/desktop-feedback` → HSCode GitHub issues。
+- Windows 应用菜单标题 `OpenCode` → `HSCode`。
+- `packages/app/tsconfig.json` + 根 `tsconfig.json`：`jsx` 由 `preserve` → `react-jsx`
+  （`jsxImportSource: solid-js`），使 bun test 能编译 Solid JSX 测试。
+
+### Deleted
+- 旧 Network full-screen overlay 行为（`network-panel.tsx` 的 fixed 定位）。
+- `network-host.tsx` 原先的 command + view 依赖（改为零 context 空组件）。
+
+### 测试（真实，无 skip/todo/mock）
+- **Network UI tests**（`network-panel.test.tsx`）：UI-1 panel 工具栏/无 fixed、
+  UI-4 命令统一入口 + host 零 context、UI-5 View 菜单 + i18n、terminal-network 互斥。**7 PASS**
+- **Brand tests**（`hscode-logo.test.tsx`）：Brand-1/2/3 HSCode wordmark、aria-label、
+  无 OpenCode wordmark、legacy-home/error 已替换。**6 PASS**
+- Highlights 回归 + 其余，app 侧合计 **16 PASS / 0 FAIL**。
+- desktop network + app-identity 回归：**36 PASS / 0 FAIL**。
+
+### 验证
+- 真实 dev 启动：窗口标题 HSCode、sidecar 连接、loading 完成。
+- 首次启动发现的 host context 崩溃已修复并加回归测试。
