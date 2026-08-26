@@ -62,6 +62,7 @@ function networkApi(): NetworkApiSurface | undefined {
 }
 
 type ViewTab = "overview" | "payload" | "hex" | "ascii"
+const tabLabels: Record<ViewTab, string> = { overview: "概览", payload: "Payload", hex: "HEX", ascii: "ASCII" }
 
 export function NetworkPanel() {
   const { view } = useSessionLayout()
@@ -76,6 +77,10 @@ export function NetworkPanel() {
   const [detail, setDetail] = createSignal<NetworkDetailPayload | undefined>()
   const [viewTab, setViewTab] = createSignal<ViewTab>("overview")
   const [loadError, setLoadError] = createSignal("")
+  const [protoFilter, setProtoFilter] = createSignal<string>("")
+  const [ipFilter, setIpFilter] = createSignal("")
+  const [portFilter, setPortFilter] = createSignal("")
+  const [dirFilter, setDirFilter] = createSignal<string>("")
 
   const isCapturing = () => snapshot.state === "capturing" || snapshot.state === "starting"
 
@@ -141,18 +146,35 @@ export function NetworkPanel() {
     })
   })
 
+  function buildBaseFilter(): string {
+    const parts: string[] = []
+    if (protoFilter()) parts.push(protoFilter())
+    if (ipFilter().trim()) parts.push(`ip == ${ipFilter().trim()}`)
+    if (portFilter().trim()) {
+      const port = portFilter().trim()
+      parts.push(`tcp.port == ${port}`)
+      parts.push(`udp.port == ${port}`)
+    }
+    if (dirFilter()) parts.push(dirFilter())
+    if (parts.length === 0) return ""
+    return parts.join(" and ")
+  }
+
   const start = async () => {
     if (!api) return
     setFilterError("")
-    if (filter().trim()) {
-      const validation = await api.validateFilter(filter())
+    const base = buildBaseFilter()
+    const adv = filter().trim()
+    const combined = [base, adv].filter(Boolean).join(" and ")
+    if (combined) {
+      const validation = await api.validateFilter(combined)
       if (!validation.ok) {
         setFilterError(validation.error ?? "invalid filter")
         return
       }
     }
     try {
-      setSnapshot(await api.start(filter()))
+      setSnapshot(await api.start(combined))
       setLoadError("")
     } catch (error) {
       setFilterError(String(error))
@@ -246,6 +268,44 @@ export function NetworkPanel() {
         </button>
       </div>
 
+      <div class="flex items-center gap-1 px-2 py-1 border-b border-border-weaker-base shrink-0">
+        <select
+          value={protoFilter()}
+          onChange={(e) => setProtoFilter(e.currentTarget.value)}
+          aria-label="协议筛选"
+          class="bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+        >
+          <option value="">全部协议</option>
+          <option value="TCP">TCP</option>
+          <option value="UDP">UDP</option>
+          <option value="ICMP">ICMP</option>
+        </select>
+        <input
+          value={ipFilter()}
+          onInput={(e) => setIpFilter(e.currentTarget.value)}
+          placeholder="IP"
+          aria-label="IP 筛选"
+          class="w-36 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+        />
+        <input
+          value={portFilter()}
+          onInput={(e) => setPortFilter(e.currentTarget.value)}
+          placeholder="端口"
+          aria-label="端口筛选"
+          class="w-24 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+        />
+        <select
+          value={dirFilter()}
+          onChange={(e) => setDirFilter(e.currentTarget.value)}
+          aria-label="方向筛选"
+          class="bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+        >
+          <option value="">全部方向</option>
+          <option value="inbound">入站</option>
+          <option value="outbound">出站</option>
+        </select>
+      </div>
+
       <div class="flex items-center gap-2 px-2 h-9 border-b border-border-weaker-base shrink-0">
         <input
           value={filter()}
@@ -332,7 +392,7 @@ export function NetworkPanel() {
                 class="px-2 py-0.5 rounded text-12-regular"
                 style={{ background: viewTab() === tab ? "var(--accent-1, #2f5f8f)" : undefined }}
               >
-                {tab}
+                {tabLabels[tab]}
               </button>
             ))}
           </div>
