@@ -10,11 +10,14 @@ import type { WorkerSpawner } from "./capture-service"
 export interface NetworkIpcDeps {
   service: CaptureService
   getResourcesDir: () => string
+  getNativeBridge?: () => { validateFilter(f: string): boolean } | null
 }
 
 export function registerNetworkIpc(deps: NetworkIpcDeps): () => void {
   const { service } = deps
   service.setResourcesDir(deps.getResourcesDir())
+  const bridge = deps.getNativeBridge?.()
+  if (bridge) service.setNativeBridge(bridge)
 
   const onState = (snapshot: unknown) => {
     for (const win of BrowserWindow.getAllWindows()) {

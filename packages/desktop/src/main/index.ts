@@ -51,6 +51,7 @@ import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 import { APP_IDS, APP_NAMES } from "./app-identity"
 import { registerNetworkIpc, createWorkerSpawner } from "./network/network-ipc"
+import { makeNativeBridge } from "./network/native"
 import { CaptureService } from "./network/capture-service"
 
 export const networkService = new CaptureService({}, createWorkerSpawner())
@@ -351,6 +352,13 @@ const main = Effect.gen(function* () {
     // dev: out/main → ../.. = packages/desktop（resources/win 在其下）
     // packaged: electron-builder 把 resources/win 复制到 resourcesPath
     getResourcesDir: () => (app.isPackaged ? process.resourcesPath : join(import.meta.dirname, "../..")),
+    getNativeBridge: () => {
+      try {
+        const dir = app.isPackaged ? process.resourcesPath : join(import.meta.dirname, "../..")
+        const bridge = makeNativeBridge(dir)
+        return { validateFilter: (f: string) => bridge.validateFilter(f) }
+      } catch { return null }
+    },
   })
   void updater.start()
   const updateTimer = setInterval(() => void updater.check(), 10 * 60 * 1000)

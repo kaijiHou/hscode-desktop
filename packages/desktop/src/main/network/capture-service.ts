@@ -51,6 +51,7 @@ export class CaptureService extends EventEmitter {
   private readonly spawnWorker: WorkerSpawner
   private worker: WorkerLike | null = null
   private resourcesDir = ""
+  private nativeBridge: { validateFilter(f: string): boolean } | null = null
 
   constructor(options: CaptureServiceOptions = {}, spawnWorker?: WorkerSpawner) {
     super()
@@ -64,7 +65,11 @@ export class CaptureService extends EventEmitter {
   }
 
   setResourcesDir(dir: string): void {
-    this.resourcesDir = dir.replace(/[\\/]$/, "")
+    this.resourcesDir = dir.replace(/[\\\/]$/, "")
+  }
+
+  setNativeBridge(bridge: { validateFilter(f: string): boolean }): void {
+    this.nativeBridge = bridge
   }
 
   get state() {
@@ -87,9 +92,15 @@ export class CaptureService extends EventEmitter {
     return this.details.get(id)
   }
 
-  /** Validate a filter without starting a capture. Throws FilterValidationError. */
+  /** Validate a filter. First validates HSCode grammar, then compiles with WinDivert if bridge available. */
   validateFilter(input: string): string {
-    return parseFilter(input).display
+    const parsed = parseFilter(input)
+    if (this.nativeBridge && parsed.windivert !== "true") {
+      if (!this.nativeBridge.validateFilter(parsed.windivert)) {
+        throw new FilterValidationError("WinDivert could not compile this filter")
+      }
+    }
+    return parsed.display
   }
 
   start(filterInput: string): void {
