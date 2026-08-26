@@ -50,3 +50,15 @@ HSCode 是基于 [OpenCode](https://github.com/anomalyco/opencode) 的自用修�
 - 分支：`dev`
 - Commit：`e00890c67261a435cee6409366a68999a93393fd`
 - 详见 [docs/upstream-baseline.md](docs/upstream-baseline.md)
+## [CHANGE-023] — 2026-08-26
+
+### Fixed
+- Network: dev WinDivert resources path (packages/desktop/resources via unified `networkResourcesDir()`)
+- Network: native bridge init errors no longer silently swallowed; renderer shows real root cause (Chinese mapping included)
+- Network UI: Start/Stop/Clear buttons now theme-aware ButtonV2 (light-theme contrast fixed)
+- Network: capture-worker bundled as separate entry + static import (dev runtime no longer crashes with MODULE_NOT_FOUND)
+- Network: koffi GetLastError prototype form (`int __stdcall GetLastError()`), real win32 error codes surfaced
+
+### Verified
+- First real live capture closure in admin-mode dev: capturing → 1910 packets → target match (10.199.194.75:8080) → stop → clear
+- desktop network tests 71 PASS / 0 FAIL; app network tests 10 PASS / 0 FAIL; typecheck exit=0 both packages

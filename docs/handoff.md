@@ -72,3 +72,37 @@
 - Network panel only renders when in an active session (by design)
 - V2Actions Terminal|Network buttons only visible when isDesktop() is true
 - Free models section shows even when no free models available (minor UI issue)
+
+---
+
+## CHANGE-023 Handoff (2026-08-26) — WinDivert Dev Runtime + Live Capture Closure
+
+### What landed
+- `networkResourcesDir()` unified helper (resources.ts): dev → packages/desktop/resources, packaged → process.resourcesPath
+- Native bridge init errors surfaced: structured log + `setNativeBridgeError()` + real root cause in renderer (Chinese mapping via `networkErrorText()`)
+- Light-theme buttons fixed: ButtonV2 replaces hardcoded dark inline styles
+- capture-worker: separate rollup entry (`out/main/capture-worker.js`) + static import of ./native
+- GetLastError via koffi prototype form — real win32 codes (e.g. 87 on bad filter)
+- network-start IPC defensive re-validation; empty filter explicitly allowed
+
+### First REAL live capture (admin-mode dev)
+click 开始抓包 → capturing → packetCount=1910 → match row
+`→ 10.1.224.6:54427 → 10.199.194.75:8080 TCP 52` → stop stable → clear=0.
+Screenshots: artifacts/runtime/network-live-{capturing,packets}.png, network-buttons-{light,dark}.png
+
+### Tests
+desktop network 71/0 · app network 10/0 · typecheck exit=0 (both).
+App-wide 12 pre-existing failures (server-session/i18n/deep-links) confirmed on HEAD via stash.
+
+### Dev-run-as-admin note
+Desktop launcher: `D:\Desktop\HSCode-管理员启动.bat` → pwsh7 self-elevating ps1.
+WinDivert requires admin; non-admin now shows 中文提示 instead of raw error.
+Verification scripts kept in scripts/: live-capture-verify.cjs, theme-buttons-shot.cjs.
+
+## Known Issues (updated)
+
+- Network panel only renders when in an active session (by design)
+- V2Actions Terminal|Network buttons only visible when isDesktop() is true
+- Free models section shows even when no free models available (minor UI issue)
+- App-wide test suite has 12 pre-existing failures (server-session/i18n/deep-links) unrelated to network work
+- Non-admin capture start surfaces ADMIN_REQUIRED Chinese hint; live capture requires admin relaunch

@@ -53,6 +53,10 @@ export function registerNetworkIpc(deps: NetworkIpcDeps): () => void {
     }
   })
   ipcMain.handle("network-start", (_event, filter: string) => {
+    // Defensive re-validation at the IPC boundary: the renderer validates
+    // before start, but nothing else should be able to bypass it.
+    // An empty filter is explicitly allowed (parseFilter("") → "true" → capture all).
+    service.validateFilter(filter ?? "")
     service.start(filter ?? "")
     return service.snapshot()
   })
@@ -88,10 +92,13 @@ export function registerNetworkIpc(deps: NetworkIpcDeps): () => void {
   }
 }
 
-/** Default worker spawner using node:worker_threads (used by desktop main). */
+/** Default worker spawner using node:worker_threads (used by desktop main).
+ *  Points at the bundled out/main/capture-worker.js entry (see
+ *  electron.vite.config.ts build.rollupOptions.input) — NOT the .ts source,
+ *  which does not exist at runtime. */
 export function createWorkerSpawner(): WorkerSpawner {
   return (input) => {
-    const worker = new Worker(new URL("./capture-worker.ts", import.meta.url), {
+    const worker = new Worker(new URL("./capture-worker.js", import.meta.url), {
       workerData: input,
     })
     return worker as unknown as ReturnType<WorkerSpawner>

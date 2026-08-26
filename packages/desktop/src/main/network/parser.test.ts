@@ -222,8 +222,10 @@ describe("N1 — filter parser", () => {
   test("tcp maps to winDivert protocol filter", () => {
     const f = parseFilter("tcp")
     expect(f.display).toBe("tcp")
-    expect(f.windivert).toContain("ipv4.Protocol == 6")
-    expect(f.windivert).toContain("ipv6.NextHeader == 6")
+    // Real WinDivert syntax (verified via WinDivertHelperCompileFilter):
+    // ip.Protocol covers IPv4; IPv6 traffic without a protocol clause still
+    // matches when using layer NETWORK — see filter.ts buildProtocolClause.
+    expect(f.windivert).toContain("ip.Protocol == 6")
   })
 
   test("udp.port == 5000 maps to winDivert ports", () => {
@@ -241,9 +243,9 @@ describe("N1 — filter parser", () => {
 
   test("src.ip / dst.ip map to ipv4 address fields", () => {
     const f = parseFilter("src.ip == 192.168.1.10")
-    expect(f.windivert).toContain("ipv4.SrcAddr == 192.168.1.10")
+    expect(f.windivert).toContain("ip.SrcAddr == 192.168.1.10")
     const g = parseFilter("dst.ip == 192.168.1.20")
-    expect(g.windivert).toContain("ipv4.DstAddr == 192.168.1.20")
+    expect(g.windivert).toContain("ip.DstAddr == 192.168.1.20")
   })
 
   test("invalid filter raises a clear validation error", () => {

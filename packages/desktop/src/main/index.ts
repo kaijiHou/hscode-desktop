@@ -51,7 +51,9 @@ import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 import { APP_IDS, APP_NAMES } from "./app-identity"
 import { registerNetworkIpc, createWorkerSpawner } from "./network/network-ipc"
-import { makeNativeBridge } from "./network/native"
+import { makeNativeBridge, dllPath } from "./network/native"
+import { networkResourcesDir } from "./network/resources"
+import { existsSync } from "node:fs"
 import { CaptureService } from "./network/capture-service"
 
 export const networkService = new CaptureService({}, createWorkerSpawner())
@@ -349,15 +351,50 @@ const main = Effect.gen(function* () {
   registerWslIpcHandlers(wslServers)
   registerNetworkIpc({
     service: networkService,
-    // dev: out/main → ../.. = packages/desktop（resources/win 在其下）
-    // packaged: electron-builder 把 resources/win 复制到 resourcesPath
-    getResourcesDir: () => (app.isPackaged ? process.resourcesPath : join(import.meta.dirname, "../..")),
+    // Single source of truth: networkResourcesDir() (see ./network/resources).
+    // dev: app.getAppPath() = packages/desktop → resources/win/WinDivert.dll
+    // packaged: process.resourcesPath → win/WinDivert.dll
+    getResourcesDir: () => {
+      const dir = networkResourcesDir({
+        isPackaged: app.isPackaged,
+        appPath: app.getAppPath(),
+        resourcesPath: process.resourcesPath,
+      })
+      writeLog("main", "[hscode:network] native resources", {
+        resourcesDir: dir,
+        dllPath: dllPath(dir),
+        dllExists: existsSync(dllPath(dir)),
+        sysPath: join(dir, "win", "WinDivert64.sys"),
+        sysExists: existsSync(join(dir, "win", "WinDivert64.sys")),
+      })
+      return dir
+    },
     getNativeBridge: () => {
       try {
-        const dir = app.isPackaged ? process.resourcesPath : join(import.meta.dirname, "../..")
+        const dir = networkResourcesDir({
+          isPackaged: app.isPackaged,
+          appPath: app.getAppPath(),
+          resourcesPath: process.resourcesPath,
+        })
         const bridge = makeNativeBridge(dir)
+        writeLog("main", "[hscode:network] native bridge initialized")
         return { validateFilter: (f: string) => bridge.validateFilter(f) }
-      } catch { return null }
+      } catch (error) {
+        // Never swallow native init failures — the renderer must see the real
+        // root cause (DLL_NOT_FOUND / DLL_LOAD_FAILED / UNSUPPORTED_PLATFORM...).
+        const err = error as { code?: string; message?: string }
+        writeLog(
+          "main",
+          "[hscode:network] native bridge init failed",
+          { code: err.code ?? "UNKNOWN", message: err.message ?? String(error) },
+          "error",
+        )
+        networkService.setNativeBridgeError({
+          code: (err.code ?? "UNKNOWN") as never,
+          message: err.message ?? String(error),
+        })
+        return null
+      }
     },
   })
   void updater.start()

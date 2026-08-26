@@ -1,8 +1,10 @@
 // HSCode Network Inspector — capture worker thread.
 // Runs the blocking WinDivert recv loop off the Electron main thread.
-// Loaded via `new Worker(new URL("./capture-worker.ts", import.meta.url))`.
+// Bundled as a separate rollup entry: out/main/capture-worker.js.
 
 import { parentPort, workerData } from "node:worker_threads"
+
+import { KoffiNativeBridge } from "./native"
 
 export interface CaptureWorkerInput {
   dllPath: string
@@ -29,8 +31,9 @@ const { dllPath: workerDll, filter } = workerData as CaptureWorkerInput
 let running = true
 
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { KoffiNativeBridge } = require("./native") as typeof import("./native")
+  // Static import: the worker is a SEPARATE rollup entry (out/main/capture-worker.js),
+  // so a runtime require("./native") would resolve against out/main and fail with
+  // MODULE_NOT_FOUND — bundling inlines the dependency instead.
   const bridge = new KoffiNativeBridge(workerDll)
   const handle = bridge.open(filter)
 

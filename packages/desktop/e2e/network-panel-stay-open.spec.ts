@@ -100,11 +100,36 @@ async function getButtonPos(session: CDPSession, text: string): Promise<{ x: num
   return pos
 }
 
-async function isPanelVisible(session: CDPSession, selector: string): Promise<{ visible: boolean; height: number }> {
+async function getPanelGeometry(session: CDPSession, selector: string) {
   const raw = await session.evaluate(
-    `JSON.stringify({ visible: !!document.querySelector(${JSON.stringify(selector)}), height: document.querySelector(${JSON.stringify(selector)})?.offsetHeight || 0 })`,
+    `JSON.stringify((() => {
+      const el = document.querySelector(${JSON.stringify(selector)})
+      if (!el) return { exists: false, width: 0, height: 0, left: 0, right: 0, top: 0, bottom: 0 }
+      const r = el.getBoundingClientRect()
+      return {
+        exists: true,
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+        left: Math.round(r.left),
+        right: Math.round(r.right),
+        top: Math.round(r.top),
+        bottom: Math.round(r.bottom),
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      }
+    })())`,
   )
   return JSON.parse(raw)
+}
+
+function assertVisibleInViewport(geom: any, label: string, minWidth = 300, minHeight = 100) {
+  expect(geom.exists, label + " should exist").toBe(true)
+  expect(geom.width, label + " width should be >= " + minWidth).toBeGreaterThanOrEqual(minWidth)
+  expect(geom.height, label + " height should be >= " + minHeight).toBeGreaterThanOrEqual(minHeight)
+  expect(geom.left, label + " left < viewport width").toBeLessThan(geom.viewportWidth)
+  expect(geom.right, label + " right > 0").toBeGreaterThan(0)
+  expect(geom.top, label + " top < viewport height").toBeLessThan(geom.viewportHeight)
+  expect(geom.bottom, label + " bottom > 0").toBeGreaterThan(0)
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -129,8 +154,8 @@ describe("Network panel 3-second stay-open E2E", () => {
     await sleep(5000)
 
     // Verify initial state: both panels hidden
-    const netBefore = await isPanelVisible(session, "#network-panel")
-    expect(netBefore.visible, "Network panel should be hidden initially").toBe(false)
+    const netBefore = await getPanelGeometry(session, "#network-panel")
+    expect(netBefore.exists, "Network panel should not exist initially").toBe(false)
 
     // Real click via CDP Input.dispatchMouseEvent
     const pos = await getButtonPos(session, "网络抓包")
@@ -142,9 +167,8 @@ describe("Network panel 3-second stay-open E2E", () => {
     for (const target of checkpoints) {
       const elapsed = Date.now() - clickStart
       if (elapsed < target) await sleep(target - elapsed)
-      const state = await isPanelVisible(session, "#network-panel")
-      expect(state.visible, `Network panel visible at ${target}ms (actual: ${Date.now() - clickStart}ms)`).toBe(true)
-      expect(state.height, `Network panel has height at ${target}ms`).toBeGreaterThan(0)
+      const state = await getPanelGeometry(session, "#network-panel")
+      assertVisibleInViewport(state, `Network at ${target}ms`)
     }
 
     await session.screenshot("network-direct-3s.png")
@@ -167,8 +191,8 @@ describe("Network panel 3-second stay-open E2E", () => {
     // Assert: Terminal visible, Network hidden
     const termAfter = await isPanelVisible(session, "#terminal-panel")
     expect(termAfter.visible, "Terminal panel should be visible after clicking 终端").toBe(true)
-    const netAfterTerm = await isPanelVisible(session, "#network-panel")
-    expect(netAfterTerm.visible, "Network panel should be hidden after clicking 终端").toBe(false)
+    const netAfterTerm = await getPanelGeometry(session, "#network-panel")
+    expect(netAfterTerm.exists, "Network panel should not exist after clicking 终端").toBe(false)
 
     // Click Network
     const netPos = await getButtonPos(session, "网络抓包")
@@ -180,11 +204,10 @@ describe("Network panel 3-second stay-open E2E", () => {
     for (const target of checkpoints) {
       const elapsed = Date.now() - clickStart
       if (elapsed < target) await sleep(target - elapsed)
-      const net = await isPanelVisible(session, "#network-panel")
-      const term = await isPanelVisible(session, "#terminal-panel")
-      expect(net.visible, `Network visible at ${target}ms`).toBe(true)
-      expect(net.height, `Network has height at ${target}ms`).toBeGreaterThan(0)
-      expect(term.visible, `Terminal hidden at ${target}ms`).toBe(false)
+      const net = await getPanelGeometry(session, "#network-panel")
+      const term = await getPanelGeometry(session, "#terminal-panel")
+      assertVisibleInViewport(net, `Network at ${target}ms`)
+      expect(term.exists, `Terminal hidden at ${target}ms`).toBe(false)
     }
 
     await session.screenshot("network-terminal-to-network-3s.png")

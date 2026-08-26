@@ -4,7 +4,7 @@
 
 import { For, Show, createMemo, createSignal, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { JSX } from "solid-js"
+import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { buildFilter, type FilterState } from "./filter-builder"
 
@@ -295,15 +295,15 @@ export function NetworkPanel() {
           aria-label="Network filter"
           class="flex-1 min-w-0 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-14-regular"
         />
-        <button onClick={() => void start()} disabled={isCapturing() || !api} class="btn-outline btn-sm" style={btnStyle}>
+        <ButtonV2 size="small" onClick={() => void start()} disabled={isCapturing() || !api}>
           开始抓包
-        </button>
-        <button onClick={() => void stop()} disabled={!isCapturing() || !api} class="btn-outline btn-sm" style={btnStyle}>
+        </ButtonV2>
+        <ButtonV2 size="small" variant="danger" onClick={() => void stop()} disabled={!isCapturing() || !api}>
           停止抓包
-        </button>
-        <button onClick={() => void clear()} class="btn-outline btn-sm" style={btnStyle}>
+        </ButtonV2>
+        <ButtonV2 size="small" variant="ghost" onClick={() => void clear()}>
           清空
-        </button>
+        </ButtonV2>
       </div>
 
       <Show when={engineUnavailable}>
@@ -312,14 +312,14 @@ export function NetworkPanel() {
         </div>
       </Show>
       <Show when={filterError()}>
-        <div class="px-3 py-1" style={{ color: "#f44336" }}>{filterError()}</div>
+        <div class="px-3 py-1" style={{ color: "#f44336", "white-space": "pre-wrap" }}>{networkErrorText(undefined, filterError())}</div>
       </Show>
       <Show when={loadError()}>
         <div class="px-3 py-1" style={{ color: "#f44336" }}>{loadError()}</div>
       </Show>
       <Show when={snapshot.state === "error" && snapshot.error}>
         <div class="px-3 py-2 border-b border-border-weaker-base" style={{ color: "#f44336", "white-space": "pre-wrap" }}>
-          {snapshot.error?.message ?? "抓包错误"}
+          {networkErrorText(snapshot.error?.code, snapshot.error?.message)}
         </div>
       </Show>
 
@@ -407,11 +407,22 @@ export function NetworkPanel() {
   )
 }
 
-const btnStyle: JSX.CSSProperties = {
-  padding: "2px 10px",
-  background: "var(--surface-2, #2a2a2a)",
-  color: "inherit",
-  border: "1px solid var(--border-1, #444)",
-  "border-radius": "4px",
-  cursor: "pointer",
+// Chinese error mapping — the renderer must show a readable reason, not raw codes.
+// Dev mode keeps the technical code visible after the Chinese message.
+export function networkErrorText(code: string | undefined, message: string | undefined): string {
+  const devHint = message ? `\n${message}` : ""
+  switch (code) {
+    case "DLL_NOT_FOUND":
+      return `网络抓包组件缺失，请重新安装或修复 HSCode。${devHint}`
+    case "DLL_LOAD_FAILED":
+      return `网络抓包组件加载失败。${devHint}`
+    case "ADMIN_REQUIRED":
+      return "网络抓包需要管理员权限，请以管理员身份重新启动 HSCode。"
+    case "DRIVER_MISSING":
+      return `WinDivert 驱动未找到或启动失败。${devHint}`
+    case "NATIVE_VALIDATOR_UNAVAILABLE":
+      return `网络抓包引擎未初始化。${devHint}`
+    default:
+      return message || code || "未知错误"
+  }
 }

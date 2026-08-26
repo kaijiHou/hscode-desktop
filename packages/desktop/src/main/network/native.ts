@@ -63,7 +63,8 @@ export function dllPath(resourcesDir: string): string {
 }
 
 interface KoffiLib {
-  func(name: string, ret: string, args?: string[]): (...args: unknown[]) => unknown
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-generics
+  func(signatureOrName: string, ret?: string, args?: string[]): (...args: unknown[]) => unknown
 }
 
 type KoffiRuntime = {
@@ -132,10 +133,13 @@ export class KoffiNativeBridge implements NativeBridge {
       throw new NativeBridgeError("DLL_LOAD_FAILED", `WinDivert.dll exports missing: ${String(error)}`)
     }
 
-    // Kernel32 GetLastError for accurate error mapping.
+    // Kernel32 GetLastError for accurate error mapping. MUST use the
+    // prototype form ("int __stdcall GetLastError()") — the (name, ret, args)
+    // form fails to resolve the symbol on koffi 3.x. Call it immediately after
+    // the failing foreign call, before any other JS work resets the TLS value.
     try {
       const kernel32 = rt.load("kernel32.dll")
-      this.fnGetLastError = kernel32.func("GetLastError", "int") as never
+      this.fnGetLastError = kernel32.func("int __stdcall GetLastError()") as never
     } catch {
       this.fnGetLastError = () => 0
     }

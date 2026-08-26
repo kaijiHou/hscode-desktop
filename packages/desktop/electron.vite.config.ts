@@ -22,7 +22,14 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        input: { index: "src/main/index.ts", sidecar: "src/main/sidecar.ts" },
+        input: {
+          index: "src/main/index.ts",
+          sidecar: "src/main/sidecar.ts",
+          // HSCode Network Inspector: capture worker must be a separate bundle
+          // entry, otherwise `new Worker(...)` at runtime points to a .ts file
+          // that does not exist in out/main → MODULE_NOT_FOUND / instant crash.
+          "capture-worker": "src/main/network/capture-worker.ts",
+        },
         // Keep this identical to electron-vite's Node 20.11+ shim. Its regex insertion can
         // corrupt bundled TypeScript, while a Rollup banner places the shim safely.
         output: {

@@ -19,6 +19,29 @@ describe("CaptureService.validateFilter — native bridge unavailable", () => {
     expect(() => service.validateFilter("tcp")).toThrow("NATIVE_VALIDATOR_UNAVAILABLE")
   })
 
+  test("setNativeBridgeError → validateFilter throws the REAL root cause, not generic", () => {
+    const service = makeService()
+    service.setNativeBridgeError({ code: "DLL_NOT_FOUND", message: "WinDivert.dll not found: C:\\bad\\path.dll" })
+    let message = ""
+    try {
+      service.validateFilter("tcp")
+    } catch (error) {
+      message = (error as Error).message
+    }
+    expect(message).toContain("DLL_NOT_FOUND")
+    expect(message).toContain("C:\\bad\\path.dll")
+    expect(message).not.toContain("NATIVE_VALIDATOR_UNAVAILABLE")
+  })
+
+  test("setNativeBridge clears the recorded error", () => {
+    const service = makeService()
+    service.setNativeBridgeError({ code: "DLL_LOAD_FAILED", message: "load failed" })
+    expect(service.nativeInitError?.code).toBe("DLL_LOAD_FAILED")
+    service.setNativeBridge({ validateFilter: () => true })
+    expect(service.nativeInitError).toBeNull()
+    expect(service.validateFilter("tcp")).toBeTruthy()
+  })
+
   test("empty filter still passes (no native validation needed)", () => {
     const service = makeService()
     // Empty filter → windivert is "true" → skip native validation

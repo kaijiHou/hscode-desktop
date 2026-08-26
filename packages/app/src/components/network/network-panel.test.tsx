@@ -31,6 +31,30 @@ describe("UI-1 — Network panel renders Start/Stop/Clear/filter", () => {
     expect(src).toContain("Failed to load packets:")
     expect(src).toContain("Failed to load packet detail:")
   })
+
+  test("action buttons use theme-aware ButtonV2 — no dark hardcoded inline style", async () => {
+    const src = await Bun.file(`${import.meta.dir}/network-panel.tsx`).text()
+    // theme-aware component, not raw <button> with hardcoded dark colors
+    expect(src).toContain('@opencode-ai/ui/v2/button-v2"')
+    expect(src).not.toContain("#2a2a2a")
+    expect(src).not.toContain('"1px solid var(--border-1')
+    expect(src).not.toContain("const btnStyle")
+    expect(src).not.toContain('class="btn-outline btn-sm"')
+  })
+
+  test("errors are mapped to readable Chinese text with real root cause", async () => {
+    const mod = await import("./network-panel")
+    expect(typeof mod.networkErrorText).toBe("function")
+    expect(mod.networkErrorText("ADMIN_REQUIRED", "win32 error 5")).toBe(
+      "网络抓包需要管理员权限，请以管理员身份重新启动 HSCode。",
+    )
+    expect(mod.networkErrorText("DLL_NOT_FOUND", "missing at C:\\x")).toContain("网络抓包组件缺失")
+    expect(mod.networkErrorText("DLL_LOAD_FAILED", "boom")).toContain("网络抓包组件加载失败")
+    expect(mod.networkErrorText("DRIVER_MISSING", "sys")).toContain("WinDivert 驱动未找到或启动失败")
+    expect(mod.networkErrorText("NATIVE_VALIDATOR_UNAVAILABLE", undefined)).toContain("网络抓包引擎未初始化")
+    // unknown codes keep the technical message visible (dev diagnosability)
+    expect(mod.networkErrorText(undefined, "raw message")).toBe("raw message")
+  })
 })
 
 // ---- UI-4: command palette entry -------------------------------------------

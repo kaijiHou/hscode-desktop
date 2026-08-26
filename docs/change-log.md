@@ -454,3 +454,62 @@ Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后�
 ### 验证
 - 真实 dev 启动：窗口标题 HSCode、sidecar 连接、loading 完成。
 - 首次启动发现的 host context 崩溃已修复并加回归测试。
+
+---
+
+## CHANGE-023 — WinDivert Dev Runtime + Theme Button + Live Capture Closure
+
+**日期**：2026-08-26
+
+### 修改了什么
+修复网络抓包开发模式四大缺陷，跑通首次真实抓包闭环。
+
+1. **dev resources 路径**：新增 `packages/desktop/src/main/network/resources.ts`
+   （`networkResourcesDir()` 唯一来源）。dev = `app.getAppPath()/resources`，
+   packaged = `process.resourcesPath`。`index.ts` 的 getResourcesDir/getNativeBridge
+   统一走该 helper。旧逻辑拼出 `packages/desktop/win/`（缺 resources 层）→ DLL_NOT_FOUND。
+2. **初始化错误不吞掉**：`getNativeBridge` 的空 catch 改为结构化日志 +
+   `networkService.setNativeBridgeError()`；`validateFilter` 无 bridge 时优先抛
+   真实根因（DLL_NOT_FOUND 等），不再统一泛化成 NATIVE_VALIDATOR_UNAVAILABLE。
+3. **浅色主题按钮**：NetworkPanel 三个动作按钮从裸 button + 深色 inline style
+   （#2a2a2a/#444/color:inherit）改为项目 `ButtonV2`（neutral/danger/ghost）。
+   新增 `networkErrorText()` 中文化错误映射（DLL_NOT_FOUND/DLL_LOAD_FAILED/
+   ADMIN_REQUIRED/DRIVER_MISSING/NATIVE_VALIDATOR_UNAVAILABLE）。
+4. **capture worker 双修复**：
+   - electron.vite.config.ts main.build.rollupOptions.input 增加
+     `"capture-worker"` 入口 → 生成 `out/main/capture-worker.js`；
+     spawner 从 `.ts` 改指 `.js`（原运行时 MODULE_NOT_FOUND）。
+   - capture-worker.ts 内 `require("./native")` 改为静态 import
+     （独立 bundle 下相对 require 解析失败）。
+5. **GetLastError 修复**：koffi 3.x 必须用原型式
+   `func("int __stdcall GetLastError()")`；旧 (name, ret, args) 形式解析失败
+   返回恒 0（实测坏 filter 得 win32 error 87 而非 0）。
+6. **IPC 防御**：`network-start` 先 `validateFilter` 再 `start`；
+   空 filter 明确放行（parseFilter("") → "true" 抓全部）。
+7. **测试断言修正**：parser.test.ts 两条陈旧断言（ipv4.Protocol→ip.Protocol，
+   上轮 filter 语法修正遗漏）。
+
+### 为什么
+用户真实运行截图证明：NATIVE_VALIDATOR_UNAVAILABLE 直接显示、三按钮浅色主题
+不可读、点击开始抓包无任何反应。上一轮"测试绿"但真实链路断裂（false-green）。
+
+### 涉及文件
+- 新增：`src/main/network/resources.ts(+test)`、`scripts/live-capture-verify.cjs`、
+  `scripts/theme-buttons-shot.cjs`
+- 修改：`index.ts`、`capture-service.ts(+test)`、`network-ipc.ts`、`native.ts`、
+  `capture-worker.ts`、`electron.vite.config.ts`、`network-panel.tsx(+test)`、`parser.test.ts`
+
+### 是否影响原功能
+不影响。packaged 路径行为不变；worker 仅修打包引用；UI 按钮换组件不改交互。
+
+### 如何验证 / 结果
+- 单测：desktop network **71 PASS / 0 FAIL**（含新增 DLL/SYS 实存检查、
+  makeNativeBridge 成功、DLL_NOT_FOUND 非静默）；app network **10 PASS / 0 FAIL**。
+  全量 app 其余 12 fail 为 HEAD 预存（git stash 对照确认，与本轮无关）。
+- typecheck：desktop + app 均 exit=0。
+- **真实抓包闭环（管理员模式 dev，CDP 驱动）**：
+  开始抓包 → capturing → packetCount=1910 → 目标匹配包
+  （10.1.224.6:54427 → 10.199.194.75:8080 TCP 52）→ stop 计数稳定 → clear 归零。
+- 截图：artifacts/runtime/network-live-capturing.png、network-live-packets.png、
+  network-buttons-light.png、network-buttons-dark.png。
+- 按钮对比度探针：light 白底黑字 rgb(255,255,255)/rgb(22,22,22)；dark 反之。

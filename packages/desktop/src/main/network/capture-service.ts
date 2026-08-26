@@ -13,6 +13,7 @@ import {
   DetailCache,
   PacketRingBuffer,
 } from "./capture-service-core"
+import type { CaptureError } from "./capture-service-core"
 import type { PacketDetail, PacketSummary } from "./parser"
 import { buildDetail, parsePacket } from "./parser"
 
@@ -52,6 +53,7 @@ export class CaptureService extends EventEmitter {
   private worker: WorkerLike | null = null
   private resourcesDir = ""
   private nativeBridge: { validateFilter(f: string): boolean } | null = null
+  private nativeBridgeError: CaptureError | null = null
 
   constructor(options: CaptureServiceOptions = {}, spawnWorker?: WorkerSpawner) {
     super()
@@ -70,6 +72,19 @@ export class CaptureService extends EventEmitter {
 
   setNativeBridge(bridge: { validateFilter(f: string): boolean }): void {
     this.nativeBridge = bridge
+    this.nativeBridgeError = null
+  }
+
+  /** Record why the native bridge is unavailable, so validateFilter can throw
+   *  the real root cause (DLL_NOT_FOUND / DLL_LOAD_FAILED / ...) instead of a
+   *  generic NATIVE_VALIDATOR_UNAVAILABLE. */
+  setNativeBridgeError(error: CaptureError): void {
+    this.nativeBridge = null
+    this.nativeBridgeError = error
+  }
+
+  get nativeInitError(): CaptureError | null {
+    return this.nativeBridgeError
   }
 
   get state() {
@@ -93,11 +108,17 @@ export class CaptureService extends EventEmitter {
   }
 
   /** Validate a filter through HSCode grammar + WinDivert native compile.
-   *  If native bridge is unavailable, throws rather than silently passing. */
+   *  If native bridge is unavailable, throws the recorded init error (real root
+   *  cause) rather than silently passing or a generic unavailable message. */
   validateFilter(input: string): string {
     const parsed = parseFilter(input)
     if (parsed.windivert === "true") return parsed.display
     if (!this.nativeBridge) {
+      if (this.nativeBridgeError) {
+        throw new FilterValidationError(
+          `${this.nativeBridgeError.code}: ${this.nativeBridgeError.message}`,
+        )
+      }
       throw new FilterValidationError(
         "NATIVE_VALIDATOR_UNAVAILABLE: WinDivert native bridge is not initialized. " +
         "Filter validation requires the WinDivert DLL.",
