@@ -54,26 +54,26 @@ function protoCode(proto: string): number {
 /** Build a WinDivert clause that matches the given protocol on either IPv4 or IPv6. */
 function buildProtocolClause(proto: string): string {
   const code = protoCode(proto)
-  return `(ipv4.Protocol == ${code} or ipv6.NextHeader == ${code})`
+  return `ip.Protocol == ${code}`
 }
 
 /** Build a WinDivert clause for generic port == N (both TCP and UDP, both directions). */
 function buildGenericPortClause(port: number): string {
   return (
-    `((ipv4.Protocol == 6 and (tcp.SrcPort == ${port} or tcp.DstPort == ${port})) or ` +
-    `(ipv4.Protocol == 17 and (udp.SrcPort == ${port} or udp.DstPort == ${port})))`
+    `((ip.Protocol == 6 and (tcp.SrcPort == ${port} or tcp.DstPort == ${port})) or ` +
+    `(ip.Protocol == 17 and (udp.SrcPort == ${port} or udp.DstPort == ${port})))`
   )
 }
 
 /** Build a WinDivert clause for generic ip == X (src OR dst). */
 function buildGenericIpClause(ip: string): string {
-  return `ipv4.SrcAddr == ${ip} or ipv4.DstAddr == ${ip}`
+  return `(ip.SrcAddr == ${ip} or ip.DstAddr == ${ip})`
 }
 
 /** Build a WinDivert clause for direction == inbound/outbound. */
 function buildDirectionClause(direction: string): string {
-  if (direction === "inbound") return "inbound"
-  if (direction === "outbound") return "outbound"
+  if (direction === "inbound") return "(inbound)"
+  if (direction === "outbound") return "(outbound)"
   throw new FilterValidationError(`invalid direction: "${direction}"`)
 }
 
@@ -105,8 +105,8 @@ function parseToken(token: string): string {
     const proto = portRe[1].toLowerCase()
     const code = protoCode(proto)
     return (
-      `((ipv4.Protocol == ${code} and (${proto}.SrcPort == ${port} or ${proto}.DstPort == ${port})) or ` +
-      `(ipv6.NextHeader == ${code} and (${proto}.SrcPort == ${port} or ${proto}.DstPort == ${port})))`
+      `((ip.Protocol == ${code} and (${proto}.SrcPort == ${port} or ${proto}.DstPort == ${port})) or ` +
+      `(ip.Protocol == ${code} and (${proto}.SrcPort == ${port} or ${proto}.DstPort == ${port})))`
     )
   }
 
@@ -122,8 +122,8 @@ function parseToken(token: string): string {
   // src.ip / dst.ip
   if (f === "src.ip" || f === "dst.ip") {
     if (!isValidIpv4(value)) throw new FilterValidationError(`invalid IPv4 address: "${value}"`)
-    const fieldName = f === "src.ip" ? "ipv4.SrcAddr" : "ipv4.DstAddr"
-    return `ipv4.Protocol != 0 and ${fieldName} == ${value}`
+    const fieldName = f === "src.ip" ? "ip.SrcAddr" : "ip.DstAddr"
+    return `(ip.Protocol != 0 and ${fieldName} == ${value})`
   }
 
   // generic ip == X

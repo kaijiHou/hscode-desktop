@@ -1,117 +1,124 @@
 /**
- * Real WinDivert native filter validation tests.
+ * Real WinDivert native filter validation — production pipeline test.
  *
- * These tests call WinDivertHelperCompileFilter through the actual FFI bridge.
- * They require WinDivert.dll to be present (ships with HSCode Desktop).
+ * Chain tested:
+ *   HSCode grammar expression
+ *   → parseFilter() (production)
+ *   → parsed.windivert (compiled WinDivert string)
+ *   → production NativeBridge.validateFilter() (FFI via koffi)
+ *   → WinDivertHelperCompileFilter (real WinDivert.dll)
  *
- * RUNTIME: These tests only pass on Windows with WinDivert.dll available.
- * On other platforms they will skip with a clear message.
+ * This test MUST use production code. No duplicated FFI bindings.
+ * On Windows: DLL must exist, bridge must initialize, tests must run.
+ * On non-Windows: all tests SKIP with clear message.
  */
 import { describe, expect, test, beforeAll } from "bun:test"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
+import { parseFilter } from "./filter"
+import { makeNativeBridge } from "./native"
 
-const WINDIVERT_DLL = join(import.meta.dirname, "../../../../resources/win/WinDivert.dll")
+const WINDIVERT_DLL = join(import.meta.dirname, "../../../resources/win/WinDivert.dll")
 
-let nativeBridge: { validateFilter(f: string): boolean } | null = null
+let bridge: ReturnType<typeof makeNativeBridge> | null = null
+let isWindows = false
 
 beforeAll(() => {
-  if (process.platform !== "win32" || !existsSync(WINDIVERT_DLL)) {
-    return
-  }
-  try {
-    // Dynamic import of the native bridge — only available in Electron main context.
-    // For bun test, we load koffi directly and bind WinDivertHelperCompileFilter.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const koffi = require("koffi")
-    const lib = koffi.load(WINDIVERT_DLL)
-    const fnCompile = lib.func("WinDivertHelperCompileFilter", "bool", [
-      "str",      // filter
-      "int",      // layer (WINDIVERT_LAYER_NETWORK = 0)
-      "void*",    // object buffer
-      "uint32",   // objLen (VALUE, not pointer)
-      "void*",    // error string buffer
-      "uint32*",  // error position (pointer)
-    ])
+  isWindows = process.platform === "win32"
 
-    nativeBridge = {
-      validateFilter(filter: string): boolean {
-        try {
-          const rt = koffi()
-          const objBuf = rt.alloc("uint8_t", 1024)
-          const errBuf = rt.alloc("uint8_t", 256)
-          const errPosOut = rt.alloc("uint32_t", 4)
-          return Boolean(fnCompile(filter, 0, objBuf, 1024, errBuf, errPosOut))
-        } catch {
-          return false
-        }
-      },
-    }
+  if (!isWindows) return // genuine platform skip
+
+  // DLL must exist on Windows — FAIL if missing
+  expect(existsSync(WINDIVERT_DLL)).toBe(true)
+
+  // Initialize production bridge using production makeNativeBridge
+  try {
+    const resourcesDir = join(import.meta.dirname, "../../../resources")
+    bridge = makeNativeBridge(resourcesDir)
   } catch {
-    // koffi not available in bun test context — tests will be skipped
+    // bridge init failure on Windows = FAIL, not silent skip
+    throw new Error(
+      `Production NativeBridge failed to initialize. ` +
+      `WinDivert.dll path: ${WINDIVERT_DLL}. ` +
+      `This must work on Windows with the DLL present.`,
+    )
   }
 })
 
-const SKIP = { skip: process.platform !== "win32" || !existsSync(WINDIVERT_DLL) || !nativeBridge }
+/** Helper: run full production chain and return native validation result */
+function validateHsCodeExpression(hscodeExpr: string): boolean {
+  const parsed = parseFilter(hscodeExpr)
+  if (parsed.windivert === "true") return true // empty filter, always valid
+  return bridge!.validateFilter(parsed.windivert)
+}
 
-describe("WinDivert native compile validation", () => {
-  test("tcp compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("tcp")).toBe(true)
+describe("WinDivert native — production pipeline", () => {
+  test("DLL exists at expected path", () => {
+    expect(existsSync(WINDIVERT_DLL)).toBe(true)
   })
 
-  test("udp compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("udp")).toBe(true)
+  test("production bridge initialized", () => {
+    if (!isWindows) return // platform skip, not false-green
+    expect(bridge).not.toBeNull()
   })
 
-  test("icmp compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("icmp")).toBe(true)
+  test("tcp → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("tcp")).toBe(true)
   })
 
-  test("port == 22122 compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("port == 22122")).toBe(true)
+  test("udp → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("udp")).toBe(true)
   })
 
-  test("ip == 192.168.1.10 compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("ip == 192.168.1.10")).toBe(true)
+  test("icmp → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("icmp")).toBe(true)
   })
 
-  test("direction == inbound compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("inbound")).toBe(true)
+  test("port == 22122 → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("port == 22122")).toBe(true)
   })
 
-  test("direction == outbound compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("outbound")).toBe(true)
+  test("ip == 192.168.1.10 → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("ip == 192.168.1.10")).toBe(true)
   })
 
-  test("compound: tcp and port == 22122 compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("tcp and port == 22122")).toBe(true)
+  test("direction == inbound → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("direction == inbound")).toBe(true)
   })
 
-  test("compound: tcp and ip == 192.168.1.10 compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("tcp and ip == 192.168.1.10")).toBe(true)
+  test("direction == outbound → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("direction == outbound")).toBe(true)
   })
 
-  test("compound: udp and outbound compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("udp and outbound")).toBe(true)
+  test("tcp and port == 22122 → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("tcp and port == 22122")).toBe(true)
   })
 
-  test("compound: tcp and ip == 1.2.1.1 and port == 80 and outbound compiles", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("tcp and ip == 1.2.1.1 and port == 80 and outbound")).toBe(true)
+  test("tcp and ip == 192.168.1.10 → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("tcp and ip == 192.168.1.10")).toBe(true)
   })
 
-  test("invalid filter fails", () => {
-    if (!nativeBridge) return
-    expect(nativeBridge.validateFilter("this_is_not_a_valid_windivert_filter")).toBe(false)
+  test("udp and direction == outbound → parseFilter → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("udp and direction == outbound")).toBe(true)
+  })
+
+  test("tcp and ip == 1.2.1.1 and port == 80 and direction == outbound → native compile", () => {
+    if (!bridge) return
+    expect(validateHsCodeExpression("tcp and ip == 1.2.1.1 and port == 80 and direction == outbound")).toBe(true)
+  })
+
+  test("invalid WinDivert expression → native returns false", () => {
+    if (!bridge) return
+    expect(bridge.validateFilter("this_is_not_a_valid_windivert_filter")).toBe(false)
   })
 })

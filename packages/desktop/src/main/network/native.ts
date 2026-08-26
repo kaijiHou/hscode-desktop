@@ -147,11 +147,9 @@ export class KoffiNativeBridge implements NativeBridge {
    *  Returns true if the filter compiles without error. */
   validateFilter(filter: string): boolean {
     try {
-      const rt = koffi()
-      const objBuf = rt.alloc("uint8_t", 1024)
-      const errBuf = rt.alloc("uint8_t", 256)
-      const errPosOut = rt.alloc("uint32_t", 4)
-      const ok = this.fnValidateFilter(filter, WINDIVERT_LAYER_NETWORK, objBuf, 1024, errBuf, errPosOut)
+      // Pass null for errorStr (const char**) and errorPos (UINT*).
+      // We only need the boolean return for validation.
+      const ok = this.fnValidateFilter(filter, WINDIVERT_LAYER_NETWORK, null, 0, null, null)
       return Boolean(ok)
     } catch {
       return false

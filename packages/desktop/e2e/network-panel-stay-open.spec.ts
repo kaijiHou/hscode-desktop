@@ -1,17 +1,16 @@
 /**
  * Real Electron/Renderer E2E: Network panel stays open for 3 seconds.
  *
- * This test connects to a running HSCode Desktop instance via CDP,
- * navigates to a session, clicks "网络抓包", and verifies the panel
- * remains visible at 50ms, 500ms, 1500ms, and 3000ms checkpoints.
- *
- * PREREQUISITES:
+ * PREREQUISITES (all MUST be met or tests FAIL):
  *   - HSCode Desktop running with --remote-debugging-port=9222
  *   - At least one session available
  *
- * RUN: bun test packages/desktop/e2e/network-panel-stay-open.spec.ts
+ * COMMAND:
+ *   bun test packages/desktop/e2e/network-panel-stay-open.spec.ts
+ *
+ * If prerequisites are missing, this test FAILS (not PASS).
  */
-import { describe, expect, test, beforeAll, afterAll } from "bun:test"
+import { describe, expect, test, beforeAll } from "bun:test"
 import http from "node:http"
 import fs from "node:fs"
 import path from "node:path"
@@ -92,91 +91,100 @@ class CDPSession {
   }
 }
 
-async function getNetworkButtonPos(session: CDPSession): Promise<{ x: number; y: number } | null> {
+async function getButtonPos(session: CDPSession, text: string): Promise<{ x: number; y: number }> {
   const raw = await session.evaluate(
-    'JSON.stringify((() => { const b = [...document.querySelectorAll("button")].find(x => (x.textContent||"").trim() === "网络抓包"); if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })())',
+    `JSON.stringify((() => { const b = [...document.querySelectorAll("button")].find(x => (x.textContent||"").trim() === ${JSON.stringify(text)}); if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })())`,
   )
-  return raw ? JSON.parse(raw) : null
+  const pos = raw ? JSON.parse(raw) : null
+  if (!pos) throw new Error(`Button "${text}" not found in DOM`)
+  return pos
 }
 
-async function getTerminalButtonPos(session: CDPSession): Promise<{ x: number; y: number } | null> {
+async function isPanelVisible(session: CDPSession, selector: string): Promise<{ visible: boolean; height: number }> {
   const raw = await session.evaluate(
-    'JSON.stringify((() => { const b = [...document.querySelectorAll("button")].find(x => (x.textContent||"").trim() === "终端"); if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })())',
-  )
-  return raw ? JSON.parse(raw) : null
-}
-
-async function isNetworkPanelVisible(session: CDPSession): Promise<{ visible: boolean; height: number }> {
-  const raw = await session.evaluate(
-    'JSON.stringify({ visible: !!document.getElementById("network-panel"), height: document.getElementById("network-panel")?.offsetHeight || 0 })',
+    `JSON.stringify({ visible: !!document.querySelector(${JSON.stringify(selector)}), height: document.querySelector(${JSON.stringify(selector)})?.offsetHeight || 0 })`,
   )
   return JSON.parse(raw)
 }
 
+async function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
 describe("Network panel 3-second stay-open E2E", () => {
-  let session: CDPSession | null = null
+  let session: CDPSession
 
   beforeAll(async () => {
-    try {
-      const pages = await cdpGet("/json/list")
-      const page = pages.find((p) => p.type === "page")
-      if (!page) throw new Error("No CDP page found")
-      session = new CDPSession(page.webSocketDebuggerUrl)
-      await session.connect()
-    } catch {
-      // HSCode Desktop not running — tests will be skipped
-    }
+    // FAIL if CDP is unavailable — no silent skip
+    const pages = await cdpGet("/json/list")
+    const page = pages.find((p) => p.type === "page")
+    if (!page) throw new Error("CDP: no page found. Is HSCode Desktop running with --remote-debugging-port=9222?")
+    session = new CDPSession(page.webSocketDebuggerUrl)
+    await session.connect()
   })
 
-  afterAll(() => {
-    session?.close()
-  })
-
-  test("Case A: Direct click 网络抓包 stays open 3 seconds", async () => {
-    if (!session) return
-
+  test("Case A: Direct click 网络抓包 — initial state + 3-second stay-open", async () => {
     // Navigate to session
     await session.evaluate('(() => { const a = document.querySelector("a[href*=session]"); if (a) a.click(); return !!a })()')
-    await Bun.sleep(5000)
+    await sleep(5000)
 
-    const pos = await getNetworkButtonPos(session)
-    if (!pos) throw new Error("网络抓包 button not found")
+    // Verify initial state: both panels hidden
+    const netBefore = await isPanelVisible(session, "#network-panel")
+    expect(netBefore.visible, "Network panel should be hidden initially").toBe(false)
 
-    // Real click via CDP Input
+    // Real click via CDP Input.dispatchMouseEvent
+    const pos = await getButtonPos(session, "网络抓包")
+    const clickStart = Date.now()
     await session.click(pos.x, pos.y)
 
-    const delays = [50, 500, 1500, 3000]
-    for (const ms of delays) {
-      await Bun.sleep(ms)
-      const state = await isNetworkPanelVisible(session)
-      expect(state.visible, `panel should be visible at ${ms}ms`).toBe(true)
-      expect(state.height, `panel should have height at ${ms}ms`).toBeGreaterThan(0)
+    // True elapsed checkpoints
+    const checkpoints = [50, 500, 1500, 3000]
+    for (const target of checkpoints) {
+      const elapsed = Date.now() - clickStart
+      if (elapsed < target) await sleep(target - elapsed)
+      const state = await isPanelVisible(session, "#network-panel")
+      expect(state.visible, `Network panel visible at ${target}ms (actual: ${Date.now() - clickStart}ms)`).toBe(true)
+      expect(state.height, `Network panel has height at ${target}ms`).toBeGreaterThan(0)
     }
 
     await session.screenshot("network-direct-3s.png")
   })
 
-  test("Case B: Terminal → Network stays open 3 seconds", async () => {
-    if (!session) return
-
-    // Click Terminal first
-    const termPos = await getTerminalButtonPos(session)
-    if (termPos) {
-      await session.click(termPos.x, termPos.y)
-      await Bun.sleep(1500)
+  test("Case B: Terminal → Network — state switch + 3-second stay-open", async () => {
+    // First ensure we're in a known state: click Network to close if open
+    const netState = await isPanelVisible(session, "#network-panel")
+    if (netState.visible) {
+      const netPos = await getButtonPos(session, "网络抓包")
+      await session.click(netPos.x, netPos.y)
+      await sleep(500)
     }
 
+    // Click Terminal — must be found
+    const termPos = await getButtonPos(session, "终端")
+    await session.click(termPos.x, termPos.y)
+    await sleep(1000)
+
+    // Assert: Terminal visible, Network hidden
+    const termAfter = await isPanelVisible(session, "#terminal-panel")
+    expect(termAfter.visible, "Terminal panel should be visible after clicking 终端").toBe(true)
+    const netAfterTerm = await isPanelVisible(session, "#network-panel")
+    expect(netAfterTerm.visible, "Network panel should be hidden after clicking 终端").toBe(false)
+
     // Click Network
-    const netPos = await getNetworkButtonPos(session)
-    if (!netPos) throw new Error("网络抓包 button not found")
+    const netPos = await getButtonPos(session, "网络抓包")
+    const clickStart = Date.now()
     await session.click(netPos.x, netPos.y)
 
-    const delays = [50, 500, 1500, 3000]
-    for (const ms of delays) {
-      await Bun.sleep(ms)
-      const state = await isNetworkPanelVisible(session)
-      expect(state.visible, `panel should be visible at ${ms}ms`).toBe(true)
-      expect(state.height, `panel should have height at ${ms}ms`).toBeGreaterThan(0)
+    // True elapsed checkpoints: verify Network visible AND Terminal hidden
+    const checkpoints = [50, 500, 1500, 3000]
+    for (const target of checkpoints) {
+      const elapsed = Date.now() - clickStart
+      if (elapsed < target) await sleep(target - elapsed)
+      const net = await isPanelVisible(session, "#network-panel")
+      const term = await isPanelVisible(session, "#terminal-panel")
+      expect(net.visible, `Network visible at ${target}ms`).toBe(true)
+      expect(net.height, `Network has height at ${target}ms`).toBeGreaterThan(0)
+      expect(term.visible, `Terminal hidden at ${target}ms`).toBe(false)
     }
 
     await session.screenshot("network-terminal-to-network-3s.png")
