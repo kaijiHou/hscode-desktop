@@ -20,7 +20,7 @@ import { migrateLegacySessionStateKeys, ServerScope, SessionStateKey } from "@/u
 import { createSessionKeyReader, ensureSessionKey, pruneSessionKeys } from "./layout-helpers"
 import { requireServerKey } from "@/utils/session-route"
 import { type DraftTab, useTabs } from "./tabs"
-import { computeTerminalToggle, computeNetworkToggle } from "./panel-transitions"
+import { openTerminal, closeTerminal, toggleTerminal, openNetwork, closeNetwork, toggleNetwork } from "./panel-transitions"
 import { closeSessionTab, openSessionTab, previewSessionTab, type SessionTabs } from "./layout-tabs"
 
 export { createSessionKeyReader, ensureSessionKey, pruneSessionKeys }
@@ -901,15 +901,17 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           terminal: {
             opened: terminalOpened,
             open() {
-              const next = computeTerminalToggle({ terminal: true, network: networkOpened() })
+              const next = openTerminal({ terminal: terminalOpened(), network: networkOpened() })
               setTerminalOpened(next.terminal)
               setNetworkOpened(next.network)
             },
             close() {
-              setTerminalOpened(false)
+              const next = closeTerminal({ terminal: terminalOpened(), network: networkOpened() })
+              setTerminalOpened(next.terminal)
+              setNetworkOpened(next.network)
             },
             toggle() {
-              const next = computeTerminalToggle({ terminal: terminalOpened(), network: networkOpened() })
+              const next = toggleTerminal({ terminal: terminalOpened(), network: networkOpened() })
               setTerminalOpened(next.terminal)
               setNetworkOpened(next.network)
             },
@@ -917,15 +919,17 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           network: {
             opened: networkOpened,
             open() {
-              const next = computeNetworkToggle({ terminal: terminalOpened(), network: true })
+              const next = openNetwork({ terminal: terminalOpened(), network: networkOpened() })
               setTerminalOpened(next.terminal)
               setNetworkOpened(next.network)
             },
             close() {
-              setNetworkOpened(false)
+              const next = closeNetwork({ terminal: terminalOpened(), network: networkOpened() })
+              setTerminalOpened(next.terminal)
+              setNetworkOpened(next.network)
             },
             toggle() {
-              const next = computeNetworkToggle({ terminal: terminalOpened(), network: networkOpened() })
+              const next = toggleNetwork({ terminal: terminalOpened(), network: networkOpened() })
               setTerminalOpened(next.terminal)
               setNetworkOpened(next.network)
             },
