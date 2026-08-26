@@ -79,8 +79,8 @@ describe("Terminal | Network mutual exclusion", () => {
     const src = await Bun.file(`${import.meta.dir}/../../context/layout.tsx`).text()
     // layout.tsx must import production panel transitions
     expect(src).toContain('from "./panel-transitions"')
-    expect(src).toContain("computeTerminalToggle")
-    expect(src).toContain("computeNetworkToggle")
+    expect(src).toContain("openTerminal")
+    expect(src).toContain("openNetwork")
     // network and terminal blocks must use compute helpers
     expect(src).toContain("next.terminal")
     expect(src).toContain("next.network")
