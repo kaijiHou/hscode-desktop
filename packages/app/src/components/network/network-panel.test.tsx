@@ -14,15 +14,15 @@ describe("UI-1 — Network panel renders Start/Stop/Clear/filter", () => {
 
   test("panel source declares the visible toolbar (Start/Stop/Clear/filter input)", async () => {
     const src = await Bun.file(`${import.meta.dir}/network-panel.tsx`).text()
-    expect(src).toContain("Network Inspector")
+    expect(src).toContain("网络抓包")
     // buttons wired to real handlers
     expect(src).toContain("onClick={() => void start()}")
-    expect(src).toMatch(/Start\s*</)
+    expect(src).toContain("开始抓包")
     expect(src).toContain("onClick={() => void stop()}")
-    expect(src).toMatch(/Stop\s*</)
+    expect(src).toContain("停止抓包")
     expect(src).toContain("onClick={() => void clear()}")
-    expect(src).toMatch(/Clear\s*</)
-    expect(src).toContain('placeholder="filter: tcp')
+    expect(src).toContain("清空")
+    expect(src).toContain("高级筛选")
     expect(src).toContain('aria-label="Network filter"')
     // panel is dock content, not a fixed overlay
     expect(src).toContain('class="network-panel relative w-full h-full')
@@ -56,10 +56,10 @@ describe("UI-5 — View menu wires Network Inspector to network.toggle", () => {
     expect(src).toContain('labelKey: "desktop.menu.toggleNetwork"')
     expect(src).toContain('command: "network.toggle"')
   })
-  test("desktop-native i18n provides the menu label", async () => {
-    const src = await Bun.file(`${import.meta.dir}/../../i18n/desktop-native.ts`).text()
-    expect(src).toContain('"desktop.menu.toggleNetwork"')
-    expect(src).toContain("Network Inspector")
+  test("i18n zh.ts provides the menu label", async () => {
+    const src = await Bun.file(`${import.meta.dir}/../../i18n/zh.ts`).text()
+    expect(src).toContain('"command.network.toggle"')
+    expect(src).toContain("网络抓包")
   })
 })
 
