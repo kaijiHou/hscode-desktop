@@ -6,6 +6,7 @@ import { For, Show, createMemo, createSignal, onCleanup, onMount } from "solid-j
 import { createStore } from "solid-js/store"
 import type { JSX } from "solid-js"
 import { useSessionLayout } from "@/pages/session/session-layout"
+import { buildFilter, type FilterState } from "./filter-builder"
 
 // ---- HSCode Network Inspector renderer-side types (mirror of preload) ----
 export type NetworkCaptureState = "idle" | "starting" | "capturing" | "stopping" | "error"
@@ -71,16 +72,12 @@ export function NetworkPanel() {
 
   const [snapshot, setSnapshot] = createStore<NetworkStateSnapshot>({ state: "idle", packetCount: 0 })
   const [packets, setPackets] = createSignal<NetworkPacketSummary[]>([])
-  const [filter, setFilter] = createSignal("")
+  const [filterState, setFilterState] = createSignal<FilterState>({ protocol: "", ip: "", port: "", direction: "", advanced: "" })
   const [filterError, setFilterError] = createSignal("")
   const [selectedId, setSelectedId] = createSignal<string | undefined>()
   const [detail, setDetail] = createSignal<NetworkDetailPayload | undefined>()
   const [viewTab, setViewTab] = createSignal<ViewTab>("overview")
   const [loadError, setLoadError] = createSignal("")
-  const [protoFilter, setProtoFilter] = createSignal<string>("")
-  const [ipFilter, setIpFilter] = createSignal("")
-  const [portFilter, setPortFilter] = createSignal("")
-  const [dirFilter, setDirFilter] = createSignal<string>("")
 
   const isCapturing = () => snapshot.state === "capturing" || snapshot.state === "starting"
 
@@ -146,26 +143,10 @@ export function NetworkPanel() {
     })
   })
 
-  function buildBaseFilter(): string {
-    const parts: string[] = []
-    if (protoFilter()) parts.push(protoFilter())
-    if (ipFilter().trim()) parts.push(`ip == ${ipFilter().trim()}`)
-    if (portFilter().trim()) {
-      const port = portFilter().trim()
-      parts.push(`tcp.port == ${port}`)
-      parts.push(`udp.port == ${port}`)
-    }
-    if (dirFilter()) parts.push(dirFilter())
-    if (parts.length === 0) return ""
-    return parts.join(" and ")
-  }
-
   const start = async () => {
     if (!api) return
     setFilterError("")
-    const base = buildBaseFilter()
-    const adv = filter().trim()
-    const combined = [base, adv].filter(Boolean).join(" and ")
+    const combined = buildFilter(filterState())
     if (combined) {
       const validation = await api.validateFilter(combined)
       if (!validation.ok) {
@@ -270,33 +251,33 @@ export function NetworkPanel() {
 
       <div class="flex items-center gap-1 px-2 py-1 border-b border-border-weaker-base shrink-0">
         <select
-          value={protoFilter()}
-          onChange={(e) => setProtoFilter(e.currentTarget.value)}
+          value={filterState().protocol}
+          onChange={(e) => setFilterState({ ...filterState(), protocol: e.currentTarget.value as FilterState["protocol"] })}
           aria-label="协议筛选"
           class="bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
         >
           <option value="">全部协议</option>
-          <option value="TCP">TCP</option>
-          <option value="UDP">UDP</option>
-          <option value="ICMP">ICMP</option>
+          <option value="tcp">TCP</option>
+          <option value="udp">UDP</option>
+          <option value="icmp">ICMP</option>
         </select>
         <input
-          value={ipFilter()}
-          onInput={(e) => setIpFilter(e.currentTarget.value)}
+          value={filterState().ip}
+          onInput={(e) => setFilterState({ ...filterState(), ip: e.currentTarget.value })}
           placeholder="IP"
           aria-label="IP 筛选"
           class="w-36 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
         />
         <input
-          value={portFilter()}
-          onInput={(e) => setPortFilter(e.currentTarget.value)}
+          value={filterState().port}
+          onInput={(e) => setFilterState({ ...filterState(), port: e.currentTarget.value })}
           placeholder="端口"
           aria-label="端口筛选"
           class="w-24 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
         />
         <select
-          value={dirFilter()}
-          onChange={(e) => setDirFilter(e.currentTarget.value)}
+          value={filterState().direction}
+          onChange={(e) => setFilterState({ ...filterState(), direction: e.currentTarget.value as FilterState["direction"] })}
           aria-label="方向筛选"
           class="bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
         >
@@ -308,8 +289,8 @@ export function NetworkPanel() {
 
       <div class="flex items-center gap-2 px-2 h-9 border-b border-border-weaker-base shrink-0">
         <input
-          value={filter()}
-          onInput={(e) => setFilter(e.currentTarget.value)}
+          value={filterState().advanced}
+          onInput={(e) => setFilterState({ ...filterState(), advanced: e.currentTarget.value })}
           placeholder="高级筛选: tcp / udp / tcp.port == 22122"
           aria-label="Network filter"
           class="flex-1 min-w-0 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-14-regular"

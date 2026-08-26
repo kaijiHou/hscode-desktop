@@ -286,6 +286,7 @@ export const DESKTOP_MENU: DesktopMenu[] = [
     items: [
       // HSCode: 文档链接指向 GitHub 仓库（无独立文档站）；Discussions 未启用，不保留无效菜单
       { type: "item", labelKey: "desktop.menu.documentation", href: "https://github.com/kaijiHou/hscode-desktop/blob/master/docs/user-guide.md" },
+      { type: "item", labelKey: "desktop.menu.networkCaptureGuide", href: "https://github.com/kaijiHou/hscode-desktop/blob/master/docs/network-capture-guide.md" },
       { type: "item", labelKey: "desktop.menu.exportLogs", command: "logs.export" },
       { type: "separator" },
       {

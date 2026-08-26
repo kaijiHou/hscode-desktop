@@ -10,6 +10,7 @@ import { ServerRowMenu } from "@/components/server/server-row-menu"
 import { ServerHealthIndicator } from "@/components/server/server-row"
 import { useLanguage } from "@/context/language"
 import { ServerConnection, serverName } from "@/context/server"
+import type { ServerHealth } from "@/utils/server-health"
 import { useServerManagementController } from "../dialog-select-server"
 import { DialogServerV2 } from "./dialog-server-v2"
 import { SettingsListV2 } from "./parts/list"
@@ -46,18 +47,18 @@ export const SettingsServersV2: Component = () => {
     dialog.push(() => <DialogServerV2 mode="edit" server={server} />)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const openDetails = (item: any, healthFn: () => any) => {
+  const openDetails = (item: ServerConnection.Any, healthFn: () => ServerHealth | undefined) => {
     const h = healthFn()
     const isLocal = item.type === "sidecar" || (item.type === "http" && item.http.url.includes("127.0.0.1"))
+    const healthStatus = h?.healthy === true ? "正常" : h?.healthy === false ? "异常" : "检查中"
     dialog.push(() => (
       <div class="p-4 flex flex-col gap-3 max-w-sm">
         <div class="text-14-semibold">{isLocal ? "本地服务器" : serverName(item)}</div>
         <div class="flex flex-col gap-2 text-13-regular">
-          <div class="flex justify-between"><span class="opacity-70">状态</span><span>{h?.healthy ? "正常" : "异常"}</span></div>
+          <div class="flex justify-between"><span class="opacity-70">状态</span><span>{healthStatus}</span></div>
           <div class="flex justify-between"><span class="opacity-70">类型</span><span>{isLocal ? "HSCode 内置本地服务" : item.type}</span></div>
-          <Show when={item.type === "http"}><div class="flex justify-between"><span class="opacity-70">地址</span><span class="truncate ml-2">{item.http.url}</span></div></Show>
-          <Show when={h?.version}><div class="flex justify-between"><span class="opacity-70">版本</span><span>v{h.version}</span></div></Show>
+          <Show when={item.http.url}><div class="flex justify-between"><span class="opacity-70">地址</span><span class="truncate ml-2">{item.http.url}</span></div></Show>
+          <Show when={h?.version}><div class="flex justify-between"><span class="opacity-70">版本</span><span>v{h?.version}</span></div></Show>
         </div>
         <p class="text-12-regular opacity-50">HSCode Desktop 内置后端服务，负责本地项目、会话、智能体、模型调用和工具执行等桌面端能力。</p>
         <button onClick={() => dialog.close()} class="btn-outline btn-sm self-end">关闭</button>

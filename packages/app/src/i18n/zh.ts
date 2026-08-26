@@ -44,6 +44,7 @@ export const dict = {
   "desktop.menu.minimize": "最小化",
   "desktop.menu.maximize": "最大化",
   "desktop.menu.documentation": "HSCode 使用手册",
+  "desktop.menu.networkCaptureGuide": "网络抓包使用手册",
   "desktop.menu.supportForum": "支持论坛",
   "desktop.menu.shareFeedback": "提供反馈",
   "desktop.menu.reportBug": "报告错误",
