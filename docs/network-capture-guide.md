@@ -47,7 +47,7 @@ HSCode 网络抓包工具用于捕获和分析当前电脑的 TCP/UDP/ICMP 网�
 
 ### 高级筛选
 
-支持 WinDivert filter 语法（见第 9 节）。
+使用 HSCode 简化筛选语法（见第 9 节）。HSCode 会将其编译为 WinDivert 过滤表达式。
 
 ### 控制按钮
 
@@ -105,7 +105,7 @@ Windows 下网络抓包需要管理员权限（WinDivert 驱动要求）。
 
 ## 8. 高级筛选语法
 
-高级筛选支持 WinDivert filter 表达式：
+高级筛选使用 HSCode 简化筛选语法：
 
 ```
 tcp                    # 仅 TCP
