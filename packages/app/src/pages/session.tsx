@@ -468,7 +468,9 @@ export default function Page() {
   const desktopSessionResizeOpen = createMemo(() =>
     newSessionDesign() ? desktopV2ReviewOpen() || desktopTerminalOpen() : desktopReviewOpen(),
   )
-  const desktopSidePanelOpen = createMemo(() => desktopSessionResizeOpen() || desktopFileTreeOpen())
+  const desktopSidePanelOpen = createMemo(
+    () => desktopSessionResizeOpen() || desktopNetworkOpen() || desktopFileTreeOpen(),
+  )
   let panelRow: HTMLDivElement | undefined
   const [panelRowWidth, setPanelRowWidth] = createSignal<number>()
   createResizeObserver(
@@ -2264,7 +2266,7 @@ export default function Page() {
 
         <div
           classList={{
-            "@container relative shrink-0 flex flex-col min-h-0 h-full flex-1 md:flex-none transition-[width]": true,
+            "@container relative shrink-0 flex flex-col min-h-0 h-full flex-1 transition-[width]": true, "md:flex-none": !desktopSidePanelOpen(),
             "duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none":
               !size.active() && !ui.reviewSnap && !desktopInlineTerminalOnlyOpen(),
           }}
