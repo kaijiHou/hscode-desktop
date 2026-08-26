@@ -93,7 +93,7 @@ export class KoffiNativeBridge implements NativeBridge {
   ) => boolean
   private readonly fnShutdown: (handle: bigint, how: number) => boolean
   private readonly fnClose: (handle: bigint) => boolean
-  private readonly fnValidateFilter: (filter: string, layer: number, buf: unknown, bufLen: unknown, err: unknown, errLen: unknown) => boolean
+  private readonly fnValidateFilter: (filter: string, layer: number, buf: unknown, bufLen: number, err: unknown, errLen: unknown) => boolean
   private readonly fnGetLastError: () => number
 
   constructor(private readonly dll: string) {
@@ -115,7 +115,7 @@ export class KoffiNativeBridge implements NativeBridge {
 
     try {
       this.fnOpen = lib.func("WinDivertOpen", "int64", ["str", "int", "int16", "uint64"]) as never
-      this.fnValidateFilter = lib.func("WinDivertHelperCompileFilter", "bool", ["str", "int", "void*", "uint32*", "void*", "uint32*"]) as never
+      this.fnValidateFilter = lib.func("WinDivertHelperCompileFilter", "bool", ["str", "int", "void*", "uint32", "void*", "uint32*"]) as never
       this.fnRecvEx = lib.func("WinDivertRecvEx", "bool", [
         "int64",
         "void*",
@@ -143,17 +143,15 @@ export class KoffiNativeBridge implements NativeBridge {
 
   /** Validate a WinDivert filter string via WinDivertHelperCompileFilter.
    *  Returns true if the filter compiles without error. */
+  /** Validate a WinDivert filter string via WinDivertHelperCompileFilter.
+   *  Returns true if the filter compiles without error. */
   validateFilter(filter: string): boolean {
     try {
       const rt = koffi()
-      const bufLen = 1024
-      const buf = rt.alloc("uint8_t", bufLen)
-      const bufLenOut = rt.alloc("uint32_t", 4)
+      const objBuf = rt.alloc("uint8_t", 1024)
       const errBuf = rt.alloc("uint8_t", 256)
-      const errLenOut = rt.alloc("uint32_t", 4)
-      rt.encode(bufLenOut, "uint32_t", bufLen)
-      rt.encode(errLenOut, "uint32_t", 256)
-      const ok = this.fnValidateFilter(filter, WINDIVERT_LAYER_NETWORK, buf, bufLenOut, errBuf, errLenOut)
+      const errPosOut = rt.alloc("uint32_t", 4)
+      const ok = this.fnValidateFilter(filter, WINDIVERT_LAYER_NETWORK, objBuf, 1024, errBuf, errPosOut)
       return Boolean(ok)
     } catch {
       return false

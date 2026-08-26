@@ -92,13 +92,19 @@ export class CaptureService extends EventEmitter {
     return this.details.get(id)
   }
 
-  /** Validate a filter. First validates HSCode grammar, then compiles with WinDivert if bridge available. */
+  /** Validate a filter through HSCode grammar + WinDivert native compile.
+   *  If native bridge is unavailable, throws rather than silently passing. */
   validateFilter(input: string): string {
     const parsed = parseFilter(input)
-    if (this.nativeBridge && parsed.windivert !== "true") {
-      if (!this.nativeBridge.validateFilter(parsed.windivert)) {
-        throw new FilterValidationError("WinDivert could not compile this filter")
-      }
+    if (parsed.windivert === "true") return parsed.display
+    if (!this.nativeBridge) {
+      throw new FilterValidationError(
+        "NATIVE_VALIDATOR_UNAVAILABLE: WinDivert native bridge is not initialized. " +
+        "Filter validation requires the WinDivert DLL.",
+      )
+    }
+    if (!this.nativeBridge.validateFilter(parsed.windivert)) {
+      throw new FilterValidationError("WinDivert could not compile this filter")
     }
     return parsed.display
   }
