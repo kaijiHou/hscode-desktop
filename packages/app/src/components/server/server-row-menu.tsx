@@ -64,6 +64,7 @@ export const ServerRowMenuView: Component<{
         size="small"
         icon={<IconV2 name="outline-dots" />}
         aria-label={props.labels.more}
+        onClick={(e) => e.stopPropagation()}
       />
       <MenuV2.Portal>
         <MenuV2.Content>

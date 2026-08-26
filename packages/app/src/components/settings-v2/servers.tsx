@@ -56,11 +56,11 @@ export const SettingsServersV2: Component = () => {
         <div class="text-14-semibold">{isLocal ? "本地服务器" : serverName(item)}</div>
         <div class="flex flex-col gap-2 text-13-regular">
           <div class="flex justify-between"><span class="opacity-70">状态</span><span>{healthStatus}</span></div>
-          <div class="flex justify-between"><span class="opacity-70">类型</span><span>{isLocal ? "HSCode 内置本地服务" : item.type}</span></div>
+          <div class="flex justify-between"><span class="opacity-70">类型</span><span>{item.type === "sidecar" ? "HSCode 内置本地服务" : "HTTP 远程服务器"}</span></div>
           <Show when={item.http.url}><div class="flex justify-between"><span class="opacity-70">地址</span><span class="truncate ml-2">{item.http.url}</span></div></Show>
           <Show when={h?.version}><div class="flex justify-between"><span class="opacity-70">版本</span><span>v{h?.version}</span></div></Show>
         </div>
-        <p class="text-12-regular opacity-50">HSCode Desktop 内置后端服务，负责本地项目、会话、智能体、模型调用和工具执行等桌面端能力。</p>
+        <p class="text-12-regular opacity-50">{item.type === "sidecar" ? "HSCode Desktop 内置后端服务，负责本地项目、会话、智能体、模型调用和工具执行等桌面端能力。" : "远程兼容服务器。HSCode Desktop 将通过该地址访问项目、会话和智能体能力。"}</p>
         <button onClick={() => dialog.close()} class="btn-outline btn-sm self-end">关闭</button>
       </div>
     ))
