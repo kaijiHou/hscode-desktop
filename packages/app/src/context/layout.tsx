@@ -901,31 +901,33 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           terminal: {
             opened: terminalOpened,
             open() {
-              setTerminalOpened(true)
-              setNetworkOpened(false)
+              const next = computeTerminalToggle({ terminal: true, network: networkOpened() })
+              setTerminalOpened(next.terminal)
+              setNetworkOpened(next.network)
             },
             close() {
               setTerminalOpened(false)
             },
             toggle() {
-              const next = !terminalOpened()
-              setTerminalOpened(next)
-              if (next) setNetworkOpened(false)
+              const next = computeTerminalToggle({ terminal: terminalOpened(), network: networkOpened() })
+              setTerminalOpened(next.terminal)
+              setNetworkOpened(next.network)
             },
           },
           network: {
             opened: networkOpened,
             open() {
-              setNetworkOpened(true)
-              setTerminalOpened(false)
+              const next = computeNetworkToggle({ terminal: terminalOpened(), network: true })
+              setTerminalOpened(next.terminal)
+              setNetworkOpened(next.network)
             },
             close() {
               setNetworkOpened(false)
             },
             toggle() {
-              const next = !networkOpened()
-              setNetworkOpened(next)
-              if (next) setTerminalOpened(false)
+              const next = computeNetworkToggle({ terminal: terminalOpened(), network: networkOpened() })
+              setTerminalOpened(next.terminal)
+              setNetworkOpened(next.network)
             },
           },
           reviewPanel: {

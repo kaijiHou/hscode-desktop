@@ -75,14 +75,14 @@ describe("Network command i18n", () => {
 
 // ---- Terminal mutual exclusion (panel state contract) ----------------------
 describe("Terminal | Network mutual exclusion", () => {
-  test("layout view() exposes network alongside terminal (single tool panel)", async () => {
+  test("layout view() uses panel-transitions for mutual exclusion", async () => {
     const src = await Bun.file(`${import.meta.dir}/../../context/layout.tsx`).text()
-    expect(src).toContain("network: {")
-    expect(src).toContain("opened: networkOpened")
-    // opening network closes terminal and vice versa
-    expect(src).toContain("setNetworkOpened(true)")
-    expect(src).toContain("setTerminalOpened(false)")
-    expect(src).toContain("setTerminalOpened(true)")
-    expect(src).toContain("setNetworkOpened(false)")
+    // layout.tsx must import production panel transitions
+    expect(src).toContain('from "./panel-transitions"')
+    expect(src).toContain("computeTerminalToggle")
+    expect(src).toContain("computeNetworkToggle")
+    // network and terminal blocks must use compute helpers
+    expect(src).toContain("next.terminal")
+    expect(src).toContain("next.network")
   })
 })
