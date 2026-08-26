@@ -46,6 +46,25 @@ export const SettingsServersV2: Component = () => {
     dialog.push(() => <DialogServerV2 mode="edit" server={server} />)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const openDetails = (item: any, healthFn: () => any) => {
+    const h = healthFn()
+    const isLocal = item.type === "sidecar" || (item.type === "http" && item.http.url.includes("127.0.0.1"))
+    dialog.push(() => (
+      <div class="p-4 flex flex-col gap-3 max-w-sm">
+        <div class="text-14-semibold">{isLocal ? "本地服务器" : serverName(item)}</div>
+        <div class="flex flex-col gap-2 text-13-regular">
+          <div class="flex justify-between"><span class="opacity-70">状态</span><span>{h?.healthy ? "正常" : "异常"}</span></div>
+          <div class="flex justify-between"><span class="opacity-70">类型</span><span>{isLocal ? "HSCode 内置本地服务" : item.type}</span></div>
+          <Show when={item.type === "http"}><div class="flex justify-between"><span class="opacity-70">地址</span><span class="truncate ml-2">{item.http.url}</span></div></Show>
+          <Show when={h?.version}><div class="flex justify-between"><span class="opacity-70">版本</span><span>v{h.version}</span></div></Show>
+        </div>
+        <p class="text-12-regular opacity-50">HSCode Desktop 内置后端服务，负责本地项目、会话、智能体、模型调用和工具执行等桌面端能力。</p>
+        <button onClick={() => dialog.close()} class="btn-outline btn-sm self-end">关闭</button>
+      </div>
+    ))
+  }
+
   return (
     <>
       <div
@@ -104,7 +123,7 @@ export const SettingsServersV2: Component = () => {
                 const health = () => controller.status()[key]
                 const isDefault = () => controller.defaultKey() === key
                 return (
-                  <div class="settings-v2-servers-row">
+                  <div class="settings-v2-servers-row cursor-pointer hover:bg-v2-overlay-simple-overlay-hover" onClick={() => openDetails(item, health)}>
                     <div class="settings-v2-servers-lead">
                       <ServerHealthIndicator health={health()} />
                       <div class="settings-v2-servers-copy">
