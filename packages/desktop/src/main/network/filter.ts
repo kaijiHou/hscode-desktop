@@ -72,8 +72,8 @@ function buildGenericIpClause(ip: string): string {
 
 /** Build a WinDivert clause for direction == inbound/outbound. */
 function buildDirectionClause(direction: string): string {
-  if (direction === "inbound") return "direction == 1"
-  if (direction === "outbound") return "direction == 0"
+  if (direction === "inbound") return "inbound"
+  if (direction === "outbound") return "outbound"
   throw new FilterValidationError(`invalid direction: "${direction}"`)
 }
 

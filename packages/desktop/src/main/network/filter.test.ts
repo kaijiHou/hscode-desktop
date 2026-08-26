@@ -45,13 +45,15 @@ describe("parseFilter — generic port / ip / direction", () => {
   test("direction == inbound → valid", () => {
     const r = parseFilter("direction == inbound")
     expect(r.display).toBe("direction == inbound")
-    expect(r.windivert).toContain("direction == 1")
+    expect(r.windivert).toContain("inbound")
+    expect(r.windivert).not.toContain("direction == 1")
   })
 
   test("direction == outbound → valid", () => {
     const r = parseFilter("direction == outbound")
     expect(r.display).toBe("direction == outbound")
-    expect(r.windivert).toContain("direction == 0")
+    expect(r.windivert).toContain("outbound")
+    expect(r.windivert).not.toContain("direction == 0")
   })
 })
 
@@ -95,7 +97,8 @@ describe("parseFilter — compound AND", () => {
   test("udp and direction == outbound → AND semantics", () => {
     const r = parseFilter("udp and direction == outbound")
     expect(r.windivert).toContain(" and ")
-    expect(r.windivert).toContain("direction == 0")
+    expect(r.windivert).toContain("outbound")
+    expect(r.windivert).not.toContain("direction == 0")
   })
 
   test("ip == 192.168.1.10 and port == 22122 → AND semantics", () => {
@@ -109,7 +112,8 @@ describe("parseFilter — compound AND", () => {
     expect(r.windivert).toContain("ipv4.Protocol == 6")
     expect(r.windivert).toContain("ipv4.SrcAddr == 1.2.3.4")
     expect(r.windivert).toContain("tcp.SrcPort == 80")
-    expect(r.windivert).toContain("direction == 0")
+    expect(r.windivert).toContain("outbound")
+    expect(r.windivert).not.toContain("direction == 0")
   })
 })
 
