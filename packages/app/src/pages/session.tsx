@@ -2337,49 +2337,58 @@ export default function Page() {
               {sessionPanelContent()}
             </SessionPanelFrame>
           )}
-
-          <Show when={desktopResizableSidePanelOpen()}>
-                      {desktopNetworkOpen() && !desktopSessionResizeOpen() ? (
-                        // Network mode: real flex splitter between Chat and Network.
-                        // edge="start" → left drag = network wider (delta = start - pos > 0).
-                        <div
-                          class="relative w-2 shrink-0 cursor-col-resize"
-                          data-slot="network-outer-splitter"
-                          onMouseDown={() => size.start()}
-                        >
-                          <ResizeHandle
-                            class="!relative !inset-auto !w-full !h-full !transform-none"
-                            direction="horizontal"
-                            edge="start"
-                            size={networkPanelResizedWidth()}
-                            min={NETWORK_PANEL_WIDTH_MIN}
-                            max={networkPanelMax()}
-                            onResize={(width) => {
-                              size.touch()
-                              layout.network.resizeWidth(width)
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        // Session mode (review/terminal): existing ResizeHandle behavior.
-                        <div onPointerDown={() => size.start()}>
-                          <ResizeHandle
-                            classList={{
-                              "-end-1": settings.general.newLayoutDesigns(),
-                            }}
-                            direction="horizontal"
-                            size={sessionPanelResizedWidth()}
-                            min={SESSION_PANEL_WIDTH_MIN}
-                            max={sessionPanelMax()}
-                            onResize={(width) => {
-                              size.touch()
-                              layout.session.resize(width)
-                            }}
-                          />
-                        </div>
-                      )}
-                    </Show>
         </div>
+
+        <Show when={desktopResizableSidePanelOpen()}>
+          {desktopNetworkOpen() && !desktopSessionResizeOpen() ? (
+            <div
+              style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize", background: "rgba(128,128,128,0.3)", "border-left": "1px solid rgba(128,128,128,0.5)", "border-right": "1px solid rgba(128,128,128,0.5)" }}
+              onMouseDown={(e) => {
+                console.log("[splitter] mousedown", e.clientX, e.clientY, "detail=", e.detail)
+                if (e.detail > 1) return
+                e.preventDefault()
+                const startX = e.clientX
+                const startWidth = networkPanelResizedWidth()
+                const minW = NETWORK_PANEL_WIDTH_MIN
+                const maxW = networkPanelMax()
+                console.log("[splitter] start width=", startWidth, "min=", minW, "max=", maxW)
+                document.body.style.userSelect = "none"
+                document.body.style.overflow = "hidden"
+                const onMove = (me: MouseEvent) => {
+                  const delta = startX - me.clientX
+                  const next = Math.min(maxW, Math.max(minW, startWidth + delta))
+                  console.log("[splitter] move delta=", delta, "next=", next)
+                  layout.network.resizeWidth(next)
+                }
+                const onUp = () => {
+                  console.log("[splitter] mouseup")
+                  document.body.style.userSelect = ""
+                  document.body.style.overflow = ""
+                  document.removeEventListener("mousemove", onMove)
+                  document.removeEventListener("mouseup", onUp)
+                }
+                document.addEventListener("mousemove", onMove)
+                document.addEventListener("mouseup", onUp)
+              }}
+            />
+          ) : (
+            <div onPointerDown={() => size.start()}>
+              <ResizeHandle
+                classList={{
+                  "-end-1": settings.general.newLayoutDesigns(),
+                }}
+                direction="horizontal"
+                size={sessionPanelResizedWidth()}
+                min={SESSION_PANEL_WIDTH_MIN}
+                max={sessionPanelMax()}
+                onResize={(width) => {
+                  size.touch()
+                  layout.session.resize(width)
+                }}
+              />
+            </div>
+          )}
+        </Show>
 
         <Show when={!newSessionDesign() && desktopSidePanelOpen()}>
           <Suspense>
