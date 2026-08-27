@@ -19,6 +19,7 @@ export type { CaptureError, CaptureState, CaptureStateSnapshot } from "./capture
 
 export const MAX_PACKETS = 5000
 export const MAX_DETAILS = 500
+export const MAX_RAW_PACKETS = 2000
 
 export interface WorkerLike {
   postMessage(msg: { type: "stop" }): void
@@ -159,25 +160,26 @@ export class CaptureService extends EventEmitter {
   }
 
   stop(): void {
-    if (this.machine.current === "idle" || this.machine.current === "error") {
-      throw new Error("capture is not running")
+      if (this.machine.current === "idle" || this.machine.current === "error") {
+        throw new Error("capture is not running")
+      }
+      this.machine.stop()
+      this.rawPackets.clear()
+      const worker = this.worker
+      if (worker) {
+        worker.postMessage({ type: "stop" })
+        void worker.terminate().then(() => {
+          if (this.machine.current === "stopping") {
+            this.machine.finishStop()
+            this.emit("state", this.machine.snapshot())
+          }
+        })
+        this.worker = null
+      } else {
+        this.machine.finishStop()
+        this.emit("state", this.machine.snapshot())
+      }
     }
-    this.machine.stop()
-    const worker = this.worker
-    if (worker) {
-      worker.postMessage({ type: "stop" })
-      void worker.terminate().then(() => {
-        if (this.machine.current === "stopping") {
-          this.machine.finishStop()
-          this.emit("state", this.machine.snapshot())
-        }
-      })
-      this.worker = null
-    } else {
-      this.machine.finishStop()
-      this.emit("state", this.machine.snapshot())
-    }
-  }
 
   clear(): void {
       this.ring.clear()
@@ -235,6 +237,11 @@ export class CaptureService extends EventEmitter {
               })
               this.ring.push(summary)
               // Store raw bytes so detail can be built lazily on demand.
+              // Evict oldest when over limit to prevent OOM.
+              if (this.rawPackets.size >= MAX_RAW_PACKETS) {
+                const first = this.rawPackets.keys().next().value
+                if (first) this.rawPackets.delete(first)
+              }
               this.rawPackets.set(summary.id, packetMsg.bytes)
               this.machine.recordPacket()
               this.emit("packet", summary)
