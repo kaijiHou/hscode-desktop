@@ -57,7 +57,7 @@ export function PacketList(props: {
                 }}
                 style={{
                   "border-left": p.id === props.selectedId() ? "2px solid var(--accent-1, #3fb950)" : "2px solid transparent",
-                  background: p.id === props.selectedId() ? "var(--surface-base-hover, rgba(63,185,80,0.08))" : undefined,
+                  background: p.id === props.selectedId() ? "var(--surface-base-hover, var(--v2-state-bg-success, rgba(63,185,80,0.08)))" : undefined,
                 }}
               >
                 <td class="px-2 py-1 whitespace-nowrap opacity-80">{props.fmtTime(p.timestamp)}</td>
@@ -73,8 +73,8 @@ export function PacketList(props: {
                     data-slot="protocol-badge"
                     class="inline-block px-1.5 rounded-sm text-11-regular"
                     style={{
-                      background: p.protocol === "UDP" ? "rgba(210,153,34,0.15)" : "rgba(63,185,80,0.12)",
-                      color: p.protocol === "UDP" ? "#d29922" : "#3fb950",
+                      background: p.protocol === "UDP" ? "var(--v2-state-bg-warning, rgba(210,153,34,0.15))" : "var(--v2-state-bg-success, rgba(63,185,80,0.12))",
+                      color: p.protocol === "UDP" ? "var(--v2-state-fg-warning)" : "var(--v2-state-fg-success)",
                       border: "1px solid transparent",
                     }}
                   >

@@ -73,7 +73,7 @@ export function DetailInspector(props: {
             onClick={() => props.onTab(tab)}
             class="px-2 py-0.5 rounded-sm text-12-regular"
             style={{
-              background: props.tab === tab ? "var(--surface-base-hover, rgba(63,185,80,0.15))" : undefined,
+              background: props.tab === tab ? "var(--surface-base-hover, var(--v2-state-bg-success, rgba(63,185,80,0.15)))" : undefined,
               opacity: props.tab === tab ? 1 : 0.6,
               cursor: "pointer",
             }}
@@ -103,7 +103,7 @@ export function DetailInspector(props: {
             <Show when={props.packet!.tcp}>
               <Section title="Transport — TCP">
                 <For each={tcpFlagsTrue()}>{(f) => (
-                  <span class="inline-block px-1.5 mr-1 rounded-sm text-11-regular" style={{ background: "rgba(63,185,80,0.12)", color: "#3fb950" }}>{f}</span>
+                  <span class="inline-block px-1.5 mr-1 rounded-sm text-11-regular" style={{ background: "var(--v2-state-bg-success, rgba(63,185,80,0.12))", color: "var(--v2-state-fg-success)" }}>{f}</span>
                 )}</For>
               </Section>
             </Show>
@@ -209,8 +209,8 @@ function HeadersBody(props: { detail: NetworkDetailPayload | undefined }) {
                 data-flag={name}
                 class="inline-block px-1.5 rounded-sm text-11-regular"
                 style={{
-                  background: props.detail!.tcp!.flags[name] ? "rgba(63,185,80,0.14)" : "transparent",
-                  color: props.detail!.tcp!.flags[name] ? "#3fb950" : "inherit",
+                  background: props.detail!.tcp!.flags[name] ? "var(--v2-state-bg-success, rgba(63,185,80,0.14))" : "transparent",
+                  color: props.detail!.tcp!.flags[name] ? "var(--v2-state-fg-success)" : "inherit",
                   opacity: props.detail!.tcp!.flags[name] ? 1 : 0.35,
                 }}
               >

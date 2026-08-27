@@ -213,9 +213,9 @@ export function NetworkPanel(props: { expanded?: boolean; onExpand?: () => void;
   }
 
   const stateDotColor = () =>
-    snapshot.state === "capturing" ? "#3fb950" :
-    snapshot.state === "starting" || snapshot.state === "stopping" ? "#d29922" :
-    snapshot.state === "error" ? "#f44336" : "#8b8b8b"
+    snapshot.state === "capturing" ? "var(--v2-state-fg-success)" :
+    snapshot.state === "starting" || snapshot.state === "stopping" ? "var(--v2-state-fg-warning)" :
+    snapshot.state === "error" ? "var(--v2-state-fg-danger)" : "var(--v2-text-text-muted)"
   const stateLabel = () =>
     ({ idle: "未开始", starting: "正在启动", capturing: "正在抓包", stopping: "正在停止", error: "抓包失败" })[snapshot.state] ?? snapshot.state
 
@@ -328,18 +328,18 @@ export function NetworkPanel(props: { expanded?: boolean; onExpand?: () => void;
       </div>
 
       <Show when={engineUnavailable}>
-        <div class="px-3 py-2 text-12-regular" style={{ color: "#f44336" }}>
+        <div class="px-3 py-2 text-12-regular" style={{ color: "var(--v2-state-fg-danger)" }}>
           网络抓包引擎不可用。此功能需要 HSCode 桌面版。
         </div>
       </Show>
       <Show when={filterError()}>
-        <div class="px-3 py-1 text-12-regular" style={{ color: "#f44336", "white-space": "pre-wrap" }}>{filterError()}</div>
+        <div class="px-3 py-1 text-12-regular" style={{ color: "var(--v2-state-fg-danger)", "white-space": "pre-wrap" }}>{filterError()}</div>
       </Show>
       <Show when={loadError()}>
-        <div class="px-3 py-1 text-12-regular" style={{ color: "#f44336" }}>{loadError()}</div>
+        <div class="px-3 py-1 text-12-regular" style={{ color: "var(--v2-state-fg-danger)" }}>{loadError()}</div>
       </Show>
       <Show when={snapshot.state === "error" && snapshot.error}>
-        <div class="px-3 py-2 text-12-regular border-b border-border-weaker-base" style={{ color: "#f44336", "white-space": "pre-wrap" }}>
+        <div class="px-3 py-2 text-12-regular border-b border-border-weaker-base" style={{ color: "var(--v2-state-fg-danger)", "white-space": "pre-wrap" }}>
           {networkErrorText(snapshot.error?.code, snapshot.error?.message)}
         </div>
       </Show>

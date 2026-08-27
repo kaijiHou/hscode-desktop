@@ -2345,17 +2345,25 @@ export default function Page() {
                                 "-end-1": settings.general.newLayoutDesigns(),
                               }}
                               direction="horizontal"
-                              size={desktopNetworkOpen() && !desktopSessionResizeOpen() ? networkPanelResizedWidth() : sessionPanelResizedWidth()}
-                min={desktopNetworkOpen() && !desktopSessionResizeOpen() ? NETWORK_PANEL_WIDTH_MIN : SESSION_PANEL_WIDTH_MIN}
-                max={desktopNetworkOpen() && !desktopSessionResizeOpen() ? networkPanelMax() : sessionPanelMax()}
-                onResize={(width) => {
-                  size.touch()
-                  if (desktopNetworkOpen() && !desktopSessionResizeOpen()) {
-                    layout.network.resizeWidth(width)
-                    return
-                  }
-                  layout.session.resize(width)
-                }}
+                              size={desktopNetworkOpen() && !desktopSessionResizeOpen()
+                                ? (sessionPanelAvailable() ?? 0) - networkPanelResizedWidth()
+                                : sessionPanelResizedWidth()}
+                              min={desktopNetworkOpen() && !desktopSessionResizeOpen()
+                                ? (sessionPanelAvailable() ?? 0) - networkPanelMax()
+                                : SESSION_PANEL_WIDTH_MIN}
+                              max={desktopNetworkOpen() && !desktopSessionResizeOpen()
+                                ? (sessionPanelAvailable() ?? 0) - NETWORK_PANEL_WIDTH_MIN
+                                : sessionPanelMax()}
+                              onResize={(width) => {
+                                size.touch()
+                                if (desktopNetworkOpen() && !desktopSessionResizeOpen()) {
+                                  // width is chat width; network = available - chat
+                                  const available = sessionPanelAvailable() ?? 0
+                                  layout.network.resizeWidth(Math.max(NETWORK_PANEL_WIDTH_MIN, available - width))
+                                  return
+                                }
+                                layout.session.resize(width)
+                              }}
               />
             </div>
           </Show>
