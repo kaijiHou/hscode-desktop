@@ -2419,13 +2419,10 @@ export default function Page() {
               data-slot="network-workspace"
               classList={{
                 "min-w-0 h-full flex flex-col": true,
-                "flex-1": !desktopNetworkOnlyOpen() && !desktopTerminalOnlyOpen(),
+                "flex-1": !desktopNetworkOnlyOpen(),
               }}
               style={desktopNetworkOnlyOpen() ? {
                 width: `${networkPanelResizedWidth()}px`,
-                "flex-shrink": "0",
-              } : desktopTerminalOnlyOpen() ? {
-                height: `${layout.terminal.height()}px`,
                 "flex-shrink": "0",
               } : undefined}
             >
@@ -2479,44 +2476,11 @@ export default function Page() {
                 <div
                   classList={{
                     "min-h-0 shrink-0": desktopV2PanelLayout().stacked,
-                    "min-h-0 flex-1": !desktopV2PanelLayout().stacked && !desktopTerminalOnlyOpen(),
+                    "min-h-0 flex-1": !desktopV2PanelLayout().stacked,
                   }}
-                  style={desktopTerminalOnlyOpen() ? {
-                    height: `${layout.terminal.height()}px`,
-                    "flex-shrink": "0",
-                  } : undefined}
                 >
                   <TerminalPanelV2 stacked={desktopV2PanelLayout().stacked} />
                 </div>
-                {/* Terminal-only: vertical splitter at bottom to resize height */}
-                {desktopTerminalOnlyOpen() && (
-                  <div
-                    style={{ position: "relative", width: "100%", height: "6px", "flex-shrink": "0", cursor: "row-resize", background: "rgba(128,128,128,0.3)", "border-top": "1px solid rgba(128,128,128,0.5)", "border-bottom": "1px solid rgba(128,128,128,0.5)" }}
-                    onMouseDown={(e) => {
-                      if (e.detail > 1) return
-                      e.preventDefault()
-                      const startY = e.clientY
-                      const startH = layout.terminal.height()
-                      const minH = 100
-                      const maxH = typeof window === "undefined" ? 600 : window.innerHeight * 0.6
-                      document.body.style.userSelect = "none"
-                      document.body.style.overflow = "hidden"
-                      const onMove = (me: MouseEvent) => {
-                        const delta = me.clientY - startY
-                        const next = Math.min(maxH, Math.max(minH, startH + delta))
-                        layout.terminal.resize(next)
-                      }
-                      const onUp = () => {
-                        document.body.style.userSelect = ""
-                        document.body.style.overflow = ""
-                        document.removeEventListener("mousemove", onMove)
-                        document.removeEventListener("mouseup", onUp)
-                      }
-                      document.addEventListener("mousemove", onMove)
-                      document.addEventListener("mouseup", onUp)
-                    }}
-                  />
-                )}
               </Show>
               <Show when={networkOpen()}>
                 <div
