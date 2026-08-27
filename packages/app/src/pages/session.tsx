@@ -2458,7 +2458,6 @@ export default function Page() {
               <Show when={desktopV2PanelLayout().stacked}>
                 <div class="relative h-2 shrink-0" onPointerDown={() => size.start()}>
                   <ResizeHandle
-                    class="!relative !inset-auto !h-full !w-full !transform-none"
                     direction="vertical"
                     size={layout.terminal.height()}
                     min={100}
