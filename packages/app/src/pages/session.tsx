@@ -2339,34 +2339,46 @@ export default function Page() {
           )}
 
           <Show when={desktopResizableSidePanelOpen()}>
-            <div onPointerDown={() => size.start()}>
-              <ResizeHandle
-                              classList={{
-                                "-end-1": settings.general.newLayoutDesigns(),
-                              }}
-                              direction="horizontal"
-                              size={desktopNetworkOpen() && !desktopSessionResizeOpen()
-                                ? (sessionPanelAvailable() ?? 0) - networkPanelResizedWidth()
-                                : sessionPanelResizedWidth()}
-                              min={desktopNetworkOpen() && !desktopSessionResizeOpen()
-                                ? (sessionPanelAvailable() ?? 0) - networkPanelMax()
-                                : SESSION_PANEL_WIDTH_MIN}
-                              max={desktopNetworkOpen() && !desktopSessionResizeOpen()
-                                ? (sessionPanelAvailable() ?? 0) - NETWORK_PANEL_WIDTH_MIN
-                                : sessionPanelMax()}
-                              onResize={(width) => {
-                                size.touch()
-                                if (desktopNetworkOpen() && !desktopSessionResizeOpen()) {
-                                  // width is chat width; network = available - chat
-                                  const available = sessionPanelAvailable() ?? 0
-                                  layout.network.resizeWidth(Math.max(NETWORK_PANEL_WIDTH_MIN, available - width))
-                                  return
-                                }
-                                layout.session.resize(width)
-                              }}
-              />
-            </div>
-          </Show>
+                      {desktopNetworkOpen() && !desktopSessionResizeOpen() ? (
+                        // Network mode: real flex splitter between Chat and Network.
+                        // edge="start" → left drag = network wider (delta = start - pos > 0).
+                        <div
+                          class="relative w-2 shrink-0 cursor-col-resize"
+                          data-slot="network-outer-splitter"
+                          onMouseDown={() => size.start()}
+                        >
+                          <ResizeHandle
+                            class="!relative !inset-auto !w-full !h-full !transform-none"
+                            direction="horizontal"
+                            edge="start"
+                            size={networkPanelResizedWidth()}
+                            min={NETWORK_PANEL_WIDTH_MIN}
+                            max={networkPanelMax()}
+                            onResize={(width) => {
+                              size.touch()
+                              layout.network.resizeWidth(width)
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        // Session mode (review/terminal): existing ResizeHandle behavior.
+                        <div onPointerDown={() => size.start()}>
+                          <ResizeHandle
+                            classList={{
+                              "-end-1": settings.general.newLayoutDesigns(),
+                            }}
+                            direction="horizontal"
+                            size={sessionPanelResizedWidth()}
+                            min={SESSION_PANEL_WIDTH_MIN}
+                            max={sessionPanelMax()}
+                            onResize={(width) => {
+                              size.touch()
+                              layout.session.resize(width)
+                            }}
+                          />
+                        </div>
+                      )}
+                    </Show>
         </div>
 
         <Show when={!newSessionDesign() && desktopSidePanelOpen()}>

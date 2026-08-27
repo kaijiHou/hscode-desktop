@@ -55,7 +55,7 @@ try {
       const msg: PacketMessage = {
         type: "packet",
         bytes: result.bytes,
-        timestamp: Number(result.timestamp) || Date.now(),
+        timestamp: Date.now(),
         outbound: result.outbound,
         loopback: result.loopback,
         ipv6: result.ipv6,
