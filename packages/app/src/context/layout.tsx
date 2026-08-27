@@ -285,6 +285,9 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
         network: {
           height: DEFAULT_TERMINAL_HEIGHT,
           opened: false,
+          width: undefined as number | undefined,
+          detailWidth: undefined as number | undefined,
+          detailCollapsed: false,
         },
         review: {
           diffStyle: "split" as ReviewDiffStyle,
@@ -700,6 +703,20 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
         height: createMemo(() => store.network?.height ?? DEFAULT_TERMINAL_HEIGHT),
         resize(height: number) {
           setStore("network", "height", height)
+        },
+        // Outer workspace width of the Network panel (desktop side-panel mode).
+        width: createMemo(() => store.network?.width),
+        resizeWidth(width: number) {
+          setStore("network", "width", width)
+        },
+        // Inner packet-list/detail splitter position (px width of detail).
+        detailWidth: createMemo(() => store.network?.detailWidth),
+        resizeDetail(width: number) {
+          setStore("network", "detailWidth", width)
+        },
+        detailCollapsed: createMemo(() => store.network?.detailCollapsed ?? false),
+        collapseDetail(collapsed: boolean) {
+          setStore("network", "detailCollapsed", collapsed)
         },
       },
       review: {

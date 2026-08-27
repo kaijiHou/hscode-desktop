@@ -43,52 +43,15 @@ export type FatalRendererError = {
 }
 
 // ---- HSCode Network Inspector ---------------------------------------------
-export type NetworkCaptureState = "idle" | "starting" | "capturing" | "stopping" | "error"
-export type NetworkDirection = "inbound" | "outbound"
-export type NetworkProtocol = "TCP" | "UDP" | "ICMP" | "OTHER"
-
-export type NetworkPacketSummary = {
-  id: string
-  timestamp: number
-  direction: NetworkDirection
-  ipVersion: 4 | 6
-  protocol: NetworkProtocol
-  sourceIp: string
-  destinationIp: string
-  sourcePort?: number
-  destinationPort?: number
-  length: number
-  tcp?: {
-    syn: boolean
-    ack: boolean
-    fin: boolean
-    rst: boolean
-    psh: boolean
-    urg: boolean
-  }
-  payloadLength: number
-  application?: {
-    protocol?: "HTTP"
-    method?: string
-    path?: string
-    host?: string
-  }
-}
-
-export type NetworkStateSnapshot = {
-  state: NetworkCaptureState
-  error?: { code: string; message: string; winError?: number }
-  packetCount: number
-  startTime?: number
-}
-
-export type NetworkDetailPayload = {
-  summary: NetworkPacketSummary
-  hex: string
-  ascii: string
-  payloadLength: number
-  payloadPreview: string
-}
+// Types are imported from the shared source of truth (@opencode-ai/app) so
+// main / preload / renderer can never drift again.
+import type {
+  NetworkCaptureState,
+  NetworkDetailPayload,
+  NetworkPacketSummary,
+  NetworkStateSnapshot,
+} from "@opencode-ai/app/network-types"
+export type { NetworkCaptureState, NetworkDetailPayload, NetworkPacketSummary, NetworkStateSnapshot }
 
 export type NetworkAPI = {
   getState: () => Promise<NetworkStateSnapshot>

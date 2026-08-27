@@ -1,50 +1,33 @@
-// HSCode Network Inspector — bottom tool panel content.
-// Rendered by the session layout (Terminal │ Network). The parent controls
-// visibility via view().network; this panel fills the given space (100% w/h).
+// HSCode Network Inspector — bottom tool panel content (UX v2).
+// Rendered by the session layout. Agent/IDE-style workbench:
+//   Header │ Filter Toolbar │ Packet List ⇄ Detail Inspector
+// The outer width is controlled by the session ResizeHandle; the inner
+// List/Detail split is draggable here (persisted via layout.network.detailWidth).
 
 import { For, Show, createMemo, createSignal, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
+import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
+import { useLayout } from "@/context/layout"
+import type {
+  NetworkDetailPayload,
+  NetworkPacketSummary,
+  NetworkStateSnapshot,
+} from "@opencode-ai/app/network-types"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { buildFilter, type FilterState } from "./filter-builder"
+import { PacketList } from "./network-packet-list"
+import { DetailInspector } from "./network-packet-detail"
 
-// ---- HSCode Network Inspector renderer-side types (mirror of preload) ----
-export type NetworkCaptureState = "idle" | "starting" | "capturing" | "stopping" | "error"
-export type NetworkDirection = "inbound" | "outbound"
-export type NetworkProtocol = "TCP" | "UDP" | "ICMP" | "OTHER"
+export type NetworkCaptureState = NetworkStateSnapshot["state"]
+export type { NetworkPacketSummary, NetworkStateSnapshot, NetworkDetailPayload }
 
-export type NetworkPacketSummary = {
-  id: string
-  timestamp: number
-  direction: NetworkDirection
-  ipVersion: 4 | 6
-  protocol: NetworkProtocol
-  sourceIp: string
-  destinationIp: string
-  sourcePort?: number
-  destinationPort?: number
-  length: number
-  tcp?: { syn: boolean; ack: boolean; fin: boolean; rst: boolean; psh: boolean; urg: boolean }
-  payloadLength: number
-  application?: { protocol?: "HTTP"; method?: string; path?: string; host?: string; version?: string }
+export function networkApi(): NetworkApiSurface | undefined {
+  const api = (window as unknown as { api?: { network?: NetworkApiSurface } }).api
+  return api?.network
 }
 
-export type NetworkStateSnapshot = {
-  state: NetworkCaptureState
-  error?: { code: string; message: string; winError?: number }
-  packetCount: number
-  startTime?: number
-}
-
-export type NetworkDetailPayload = {
-  summary: NetworkPacketSummary
-  hex: string
-  ascii: string
-  payloadLength: number
-  payloadPreview: string
-}
-
-export type NetworkApiSurface = {
+export interface NetworkApiSurface {
   getState: () => Promise<NetworkStateSnapshot>
   getPackets: () => Promise<NetworkPacketSummary[]>
   getDetail: (id: string) => Promise<NetworkDetailPayload | null>
@@ -57,16 +40,21 @@ export type NetworkApiSurface = {
   onCleared: (cb: () => void) => () => void
 }
 
-function networkApi(): NetworkApiSurface | undefined {
-  const api = (window as unknown as { api?: { network?: NetworkApiSurface } }).api
-  return api?.network
+type ViewTab = "overview" | "headers" | "payload" | "hex" | "ascii"
+const tabLabels: Record<ViewTab, string> = {
+  overview: "概览",
+  headers: "协议头",
+  payload: "Payload",
+  hex: "HEX",
+  ascii: "ASCII",
 }
 
-type ViewTab = "overview" | "payload" | "hex" | "ascii"
-const tabLabels: Record<ViewTab, string> = { overview: "概览", payload: "Payload", hex: "HEX", ascii: "ASCII" }
+const DETAIL_MIN_WIDTH = 300
+const DETAIL_DEFAULT_WIDTH = 380
 
-export function NetworkPanel() {
+export function NetworkPanel(props: { expanded?: boolean; onExpand?: () => void; onRestore?: () => void }) {
   const { view } = useSessionLayout()
+  const layout = useLayout()
   const api = networkApi()
   const engineUnavailable = !api
 
@@ -79,6 +67,10 @@ export function NetworkPanel() {
   const [viewTab, setViewTab] = createSignal<ViewTab>("overview")
   const [loadError, setLoadError] = createSignal("")
 
+  // Inner splitter state — persisted through the layout store.
+  const detailWidth = () => Math.max(DETAIL_MIN_WIDTH, layout?.network.detailWidth() ?? DETAIL_DEFAULT_WIDTH)
+  const detailCollapsed = () => layout?.network.detailCollapsed() ?? false
+
   const isCapturing = () => snapshot.state === "capturing" || snapshot.state === "starting"
 
   const loadPackets = async () => {
@@ -87,7 +79,6 @@ export function NetworkPanel() {
       setPackets(await api.getPackets())
       setLoadError("")
     } catch (error) {
-      // Real engine errors must be surfaced, not swallowed as "no data".
       setLoadError(`Failed to load packets: ${String(error)}`)
     }
   }
@@ -97,6 +88,7 @@ export function NetworkPanel() {
     try {
       const d = await api.getDetail(id)
       setDetail(d ?? undefined)
+      if (d && detailCollapsed()) layout?.network.collapseDetail(false)
     } catch (error) {
       setLoadError(`Failed to load packet detail: ${String(error)}`)
       setDetail(undefined)
@@ -193,31 +185,39 @@ export function NetworkPanel() {
     return d.toTimeString().slice(0, 8) + "." + String(t % 1000).padStart(3, "0")
   }
   const fmtEndpoint = (ip: string, port?: number) => (port !== undefined ? `${ip}:${port}` : ip)
-  const protoLabel = (p: NetworkPacketSummary) => p.application?.protocol ?? p.protocol
 
-  const detailRows = createMemo(() => {
-    const s = selected()
-    const d = detail()
-    if (!s) return []
-    const rows: Array<[string, string]> = [
-      ["协议", protoLabel(s)],
-      ["源地址", fmtEndpoint(s.sourceIp, s.sourcePort)],
-      ["目标地址", fmtEndpoint(s.destinationIp, s.destinationPort)],
-      ["长度", String(s.length)],
-      ["载荷长度", String(s.payloadLength)],
-      ["方向", s.direction],
-      ["IP 版本", String(s.ipVersion)],
-    ]
-    if (s.tcp) {
-      rows.push(["TCP 标志", `SYN=${s.tcp.syn} ACK=${s.tcp.ack} FIN=${s.tcp.fin} RST=${s.tcp.rst} PSH=${s.tcp.psh} URG=${s.tcp.urg}`])
+  // --- inner splitter drag ---
+  let workspaceRef: HTMLDivElement | undefined
+  const onSplitterPointerDown = (e: PointerEvent) => {
+    e.preventDefault()
+    const bar = workspaceRef
+    if (!bar) return
+    const startX = e.clientX
+    const startWidth = detailWidth()
+    document.body.style.userSelect = "none"
+    document.body.style.cursor = "col-resize"
+    const move = (ev: PointerEvent) => {
+      // Detail sits at the RIGHT edge: dragging left grows it.
+      const next = startWidth + (startX - ev.clientX)
+      const maxAllowed = bar.getBoundingClientRect().width - 400
+      layout?.network.resizeDetail(Math.min(Math.max(DETAIL_MIN_WIDTH, next), Math.max(DETAIL_MIN_WIDTH, maxAllowed)))
     }
-    if (s.application) {
-      rows.push(["HTTP", `${s.application.method ?? ""} ${s.application.path ?? ""} ${s.application.version ?? ""}`])
-      if (s.application.host) rows.push(["主机", s.application.host])
+    const up = () => {
+      document.body.style.userSelect = ""
+      document.body.style.cursor = ""
+      window.removeEventListener("pointermove", move)
+      window.removeEventListener("pointerup", up)
     }
-    if (d && d.payloadPreview) rows.push(["载荷预览", d.payloadPreview.slice(0, 200)])
-    return rows
-  })
+    window.addEventListener("pointermove", move)
+    window.addEventListener("pointerup", up)
+  }
+
+  const stateDotColor = () =>
+    snapshot.state === "capturing" ? "#3fb950" :
+    snapshot.state === "starting" || snapshot.state === "stopping" ? "#d29922" :
+    snapshot.state === "error" ? "#f44336" : "#8b8b8b"
+  const stateLabel = () =>
+    ({ idle: "未开始", starting: "正在启动", capturing: "正在抓包", stopping: "正在停止", error: "抓包失败" })[snapshot.state] ?? snapshot.state
 
   return (
     <div
@@ -225,36 +225,57 @@ export function NetworkPanel() {
       data-component="network-panel"
       role="region"
       aria-label="网络抓包"
-      class="network-panel relative w-full h-full min-h-0 flex flex-col overflow-hidden bg-background-stronger text-14-regular border-t border-border-weak-base"
+      class="network-panel relative w-full h-full min-h-0 flex flex-col overflow-hidden bg-background-stronger text-14-regular border-t border-border-weaker-base"
     >
-      <div class="px-2 py-1 text-12-regular opacity-60 border-b border-border-weaker-base">
-        捕获并分析当前电脑的 TCP / UDP / ICMP 网络数据包
-      </div>
-      <div class="flex items-center gap-2 px-2 h-9 border-b border-border-weaker-base bg-background-stronger shrink-0">
-        <span class="font-semibold">网络抓包</span>
-        <span
-          data-slot="network-state"
-          class="text-12-regular"
-          style={{ color: isCapturing() ? "#4caf50" : snapshot.state === "error" ? "#f44336" : undefined }}
-        >
-          {{ "idle": "未开始", "starting": "正在启动", "capturing": "正在抓包", "stopping": "正在停止", "error": "抓包失败" }[snapshot.state] ?? snapshot.state}
+      {/* A. Header */}
+      <div class="flex items-center gap-2 px-3 h-10 shrink-0" data-slot="network-header">
+        <span class="font-semibold text-13-regular">网络抓包</span>
+        <span class="inline-flex items-center gap-1.5 text-12-regular" data-slot="network-state">
+          <span
+            aria-hidden="true"
+            style={{
+              width: "7px",
+              height: "7px",
+              "border-radius": "50%",
+              background: stateDotColor(),
+              display: "inline-block",
+            }}
+          />
+          {stateLabel()}
         </span>
-        <span class="ml-auto opacity-70">{packets().length} 个数据包</span>
+        <Show when={snapshot.state === "capturing"}>
+          <span class="text-12-regular opacity-60 hidden lg:inline">筛选修改将在重新开始后生效</span>
+        </Show>
+        <span class="ml-auto text-12-regular opacity-70" data-slot="network-count">{packets().length} 个数据包</span>
+        <ButtonV2 size="small" variant={isCapturing() ? "danger" : "neutral"} onClick={() => void (isCapturing() ? stop() : start())} disabled={!api || snapshot.state === "starting" || snapshot.state === "stopping"} data-action="network-toggle-capture">
+          {isCapturing() ? "停止抓包" : "开始抓包"}
+        </ButtonV2>
+        <ButtonV2 size="small" variant="ghost" onClick={() => void clear()} disabled={packets().length === 0}>
+          清空
+        </ButtonV2>
+        <Show when={props.expanded !== undefined}>
+          <ButtonV2 size="small" variant="ghost" onClick={() => props.expanded ? props.onRestore?.() : props.onExpand?.()} aria-label={props.expanded ? "恢复布局" : "扩大工作区"} title={props.expanded ? "恢复布局" : "扩大工作区"} data-action="network-expand">
+            <IconV2 name={props.expanded ? "collapse" : "expand"} />
+          </ButtonV2>
+        </Show>
         <button
           onClick={() => view().network.close()}
           aria-label="关闭网络抓包"
           class="titlebar-icon w-6 h-6 p-0 box-border shrink-0"
+          data-action="network-close"
         >
           ✕
         </button>
       </div>
 
-      <div class="flex items-center gap-1 px-2 py-1 border-b border-border-weaker-base shrink-0">
+      {/* B. Filter Toolbar — compact single row, wraps on narrow widths */}
+      <div class="flex items-center gap-1.5 px-3 py-1.5 flex-wrap shrink-0" data-slot="network-toolbar">
         <select
           value={filterState().protocol}
           onChange={(e) => setFilterState({ ...filterState(), protocol: e.currentTarget.value as FilterState["protocol"] })}
           aria-label="协议筛选"
-          class="bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+          disabled={isCapturing()}
+          class="h-7 bg-surface-base border border-border-weaker-base rounded px-1.5 text-12-regular disabled:opacity-50"
         >
           <option value="">全部协议</option>
           <option value="tcp">TCP</option>
@@ -266,43 +287,43 @@ export function NetworkPanel() {
           onInput={(e) => setFilterState({ ...filterState(), ip: e.currentTarget.value })}
           placeholder="IP"
           aria-label="IP 筛选"
-          class="w-36 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+          disabled={isCapturing()}
+          class="w-36 h-7 bg-surface-base border border-border-weaker-base rounded px-1.5 text-12-regular disabled:opacity-50"
         />
         <input
           value={filterState().port}
           onInput={(e) => setFilterState({ ...filterState(), port: e.currentTarget.value })}
           placeholder="端口"
           aria-label="端口筛选"
-          class="w-24 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+          disabled={isCapturing()}
+          class="w-20 h-7 bg-surface-base border border-border-weaker-base rounded px-1.5 text-12-regular disabled:opacity-50"
         />
         <select
           value={filterState().direction}
           onChange={(e) => setFilterState({ ...filterState(), direction: e.currentTarget.value as FilterState["direction"] })}
           aria-label="方向筛选"
-          class="bg-surface-base border border-border-weak-base rounded px-2 py-1 text-13-regular"
+          disabled={isCapturing()}
+          class="h-7 bg-surface-base border border-border-weaker-base rounded px-1.5 text-12-regular disabled:opacity-50"
         >
           <option value="">全部方向</option>
           <option value="inbound">入站</option>
           <option value="outbound">出站</option>
         </select>
-      </div>
-
-      <div class="flex items-center gap-2 px-2 h-9 border-b border-border-weaker-base shrink-0">
         <input
           value={filterState().advanced}
           onInput={(e) => setFilterState({ ...filterState(), advanced: e.currentTarget.value })}
-          placeholder="高级筛选: tcp / udp / tcp.port == 22122"
+          placeholder="高级筛选：tcp / udp / tcp.port == 22122"
           aria-label="Network filter"
-          class="flex-1 min-w-0 bg-surface-base border border-border-weak-base rounded px-2 py-1 text-14-regular"
+          disabled={isCapturing()}
+          class="flex-1 min-w-40 h-7 bg-surface-base border border-border-weaker-base rounded px-1.5 text-12-regular disabled:opacity-50"
         />
-        <ButtonV2 size="small" onClick={() => void start()} disabled={isCapturing() || !api}>
-          开始抓包
-        </ButtonV2>
-        <ButtonV2 size="small" variant="danger" onClick={() => void stop()} disabled={!isCapturing() || !api}>
-          停止抓包
-        </ButtonV2>
-        <ButtonV2 size="small" variant="ghost" onClick={() => void clear()}>
-          清空
+        <ButtonV2
+          size="small"
+          variant="ghost"
+          disabled={isCapturing() || (!filterState().protocol && !filterState().ip && !filterState().port && !filterState().direction && !filterState().advanced)}
+          onClick={() => setFilterState({ protocol: "", ip: "", port: "", direction: "", advanced: "" })}
+        >
+          重置
         </ButtonV2>
       </div>
 
@@ -312,103 +333,61 @@ export function NetworkPanel() {
         </div>
       </Show>
       <Show when={filterError()}>
-        <div class="px-3 py-1" style={{ color: "#f44336", "white-space": "pre-wrap" }}>{networkErrorText(undefined, filterError())}</div>
+        <div class="px-3 py-1 text-12-regular" style={{ color: "#f44336", "white-space": "pre-wrap" }}>{filterError()}</div>
       </Show>
       <Show when={loadError()}>
-        <div class="px-3 py-1" style={{ color: "#f44336" }}>{loadError()}</div>
+        <div class="px-3 py-1 text-12-regular" style={{ color: "#f44336" }}>{loadError()}</div>
       </Show>
       <Show when={snapshot.state === "error" && snapshot.error}>
-        <div class="px-3 py-2 border-b border-border-weaker-base" style={{ color: "#f44336", "white-space": "pre-wrap" }}>
+        <div class="px-3 py-2 text-12-regular border-b border-border-weaker-base" style={{ color: "#f44336", "white-space": "pre-wrap" }}>
           {networkErrorText(snapshot.error?.code, snapshot.error?.message)}
         </div>
       </Show>
 
-      <div class="flex-1 min-h-0 flex">
-        {/* packet list */}
-        <div class="flex-1 overflow-auto" data-slot="network-packet-list">
-          <Show when={packets().length === 0 && snapshot.state === "idle"}>
-            <div class="p-3 text-12-regular opacity-50">点击「开始抓包」捕获本机 TCP/UDP/ICMP 网络数据</div>
-          </Show>
-          <Show when={snapshot.state === "capturing" && packets().length === 0}>
-            <div class="p-3 text-12-regular opacity-50">正在监听网络流量，暂未捕获到数据包</div>
-          </Show>
-          <table class="w-full border-collapse text-13-regular">
-            <thead>
-              <tr class="sticky top-0 bg-background-stronger text-left">
-                <th class="px-2 py-1 font-semibold">时间</th>
-                <th class="px-2 py-1 font-semibold">方向</th>
-                <th class="px-2 py-1 font-semibold">源地址</th>
-                <th class="px-2 py-1 font-semibold">目标地址</th>
-                <th class="px-2 py-1 font-semibold">协议</th>
-                <th class="px-2 py-1 font-semibold">长度</th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={packets()}>
-                {(p) => (
-                  <tr
-                    onClick={() => void selectPacket(p.id)}
-                    class="cursor-pointer"
-                    style={{ background: p.id === selectedId() ? "var(--accent-1, #2f5f8f)" : undefined }}
-                  >
-                    <td class="px-2 py-0.5">{fmtTime(p.timestamp)}</td>
-                    <td class="px-2 py-0.5">{p.direction === "outbound" ? "→" : "←"}</td>
-                    <td class="px-2 py-0.5 max-w-56 truncate">{fmtEndpoint(p.sourceIp, p.sourcePort)}</td>
-                    <td class="px-2 py-0.5 max-w-56 truncate">{fmtEndpoint(p.destinationIp, p.destinationPort)}</td>
-                    <td class="px-2 py-0.5">{protoLabel(p)}</td>
-                    <td class="px-2 py-0.5">{p.length}</td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
-        </div>
-
-        {/* detail */}
-        <div class="w-[38%] min-w-70 flex flex-col border-l border-border-weaker-base" data-slot="network-detail">
-          <div class="flex gap-1 px-2 py-1 border-b border-border-weaker-base">
-            {(["overview", "payload", "hex", "ascii"] as ViewTab[]).map((tab) => (
-              <button
-                onClick={() => setViewTab(tab)}
-                class="px-2 py-0.5 rounded text-12-regular"
-                style={{ background: viewTab() === tab ? "var(--accent-1, #2f5f8f)" : undefined }}
-              >
-                {tabLabels[tab]}
-              </button>
-            ))}
-          </div>
-          <div class="flex-1 overflow-auto p-2 whitespace-pre-wrap break-all" data-slot="network-detail-body">
-            <Show when={viewTab() === "overview" && detailRows().length > 0} fallback={<span class="opacity-50">请选择数据包</span>}>
-              <For each={detailRows()}>
-                {([k, v]) => (
-                  <div class="flex gap-2 mb-1">
-                    <span class="w-30 opacity-70 shrink-0">{k}</span>
-                    <span>{v}</span>
+      {/* C+D. Packet Workspace: list ⇄ splitter ⇄ detail inspector */}
+      <div ref={workspaceRef} class="flex-1 min-h-0 flex" data-slot="network-workspace">
+        <PacketList
+          packets={packets}
+          snapshot={snapshot}
+          selectedId={selectedId}
+          onSelect={(id) => void selectPacket(id)}
+          fmtTime={fmtTime}
+          collapsed={detailCollapsed()}
+        />
+        <Show when={!detailCollapsed()}>
+                  <div
+                    data-slot="network-splitter"
+                    data-component="network-splitter"
+                    onPointerDown={onSplitterPointerDown}
+                    onDblClick={() => layout?.network.resizeDetail(DETAIL_DEFAULT_WIDTH)}
+                    aria-orientation="vertical"
+                    title="拖动调整详情宽度，双击重置"
+                    style={{
+                      width: "6px",
+                      cursor: "col-resize",
+                      "flex-shrink": "0",
+                      background: "var(--border-weaker-base, transparent)",
+                      transition: "background 120ms",
+                    }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--accent-1, rgba(63,185,80,0.35))")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--border-weaker-base, transparent)")}
+                  />
+                  <div style={{ width: `${detailWidth()}px`, "flex-shrink": "0", "min-width": "0", overflow: "hidden" }} data-slot="network-detail-wrap">
+                    <DetailInspector
+                      packet={selected()}
+                      detail={detail()}
+                      tab={viewTab()}
+                      onTab={setViewTab}
+                      onCollapse={() => layout?.network.collapseDetail(true)}
+                    />
                   </div>
-                )}
-              </For>
-            </Show>
-            <Show when={viewTab() === "payload" && detail()}>
-              <pre class="m-0">{detail()?.payloadPreview ?? ""}</pre>
-            </Show>
-            <Show when={viewTab() === "hex" && detail()}>
-              <pre class="m-0">{detail()?.hex ?? ""}</pre>
-            </Show>
-            <Show when={viewTab() === "ascii" && detail()}>
-              <pre class="m-0">{detail()?.ascii ?? ""}</pre>
-            </Show>
-            <Show when={["payload", "hex", "ascii"].includes(viewTab()) && !detail()}>
-              <span class="opacity-50">无载荷数据</span>
-            </Show>
-          </div>
-        </div>
+                </Show>
       </div>
     </div>
   )
 }
 
-// Chinese error mapping — the renderer must show a readable reason, not raw codes.
-// Dev mode keeps the technical code visible after the Chinese message.
+// Chinese error mapping — readable reason, not raw codes.
 export function networkErrorText(code: string | undefined, message: string | undefined): string {
   const devHint = message ? `\n${message}` : ""
   switch (code) {

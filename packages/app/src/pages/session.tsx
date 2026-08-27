@@ -468,8 +468,13 @@ export default function Page() {
   const desktopSessionResizeOpen = createMemo(() =>
     newSessionDesign() ? desktopV2ReviewOpen() || desktopTerminalOpen() : desktopReviewOpen(),
   )
+  // Network gets its own resizable side-panel semantics: the horizontal
+  // ResizeHandle must show when ONLY network is open, not just review/terminal.
+  const desktopResizableSidePanelOpen = createMemo(
+    () => desktopSessionResizeOpen() || desktopNetworkOpen(),
+  )
   const desktopSidePanelOpen = createMemo(
-    () => desktopSessionResizeOpen() || desktopNetworkOpen() || desktopFileTreeOpen(),
+    () => desktopResizableSidePanelOpen() || desktopFileTreeOpen(),
   )
   let panelRow: HTMLDivElement | undefined
   const [panelRowWidth, setPanelRowWidth] = createSignal<number>()
@@ -501,8 +506,53 @@ export default function Page() {
       split: splitReview(),
     }),
   )
-  const sessionPanelWidth = createMemo(() => {
+  // --- Network outer workspace resize (CHANGE-024) ---------------------------
+  // The NETWORK panel width is stored directly (not the chat width) so the
+  // network workspace can grow independently and persist across open/close.
+  const NETWORK_PANEL_WIDTH_MIN = 420
+  const NETWORK_PANEL_EXPAND_RATIO = 0.82
+  const networkPanelAvailable = createMemo(() => {
+    const available = sessionPanelAvailable()
+    return available === undefined ? undefined : available
+  })
+  const networkPanelMax = createMemo(() => {
+    const available = networkPanelAvailable()
+    // Allow the workspace to reach ~82% of the row (chat keeps the rest).
+    if (available === undefined) return 1600
+    return Math.max(NETWORK_PANEL_WIDTH_MIN, Math.floor(available * NETWORK_PANEL_EXPAND_RATIO))
+  })
+  const networkPanelResizedWidth = createMemo(() => {
+    const stored = layout.network.width()
+    const available = networkPanelAvailable()
+    if (stored === undefined) {
+      // Default: a bit wider than the old fixed 648px, but never past max.
+      const fallback = Math.min(720, networkPanelMax())
+      return available === undefined ? fallback : Math.min(fallback, available - SESSION_PANEL_WIDTH_MIN)
+    }
+    if (available === undefined) return Math.max(NETWORK_PANEL_WIDTH_MIN, stored)
+    return Math.min(networkPanelMax(), Math.max(NETWORK_PANEL_WIDTH_MIN, stored))
+  })
+  let networkPreExpandWidth: number | undefined
+    const [networkExpanded, setNetworkExpanded] = createSignal(false)
+    const expandNetwork = () => {
+      networkPreExpandWidth = layout.network.width() ?? networkPanelResizedWidth()
+      size.touch()
+      layout.network.resizeWidth(networkPanelMax())
+      setNetworkExpanded(true)
+    }
+    const restoreNetwork = () => {
+      size.touch()
+      layout.network.resizeWidth(Math.max(NETWORK_PANEL_WIDTH_MIN, networkPreExpandWidth ?? 720))
+      setNetworkExpanded(false)
+    }
+    const sessionPanelWidth = createMemo(() => {
     if (!desktopSidePanelOpen()) return "100%"
+    // Network-only open: the CHAT panel is the resizable one (chat shrinks as
+    // network grows). Reuse the session width store so drag/persist semantics
+    // stay identical to review/terminal.
+    if (desktopNetworkOpen() && !desktopSessionResizeOpen()) {
+      return `calc(100% - ${networkPanelResizedWidth()}px)`
+    }
     if (desktopSessionResizeOpen()) return `${sessionPanelResizedWidth()}px`
     return `calc(100% - ${layout.fileTree.width()}px)`
   })
@@ -2288,18 +2338,22 @@ export default function Page() {
             </SessionPanelFrame>
           )}
 
-          <Show when={desktopSessionResizeOpen()}>
+          <Show when={desktopResizableSidePanelOpen()}>
             <div onPointerDown={() => size.start()}>
               <ResizeHandle
-                classList={{
-                  "-end-1": settings.general.newLayoutDesigns(),
-                }}
-                direction="horizontal"
-                size={sessionPanelResizedWidth()}
-                min={SESSION_PANEL_WIDTH_MIN}
-                max={sessionPanelMax()}
+                              classList={{
+                                "-end-1": settings.general.newLayoutDesigns(),
+                              }}
+                              direction="horizontal"
+                              size={desktopNetworkOpen() && !desktopSessionResizeOpen() ? networkPanelResizedWidth() : sessionPanelResizedWidth()}
+                min={desktopNetworkOpen() && !desktopSessionResizeOpen() ? NETWORK_PANEL_WIDTH_MIN : SESSION_PANEL_WIDTH_MIN}
+                max={desktopNetworkOpen() && !desktopSessionResizeOpen() ? networkPanelMax() : sessionPanelMax()}
                 onResize={(width) => {
                   size.touch()
+                  if (desktopNetworkOpen() && !desktopSessionResizeOpen()) {
+                    layout.network.resizeWidth(width)
+                    return
+                  }
                   layout.session.resize(width)
                 }}
               />
@@ -2391,7 +2445,7 @@ export default function Page() {
                     "min-h-0 flex-1": !desktopV2PanelLayout().stacked,
                   }}
                 >
-                  <NetworkPanel />
+                  <NetworkPanel expanded={networkExpanded()} onExpand={expandNetwork} onRestore={restoreNetwork} />
                 </div>
               </Show>
             </div>

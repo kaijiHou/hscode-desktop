@@ -44,12 +44,23 @@ export function registerNetworkIpc(deps: NetworkIpcDeps): () => void {
   ipcMain.handle("network-get-detail", (_event, id: string) => {
     const detail = service.detail(id)
     if (!detail) return null
+    const bytes = detail.payload
+    // Text heuristic: ≥90% printable/whitespace → treat as text payload.
+    let printable = 0
+    for (const b of bytes) {
+      if ((b >= 0x20 && b <= 0x7e) || b === 0x09 || b === 0x0a || b === 0x0d) printable++
+    }
+    const isText = bytes.length > 0 && printable / bytes.length >= 0.9
     return {
       summary: detail.summary,
       hex: detail.hex,
       ascii: detail.ascii,
-      payloadLength: detail.payload.length,
-      payloadPreview: new TextDecoder().decode(detail.payload.slice(0, 512)),
+      payloadLength: bytes.length,
+      payloadPreview: new TextDecoder().decode(bytes.slice(0, 512)),
+      isText,
+      ip: detail.ip,
+      tcp: detail.tcp,
+      udp: detail.udp,
     }
   })
   ipcMain.handle("network-start", (_event, filter: string) => {

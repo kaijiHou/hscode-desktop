@@ -15,12 +15,11 @@ describe("UI-1 — Network panel renders Start/Stop/Clear/filter", () => {
   test("panel source declares the visible toolbar (Start/Stop/Clear/filter input)", async () => {
     const src = await Bun.file(`${import.meta.dir}/network-panel.tsx`).text()
     expect(src).toContain("网络抓包")
-    // buttons wired to real handlers
-    expect(src).toContain("onClick={() => void start()}")
+    // header capture toggle wired to real handlers (start/stop merged, v2 UX)
+    expect(src).toContain("void (isCapturing() ? stop() : start())")
     expect(src).toContain("开始抓包")
-    expect(src).toContain("onClick={() => void stop()}")
     expect(src).toContain("停止抓包")
-    expect(src).toContain("onClick={() => void clear()}")
+    expect(src).toContain('onClick={() => void clear()}')
     expect(src).toContain("清空")
     expect(src).toContain("高级筛选")
     expect(src).toContain('aria-label="Network filter"')
@@ -30,6 +29,53 @@ describe("UI-1 — Network panel renders Start/Stop/Clear/filter", () => {
     // real engine errors surface in the DOM, not swallowed
     expect(src).toContain("Failed to load packets:")
     expect(src).toContain("Failed to load packet detail:")
+    // expand/restore workspace controls
+    expect(src).toContain("扩大工作区")
+    expect(src).toContain("恢复布局")
+  })
+
+  test("packet list renders IDE-style table (nowrap endpoints, badge, right-aligned sizes)", async () => {
+    const list = await Bun.file(`${import.meta.dir}/network-packet-list.tsx`).text()
+    expect(list).toContain("源地址")
+    expect(list).toContain("目标地址")
+    expect(list).toContain("whitespace-nowrap")
+    expect(list).toContain("protocol-badge")
+    expect(list).toContain("text-right")
+    expect(list).toContain("--font-mono")
+  })
+
+  test("detail inspector has five tabs with structured protocol headers", async () => {
+    const detail = await Bun.file(`${import.meta.dir}/network-packet-detail.tsx`).text()
+    // tabs are declared as a typed array rendered into data-slot attributes
+    expect(detail).toContain('(["overview", "headers", "payload", "hex", "ascii"] as ViewTab[])')
+    expect(detail).toContain("detail-tab-")
+    // TCP full header fields
+    for (const field of ["Source Port", "Destination Port", "Sequence Number", "Acknowledgment", "Header Length", "Window Size", "Checksum", "Urgent Pointer"]) {
+      expect(detail).toContain(field)
+    }
+    // UDP full header fields
+    for (const field of ["Length", "Payload Length"]) {
+      expect(detail).toContain(field)
+    }
+    // IP layer shown before transport
+    expect(detail).toContain("IPv4 —")
+    expect(detail).toContain("IPv6 —")
+    // options rendering
+    expect(detail).toContain("Options")
+    // payload text/binary distinction + copy hex
+    expect(detail).toContain("Text")
+    expect(detail).toContain("Binary")
+    expect(detail).toContain("复制 HEX")
+    // collapse control
+    expect(detail).toContain("收起详情")
+  })
+
+  test("inner splitter is draggable and persisted via layout store", async () => {
+    const src = await Bun.file(`${import.meta.dir}/network-panel.tsx`).text()
+    expect(src).toContain("data-slot=\"network-splitter\"")
+    expect(src).toContain("onPointerDown={onSplitterPointerDown}")
+    expect(src).toContain("resizeDetail")
+    expect(src).toContain("collapseDetail")
   })
 
   test("action buttons use theme-aware ButtonV2 — no dark hardcoded inline style", async () => {

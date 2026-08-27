@@ -8,22 +8,12 @@
 import { EventEmitter } from "node:events"
 
 import { FilterValidationError, parseFilter } from "./filter"
-import {
-  CaptureStateMachine,
-  DetailCache,
-  PacketRingBuffer,
-} from "./capture-service-core"
+import { CaptureStateMachine, DetailCache, PacketRingBuffer } from "./capture-service-core"
 import type { CaptureError } from "./capture-service-core"
 import type { PacketDetail, PacketSummary } from "./parser"
 import { buildDetail, parsePacket } from "./parser"
 
-export {
-  CaptureStateMachine,
-  DetailCache,
-  PacketRingBuffer,
-  ReentrantStartError,
-  StopWhenIdleError,
-} from "./capture-service-core"
+export { CaptureStateMachine, DetailCache, PacketRingBuffer, ReentrantStartError, StopWhenIdleError } from "./capture-service-core"
 export { FilterValidationError } from "./filter"
 export type { CaptureError, CaptureState, CaptureStateSnapshot } from "./capture-service-core"
 
@@ -54,6 +44,8 @@ export class CaptureService extends EventEmitter {
   private resourcesDir = ""
   private nativeBridge: { validateFilter(f: string): boolean } | null = null
   private nativeBridgeError: CaptureError | null = null
+  /** Raw packet bytes indexed by packet ID — built lazily on getDetail. */
+  private rawPackets = new Map<string, Uint8Array>()
 
   constructor(options: CaptureServiceOptions = {}, spawnWorker?: WorkerSpawner) {
     super()
@@ -104,8 +96,17 @@ export class CaptureService extends EventEmitter {
   }
 
   detail(id: string): PacketDetail | undefined {
-    return this.details.get(id)
-  }
+      const cached = this.details.get(id)
+      if (cached) return cached
+      // Build detail lazily from stored raw packet bytes.
+      const raw = this.rawPackets.get(id)
+      if (!raw) return undefined
+      const summary = this.ring.all.find((s) => s.id === id)
+      if (!summary) return undefined
+      const detail = buildDetail(summary, raw)
+      this.details.set(detail)
+      return detail
+    }
 
   /** Validate a filter through HSCode grammar + WinDivert native compile.
    *  If native bridge is unavailable, throws the recorded init error (real root
@@ -179,10 +180,11 @@ export class CaptureService extends EventEmitter {
   }
 
   clear(): void {
-    this.ring.clear()
-    this.details.clear()
-    this.emit("cleared")
-  }
+      this.ring.clear()
+      this.details.clear()
+      this.rawPackets.clear()
+      this.emit("cleared")
+    }
 
   dispose(): void {
     if (this.worker) {
@@ -226,22 +228,24 @@ export class CaptureService extends EventEmitter {
         ipv6?: boolean
       }
       if (!packetMsg.bytes) return
-      try {
-        const summary = parsePacket(packetMsg.bytes, {
-          timestamp: packetMsg.timestamp ?? Date.now(),
-          direction: packetMsg.outbound ? "outbound" : "inbound",
-        })
-        this.ring.push(summary)
-        this.machine.recordPacket()
-        this.emit("packet", summary)
-        if (this.ring.length % 250 === 0) {
-          this.emit("state", this.machine.snapshot())
+            try {
+              const summary = parsePacket(packetMsg.bytes, {
+                timestamp: packetMsg.timestamp ?? Date.now(),
+                direction: packetMsg.outbound ? "outbound" : "inbound",
+              })
+              this.ring.push(summary)
+              // Store raw bytes so detail can be built lazily on demand.
+              this.rawPackets.set(summary.id, packetMsg.bytes)
+              this.machine.recordPacket()
+              this.emit("packet", summary)
+              if (this.ring.length % 250 === 0) {
+                this.emit("state", this.machine.snapshot())
+              }
+            } catch {
+              // unparseable packet — skip; capture continues
+            }
+          }
         }
-      } catch {
-        // unparseable packet — skip; capture continues
-      }
-    }
-  }
 
   /** Build + cache a detail from a raw packet (used by the detail IPC). */
   cacheDetail(summary: PacketSummary, raw: Uint8Array): PacketDetail {

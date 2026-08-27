@@ -342,3 +342,139 @@ describe("detectHttp edge cases", () => {
     expect(info?.path).toBe("/upload")
   })
 })
+// --- CHANGE-024: full protocol header parsing -------------------------------
+
+import { parseTcpOptions, type PacketDetail } from "./parser"
+
+describe("CHANGE-024 — TCP full header", () => {
+  test("PSH+ACK exposes window/checksum/urgentPointer/dataOffset", () => {
+    const raw = makeIpv6Tcp()
+    const s = parsePacket(raw)
+    const d = buildDetail(s, raw) as PacketDetail
+    expect(d.tcp).toBeDefined()
+    expect(d.tcp!.sourcePort).toBe(8080)
+    expect(d.tcp!.destinationPort).toBe(6666)
+    expect(d.tcp!.sequence).toBe(1)
+    expect(d.tcp!.acknowledgment).toBe(0)
+    expect(d.tcp!.dataOffset).toBe(20)
+    // windowSize bytes [14][15] are 0 in fixture
+    expect(d.tcp!.windowSize).toBe(0)
+    expect(d.tcp!.checksum).toBe(0)
+    expect(d.tcp!.urgentPointer).toBe(0)
+    expect(d.tcp!.flags.psh).toBe(true)
+    expect(d.tcp!.flags.ack).toBe(true)
+    expect(d.tcp!.flags.syn).toBe(false)
+    // payload excludes the TCP header
+    expect(d.payload.length).toBe(4)
+  })
+
+  test("IPv4 detail carries structured IP header fields", () => {
+    const raw = makeIpv4Tcp()
+    const s = parsePacket(raw)
+    const d = buildDetail(s, raw)
+    expect(d.ip).toBeDefined()
+    if (d.ip?.version !== 4) throw new Error("expected IPv4")
+    expect(d.ip.ihlBytes).toBe(20)
+    expect(d.ip.totalLength).toBe(56)
+    expect(d.ip.ttl).toBe(64)
+    expect(d.ip.protocolNumber).toBe(6)
+    expect(d.ip.protocolName).toBe("TCP")
+    expect(d.ip.sourceIp).toBe("192.168.1.10")
+    expect(d.ip.destinationIp).toBe("192.168.1.20")
+    expect(typeof d.ip.checksum).toBe("number")
+  })
+
+  test("TCP options: MSS + Window Scale + SACK Permitted parsed; payload offset correct", () => {
+    // Build IPv4+TCP with dataOffset=8 → 12 bytes of options:
+    // MSS(4B: 02 04 05 b4=1460), Window Scale(3B: 03 03 07), SACK Permitted(2B: 04 02), NOP(1B)+EOL... use NOP padding to 12
+    const opt = [0x02, 0x04, 0x05, 0xb4, 0x01, 0x03, 0x03, 0x07, 0x04, 0x02, 0x01, 0x01]
+    const payloadStr = "options-payload"
+    const tcpHeaderLen = 20 + 12
+    const raw = new Uint8Array(20 + tcpHeaderLen + payloadStr.length)
+    raw[0] = 0x45
+    raw[2] = 0x00
+    raw[3] = 20 + tcpHeaderLen + payloadStr.length
+    raw[9] = 6
+    raw[12] = 10; raw[13] = 0; raw[14] = 0; raw[15] = 1
+    raw[16] = 10; raw[17] = 0; raw[18] = 0; raw[19] = 2
+    raw[20] = 0x30; raw[21] = 0x39 // src 12345
+    raw[22] = 0x1f; raw[23] = 0x90 // dst 8080
+    raw[24] = 0xde; raw[25] = 0xad; raw[26] = 0xbe; raw[27] = 0xef // seq
+    raw[28] = 0x00; raw[29] = 0x00; raw[30] = 0x00; raw[31] = 0x2a // ack 42
+    raw[32] = 0x80 // data offset 8 (32 bytes)
+    raw[33] = 0x18 // PSH+ACK
+    for (let i = 0; i < opt.length; i++) raw[40 + i] = opt[i]
+    for (let i = 0; i < payloadStr.length; i++) raw[52 + i] = payloadStr.charCodeAt(i)
+
+    const s = parsePacket(raw)
+    expect(s.sourcePort).toBe(12345)
+    expect(s.payloadLength).toBe(payloadStr.length)
+    const d = buildDetail(s, raw)
+    const opts = d.tcp?.options ?? []
+    const mss = opts.find((o) => o.kind === 2)
+    const ws = opts.find((o) => o.kind === 3)
+    const sack = opts.find((o) => o.kind === 4)
+    expect(mss?.mss).toBe(1460)
+    expect(ws?.windowScale).toBe(7)
+    expect(sack?.sackPermitted).toBe(true)
+    // payload offset must account for options
+    expect(new TextDecoder().decode(d.payload)).toBe(payloadStr)
+  })
+
+  test("parseTcpOptions handles EOL/NOP and malformed length safely", () => {
+    const eolOnly = parseTcpOptions(new Uint8Array([0]))
+    expect(eolOnly).toHaveLength(1)
+    const nops = parseTcpOptions(new Uint8Array([1, 1, 1]))
+    expect(nops).toHaveLength(3)
+    // malformed: kind=2 but missing length byte
+    const malformed = parseTcpOptions(new Uint8Array([0x02]))
+    expect(malformed.length).toBeGreaterThan(0)
+  })
+})
+
+describe("CHANGE-024 — UDP full header", () => {
+  test("detail exposes ports/length/checksum and exact payload bytes", () => {
+    const raw = makeIpv4Udp()
+    const s = parsePacket(raw)
+    const d = buildDetail(s, raw)
+    expect(d.udp).toBeDefined()
+    expect(d.udp!.sourcePort).toBe(5000)
+    expect(d.udp!.destinationPort).toBe(6000)
+    // fixture sets placeholder length 0 → parser falls back to datagram length
+    expect(d.udp!.udpLength).toBeGreaterThanOrEqual(8)
+    expect(d.udp!.checksum).toBe(0)
+    expect(new TextDecoder().decode(d.payload)).toBe("hello-hscode-udp")
+  })
+
+  test("real udpLength field is honored when valid", () => {
+    const payload = "xy"
+    const raw = new Uint8Array(20 + 8 + 2)
+    raw[0] = 0x45
+    raw[9] = 17
+    raw[24] = 0x00; raw[25] = 10 // udpLength = 10 (8 hdr + 2 data)
+    raw[26] = 0xaa; raw[27] = 0xbb // checksum 0xaabb
+    raw[28] = "x".charCodeAt(0)
+    raw[29] = "y".charCodeAt(0)
+    const s = parsePacket(raw)
+    const d = buildDetail(s, raw)
+    expect(d.udp!.udpLength).toBe(10)
+    expect(d.udp!.checksum).toBe(0xaabb)
+    expect(d.payload.length).toBe(2)
+  })
+})
+
+describe("CHANGE-024 — IPv6 detail fields", () => {
+  test("traffic class / flow label / hop limit / next header exposed", () => {
+    const raw = makeIpv6Tcp()
+    const s = parsePacket(raw)
+    const d = buildDetail(s, raw)
+    expect(d.ip?.version).toBe(6)
+    if (d.ip?.version !== 6) return
+    expect(d.ip.hopLimit).toBe(64)
+    expect(d.ip.nextHeader).toBe(6)
+    expect(d.ip.nextHeaderName).toBe("TCP")
+    expect(d.ip.payloadLength).toBe(24)
+    expect(typeof d.ip.flowLabel).toBe("number")
+    expect(typeof d.ip.trafficClass).toBe("number")
+  })
+})
