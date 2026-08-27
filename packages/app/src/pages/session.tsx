@@ -472,7 +472,8 @@ export default function Page() {
   const desktopNetworkOnlyOpen = createMemo(() =>
     desktopNetworkOpen() && !desktopSessionResizeOpen() && !desktopFileTreeOpen() && !desktopV2ReviewOpen(),
   )
-  // Terminal-only mode: no review, no network — terminal gets explicit height.
+  // Terminal-only mode: Chat uses persisted session width;
+  // Terminal takes remaining horizontal workspace.
   const desktopTerminalOnlyOpen = createMemo(() =>
     desktopTerminalOpen() && !desktopV2ReviewOpen() && !desktopNetworkOpen() && !desktopFileTreeOpen(),
   )
@@ -2331,6 +2332,7 @@ export default function Page() {
           }}
           style={{
             width: sessionPanelWidth() ?? undefined,
+            flex: desktopTerminalOnlyOpen() ? "0 0 auto" : undefined,
           }}
         >
           {settings.general.newLayoutDesigns() ? (
