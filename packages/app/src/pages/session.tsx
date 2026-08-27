@@ -468,6 +468,10 @@ export default function Page() {
   const desktopSessionResizeOpen = createMemo(() =>
     newSessionDesign() ? desktopV2ReviewOpen() || desktopTerminalOpen() : desktopReviewOpen(),
   )
+  // Network-only mode: no review, no terminal, no file tree — workspace gets explicit width.
+  const desktopNetworkOnlyOpen = createMemo(() =>
+    desktopNetworkOpen() && !desktopSessionResizeOpen() && !desktopFileTreeOpen() && !desktopV2ReviewOpen(),
+  )
   // Network gets its own resizable side-panel semantics: the horizontal
   // ResizeHandle must show when ONLY network is open, not just review/terminal.
   const desktopResizableSidePanelOpen = createMemo(
@@ -510,6 +514,7 @@ export default function Page() {
   // The NETWORK panel width is stored directly (not the chat width) so the
   // network workspace can grow independently and persist across open/close.
   const NETWORK_PANEL_WIDTH_MIN = 420
+  const CHAT_MIN_WIDTH = 360
   const NETWORK_PANEL_EXPAND_RATIO = 0.82
   const networkPanelAvailable = createMemo(() => {
     const available = sessionPanelAvailable()
@@ -517,9 +522,12 @@ export default function Page() {
   })
   const networkPanelMax = createMemo(() => {
     const available = networkPanelAvailable()
-    // Allow the workspace to reach ~82% of the row (chat keeps the rest).
+    // Max must leave room for CHAT_MIN_WIDTH + splitter (8px).
     if (available === undefined) return 1600
-    return Math.max(NETWORK_PANEL_WIDTH_MIN, Math.floor(available * NETWORK_PANEL_EXPAND_RATIO))
+    return Math.max(NETWORK_PANEL_WIDTH_MIN, Math.min(
+      Math.floor(available * NETWORK_PANEL_EXPAND_RATIO),
+      available - CHAT_MIN_WIDTH - 8,
+    ))
   })
   const networkPanelResizedWidth = createMemo(() => {
     const stored = layout.network.width()
@@ -547,12 +555,9 @@ export default function Page() {
     }
     const sessionPanelWidth = createMemo(() => {
     if (!desktopSidePanelOpen()) return "100%"
-    // Network-only open: the CHAT panel is the resizable one (chat shrinks as
-    // network grows). Reuse the session width store so drag/persist semantics
-    // stay identical to review/terminal.
-    if (desktopNetworkOpen() && !desktopSessionResizeOpen()) {
-      return `calc(100% - ${networkPanelResizedWidth()}px)`
-    }
+    // Network-only: Chat is flex-1 (takes remaining space), Network has explicit width.
+    // No explicit chat width needed — flex handles it.
+    if (desktopNetworkOnlyOpen()) return undefined
     if (desktopSessionResizeOpen()) return `${sessionPanelResizedWidth()}px`
     return `calc(100% - ${layout.fileTree.width()}px)`
   })
@@ -2321,7 +2326,7 @@ export default function Page() {
               !size.active() && !ui.reviewSnap && !desktopInlineTerminalOnlyOpen(),
           }}
           style={{
-            width: sessionPanelWidth(),
+            width: sessionPanelWidth() ?? undefined,
           }}
         >
           {settings.general.newLayoutDesigns() ? (
@@ -2410,7 +2415,17 @@ export default function Page() {
         </Show>
         <Show when={newSessionDesign()}>
           <Show when={isDesktop() ? desktopV2PanelLayout().visible : terminalOpen()}>
-            <div class="min-w-0 h-full flex flex-1 flex-col">
+            <div
+              data-slot="network-workspace"
+              classList={{
+                "min-w-0 h-full flex flex-col": true,
+                "flex-1": !desktopNetworkOnlyOpen(),
+              }}
+              style={desktopNetworkOnlyOpen() ? {
+                width: `${networkPanelResizedWidth()}px`,
+                "flex-shrink": "0",
+              } : undefined}
+            >
               <Show when={isDesktop() && (desktopV2ReviewOpen() || desktopFileTreeOpen())}>
                 <div class="min-h-0 flex-1">
                   <Suspense>
