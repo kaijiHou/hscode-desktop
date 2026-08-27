@@ -478,3 +478,89 @@ describe("CHANGE-024 — IPv6 detail fields", () => {
     expect(typeof d.ip.trafficClass).toBe("number")
   })
 })
+
+
+// --- CHANGE-025: IPv6 Traffic Class + Flow Label fix ---
+
+describe("parsePacket IPv6 — Traffic Class 8-bit across nibble boundary", () => {
+  function makeIpv6Raw(tcHigh: number, tcLow: number, flHigh: number, flMid: number, flLow: number): Uint8Array {
+    // IPv6 header (40 bytes) + minimal TCP header (20 bytes) = 60 bytes
+    const raw = new Uint8Array(60)
+    raw[0] = 0x60 | (tcHigh & 0x0f) // version=6 + TC high nibble
+    raw[1] = ((tcLow & 0x0f) << 4) | (flHigh & 0x0f) // TC low nibble + FL high nibble
+    raw[2] = flMid
+    raw[3] = flLow
+    raw[4] = 0x00 // payload length high (= 20 bytes TCP)
+    raw[5] = 0x14 // payload length low = 20
+    raw[6] = 0x06 // next header = TCP
+    raw[7] = 0x40 // hop limit = 64
+    // source IP (bytes 8-23) = ::1
+    raw[15] = 0x01
+    // destination IP (bytes 24-39) = ::2
+    raw[31] = 0x02
+    // Minimal TCP header at offset 40 (data offset = 5 words = 20 bytes)
+    raw[40 + 12] = 0x50 // data offset = 5 words
+    return raw
+  }
+
+  test("Traffic Class = 0xAB, Flow Label = 0x12345", () => {
+    const raw = makeIpv6Raw(0xA, 0xB, 0x1, 0x23, 0x45)
+    const summary = parsePacket(raw)
+    expect(summary.ipVersion).toBe(6)
+    const detail = buildDetail(summary, raw)
+    expect(detail.ip).toBeDefined()
+    if (detail.ip?.version === 6) {
+      expect(detail.ip.trafficClass).toBe(0xAB)
+      expect(detail.ip.flowLabel).toBe(0x12345)
+    }
+  })
+
+  test("Traffic Class = 0x00, Flow Label = 0x00000", () => {
+    const raw = makeIpv6Raw(0x0, 0x0, 0x0, 0x00, 0x00)
+    const summary = parsePacket(raw)
+    const detail = buildDetail(summary, raw)
+    if (detail.ip?.version === 6) {
+      expect(detail.ip.trafficClass).toBe(0x00)
+      expect(detail.ip.flowLabel).toBe(0x00000)
+    }
+  })
+
+  test("Traffic Class = 0xFF, Flow Label = 0xFFFFF", () => {
+    const raw = makeIpv6Raw(0xF, 0xF, 0xF, 0xFF, 0xFF)
+    const summary = parsePacket(raw)
+    const detail = buildDetail(summary, raw)
+    if (detail.ip?.version === 6) {
+      expect(detail.ip.trafficClass).toBe(0xFF)
+      expect(detail.ip.flowLabel).toBe(0xFFFFF)
+    }
+  })
+})
+
+// --- CHANGE-025: Payload end marker test ---
+
+describe("parsePacket payload completeness", () => {
+  test("payload retains full content including end marker", () => {
+    const payloadText = "A".repeat(80) + "END_MARKER_XYZ"
+    const payloadBytes = new TextEncoder().encode(payloadText)
+    const tcpHeaderLen = 20
+    const ipHeaderLen = 20
+    const totalLen = ipHeaderLen + tcpHeaderLen + payloadBytes.length
+
+    const raw = new Uint8Array(totalLen)
+    raw[0] = 0x45 // version=4, ihl=5
+    raw[2] = (totalLen >> 8) & 0xff
+    raw[3] = totalLen & 0xff
+    raw[9] = 6 // protocol = TCP
+    raw[ipHeaderLen + 12] = 0x50 // data offset = 5 words
+
+    raw.set(payloadBytes, ipHeaderLen + tcpHeaderLen)
+
+    const summary = parsePacket(raw)
+    expect(summary.payloadLength).toBe(payloadBytes.length)
+
+    const detail = buildDetail(summary, raw)
+    const decoded = new TextDecoder("utf-8", { fatal: false }).decode(detail.payload)
+    expect(decoded).toContain("END_MARKER_XYZ")
+    expect(decoded.length).toBe(payloadText.length)
+  })
+})

@@ -19,7 +19,6 @@ export type { CaptureError, CaptureState, CaptureStateSnapshot } from "./capture
 
 export const MAX_PACKETS = 5000
 export const MAX_DETAILS = 500
-export const MAX_RAW_PACKETS = 2000
 
 export interface WorkerLike {
   postMessage(msg: { type: "stop" }): void
@@ -164,7 +163,6 @@ export class CaptureService extends EventEmitter {
         throw new Error("capture is not running")
       }
       this.machine.stop()
-      this.rawPackets.clear()
       const worker = this.worker
       if (worker) {
         worker.postMessage({ type: "stop" })
@@ -235,12 +233,12 @@ export class CaptureService extends EventEmitter {
                 timestamp: packetMsg.timestamp ?? Date.now(),
                 direction: packetMsg.outbound ? "outbound" : "inbound",
               })
-              this.ring.push(summary)
-              // Store raw bytes so detail can be built lazily on demand.
-              // Evict oldest when over limit to prevent OOM.
-              if (this.rawPackets.size >= MAX_RAW_PACKETS) {
-                const first = this.rawPackets.keys().next().value
-                if (first) this.rawPackets.delete(first)
+              // Synchronized eviction: when ring drops old summaries, also drop
+              // their raw bytes and cached details so lifecycle stays consistent.
+              const evicted = this.ring.push(summary)
+              for (const item of evicted) {
+                this.rawPackets.delete(item.id)
+                this.details.delete(item.id)
               }
               this.rawPackets.set(summary.id, packetMsg.bytes)
               this.machine.recordPacket()

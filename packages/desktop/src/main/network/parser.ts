@@ -394,12 +394,15 @@ function parseIpv4Header(raw: Uint8Array): Ipv4HeaderInfo {
 }
 
 function parseIpv6Header(raw: Uint8Array): Ipv6HeaderInfo {
-  const trafficClassFlowLabel = ((raw[1] << 16) | (raw[2] << 8) | raw[3]) >>> 0
+  // Traffic Class spans raw[0] low nibble + raw[1] high nibble (8 bits total).
+  const trafficClass = ((raw[0] & 0x0f) << 4) | ((raw[1] & 0xf0) >> 4)
+  // Flow Label spans raw[1] low nibble + raw[2] + raw[3] (20 bits total).
+  const flowLabel = ((raw[1] & 0x0f) << 16) | (raw[2] << 8) | raw[3]
   const nextHeader = raw[6]
   return {
     version: 6,
-    trafficClass: trafficClassFlowLabel >> 20,
-    flowLabel: trafficClassFlowLabel & 0xfffff,
+    trafficClass,
+    flowLabel,
     payloadLength: (raw[4] << 8) | raw[5],
     nextHeader,
     nextHeaderName: nextHeader === 58 ? "ICMPv6" : protocolName(nextHeader),

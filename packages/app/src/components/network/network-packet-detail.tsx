@@ -269,7 +269,7 @@ function PayloadView(props: { detail: NetworkDetailPayload | undefined }) {
           </pre>
         }
       >
-        <pre class="m-0 text-12-regular select-text" data-slot="payload-text" style={{ "font-family": "var(--font-mono, ui-monospace, monospace)", "white-space": "pre-wrap", "word-break": "break-word" }}>{props.detail?.payloadPreview ?? ""}</pre>
+        <pre class="m-0 text-12-regular select-text" data-slot="payload-text" style={{ "font-family": "var(--font-mono, ui-monospace, monospace)", "white-space": "pre-wrap", "word-break": "break-word" }}>{props.detail?.payloadText ?? ""}</pre>
       </Show>
     </div>
   )

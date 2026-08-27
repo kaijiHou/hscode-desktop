@@ -111,11 +111,14 @@ export class PacketRingBuffer {
     return this.items.length
   }
 
-  push(packet: PacketSummary): void {
+  /** Push a packet; returns any evicted summaries (for synchronized cleanup). */
+  push(packet: PacketSummary): PacketSummary[] {
     this.items.push(packet)
     if (this.items.length > this.capacityValue) {
-      this.items.splice(0, this.items.length - this.capacityValue)
+      const evicted = this.items.splice(0, this.items.length - this.capacityValue)
+      return evicted
     }
+    return []
   }
 
   get all(): PacketSummary[] {
@@ -149,6 +152,10 @@ export class DetailCache {
 
   get(id: string): PacketDetail | undefined {
     return this.map.get(id)
+  }
+
+  delete(id: string): boolean {
+    return this.map.delete(id)
   }
 
   clear(): void {

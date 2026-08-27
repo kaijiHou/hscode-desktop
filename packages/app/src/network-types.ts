@@ -129,7 +129,10 @@ export type NetworkDetailPayload = {
   hex: string
   ascii: string
   payloadLength: number
-  payloadPreview: string
+  /** Full text payload (only when isText=true, ≤64KB). undefined for binary. */
+  payloadText?: string
+  /** True if payload was truncated to 64KB for display. */
+  payloadTruncated?: boolean
   isText: boolean
   ip?: Ipv4HeaderInfo | Ipv6HeaderInfo
   tcp?: TcpHeaderInfo

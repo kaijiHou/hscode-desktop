@@ -42,27 +42,39 @@ export function registerNetworkIpc(deps: NetworkIpcDeps): () => void {
   ipcMain.handle("network-get-state", () => service.snapshot())
   ipcMain.handle("network-get-packets", () => service.packets)
   ipcMain.handle("network-get-detail", (_event, id: string) => {
-    const detail = service.detail(id)
-    if (!detail) return null
-    const bytes = detail.payload
-    // Text heuristic: ≥90% printable/whitespace → treat as text payload.
-    let printable = 0
-    for (const b of bytes) {
-      if ((b >= 0x20 && b <= 0x7e) || b === 0x09 || b === 0x0a || b === 0x0d) printable++
-    }
-    const isText = bytes.length > 0 && printable / bytes.length >= 0.9
-    return {
-      summary: detail.summary,
-      hex: detail.hex,
-      ascii: detail.ascii,
-      payloadLength: bytes.length,
-      payloadPreview: new TextDecoder().decode(bytes.slice(0, 512)),
-      isText,
-      ip: detail.ip,
-      tcp: detail.tcp,
-      udp: detail.udp,
-    }
-  })
+      const detail = service.detail(id)
+      if (!detail) return null
+      const bytes = detail.payload
+      // Text heuristic: ≥90% printable/whitespace → treat as text payload.
+      let printable = 0
+      for (const b of bytes) {
+        if ((b >= 0x20 && b <= 0x7e) || b === 0x09 || b === 0x0a || b === 0x0d) printable++
+      }
+      const isText = bytes.length > 0 && printable / bytes.length >= 0.9
+      const MAX_TEXT = 64 * 1024 // 64KB — single IP packet won't exceed this
+      let payloadText: string | undefined
+      let payloadTruncated = false
+      if (isText) {
+        if (bytes.length <= MAX_TEXT) {
+          payloadText = new TextDecoder("utf-8", { fatal: false }).decode(bytes)
+        } else {
+          payloadText = new TextDecoder("utf-8", { fatal: false }).decode(bytes.slice(0, MAX_TEXT))
+          payloadTruncated = true
+        }
+      }
+      return {
+        summary: detail.summary,
+        hex: detail.hex,
+        ascii: detail.ascii,
+        payloadLength: bytes.length,
+        payloadText,
+        payloadTruncated,
+        isText,
+        ip: detail.ip,
+        tcp: detail.tcp,
+        udp: detail.udp,
+      }
+    })
   ipcMain.handle("network-start", (_event, filter: string) => {
     // Defensive re-validation at the IPC boundary: the renderer validates
     // before start, but nothing else should be able to bypass it.
