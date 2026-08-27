@@ -2350,6 +2350,7 @@ export default function Page() {
 
         <Show when={desktopResizableSidePanelOpen()}>
           {desktopNetworkOpen() && !desktopSessionResizeOpen() ? (
+            // Network: real flex splitter controlling network width
             <div
               style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize", background: "rgba(128,128,128,0.3)", "border-left": "1px solid rgba(128,128,128,0.5)", "border-right": "1px solid rgba(128,128,128,0.5)" }}
               onMouseDown={(e) => {
@@ -2376,7 +2377,38 @@ export default function Page() {
                 document.addEventListener("mouseup", onUp)
               }}
             />
+          ) : desktopTerminalOnlyOpen() ? (
+            // Terminal-only: real flex splitter controlling chat width
+            // Left drag = chat narrower = terminal wider
+            <div
+              data-slot="terminal-outer-splitter"
+              style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize", background: "rgba(128,128,128,0.3)", "border-left": "1px solid rgba(128,128,128,0.5)", "border-right": "1px solid rgba(128,128,128,0.5)" }}
+              onMouseDown={(e) => {
+                if (e.detail > 1) return
+                e.preventDefault()
+                const startX = e.clientX
+                const startChatWidth = sessionPanelResizedWidth()
+                const minChat = SESSION_PANEL_WIDTH_MIN
+                const maxChat = sessionPanelMax()
+                document.body.style.userSelect = "none"
+                document.body.style.overflow = "hidden"
+                const onMove = (me: MouseEvent) => {
+                  const delta = me.clientX - startX
+                  const next = Math.min(maxChat, Math.max(minChat, startChatWidth + delta))
+                  layout.session.resize(next)
+                }
+                const onUp = () => {
+                  document.body.style.userSelect = ""
+                  document.body.style.overflow = ""
+                  document.removeEventListener("mousemove", onMove)
+                  document.removeEventListener("mouseup", onUp)
+                }
+                document.addEventListener("mousemove", onMove)
+                document.addEventListener("mouseup", onUp)
+              }}
+            />
           ) : (
+            // Session mode (review/terminal stacked): existing ResizeHandle
             <div onPointerDown={() => size.start()}>
               <ResizeHandle
                 classList={{
