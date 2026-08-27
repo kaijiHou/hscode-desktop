@@ -55,8 +55,11 @@ export function createShellSettingsController() {
   const [shells] = createResource(
     async () => {
       const sdk = serverSdk()
-      if ((await sdk.protocol) === "v1") return (await sdk.client.pty.shells()).data ?? []
-      return [] as ShellOption[]
+      const protocol = await sdk.protocol
+      if (protocol === "v1") return (await sdk.client.pty.shells()).data ?? []
+      // V2: use generated SDK Pty.shells() endpoint
+      const result = await sdk.client.pty.shells()
+      return (result.data ?? []) as ShellOption[]
     },
     { initialValue: [] as ShellOption[] },
   )

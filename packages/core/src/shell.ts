@@ -204,6 +204,12 @@ let defaultAcceptable: string | undefined
 
 export function preferred(configShell?: string) {
   if (configShell) return select(configShell)
+  // On Windows, ignore inherited SHELL env (e.g. from Git Bash/MSYS).
+  // Use native Windows shell priority: pwsh → powershell → Git Bash → cmd.
+  if (process.platform === "win32") {
+    defaultPreferred ??= win()[0]
+    return defaultPreferred
+  }
   defaultPreferred ??= select(process.env.SHELL)
   return defaultPreferred
 }
