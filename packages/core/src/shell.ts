@@ -153,12 +153,21 @@ export function ps(file: string) {
   return meta(file)?.ps === true
 }
 
+// Windows-friendly shell labels
+const WIN_LABELS: Record<string, string> = {
+  pwsh: "PowerShell 7",
+  powershell: "Windows PowerShell",
+  cmd: "Command Prompt",
+}
+
 function info(file: string): Item {
   const item = full(file)
   const n = name(item)
+  // Use friendly label for known Windows shells
+  const label = process.platform === "win32" ? (WIN_LABELS[n] ?? n) : n
   return {
     path: item,
-    name: resolve(n) ? n : item,
+    name: resolve(n) ? label : item,
     acceptable: ok(item),
   }
 }
