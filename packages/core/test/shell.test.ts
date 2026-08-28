@@ -166,7 +166,7 @@ describe("shell", () => {
       expect(shells.length).toBeGreaterThan(0)
       // Check that at least one shell has a friendly label
       const hasLabel = shells.some(
-        (s) => s.name === "PowerShell 7" || s.name === "Windows PowerShell" || s.name === "Command Prompt",
+        (s) => s.name === "pwsh" || s.name === "powershell" || s.name === "cmd",
       )
       expect(hasLabel).toBe(true)
     })

@@ -153,21 +153,26 @@ export function ps(file: string) {
   return meta(file)?.ps === true
 }
 
-// Windows-friendly shell labels
+// Windows-friendly display labels (UI only, not used in config persistence)
 const WIN_LABELS: Record<string, string> = {
   pwsh: "PowerShell 7",
   powershell: "Windows PowerShell",
   cmd: "Command Prompt",
 }
 
+/** Returns a user-friendly display label for a shell. */
+export function label(file: string): string {
+  const n = name(file)
+  return process.platform === "win32" ? (WIN_LABELS[n] ?? n) : n
+}
+
 function info(file: string): Item {
   const item = full(file)
   const n = name(item)
-  // Use friendly label for known Windows shells
-  const label = process.platform === "win32" ? (WIN_LABELS[n] ?? n) : n
+  // name stays canonical (pwsh/powershell/bash/cmd) for config persistence
   return {
     path: item,
-    name: resolve(n) ? label : item,
+    name: resolve(n) ? n : item,
     acceptable: ok(item),
   }
 }

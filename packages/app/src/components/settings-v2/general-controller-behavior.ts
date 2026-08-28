@@ -14,22 +14,15 @@ export type ShellSelectOption = {
 }
 
 export function createShellOptions(input: { shells: ShellOption[]; current: string | undefined }) {
-  const counts = input.shells.reduce((result, shell) => {
-    result.set(shell.name, (result.get(shell.name) ?? 0) + 1)
-    return result
-  }, new Map<string, number>())
   const options: ShellSelectOption[] = [
     { id: "auto", value: "", name: "", terminalOnly: false },
-    ...input.shells.map((shell) => {
-      const ambiguous = (counts.get(shell.name) ?? 0) > 1
-      const name = ambiguous ? shell.path : shell.name
-      return {
-        id: shell.path,
-        value: ambiguous ? shell.path : shell.name,
-        name,
-        terminalOnly: !shell.acceptable,
-      }
-    }),
+    ...input.shells.map((shell) => ({
+      id: shell.path,
+      // Always persist the full path for reliable config resolution
+      value: shell.path,
+      name: shell.name,
+      terminalOnly: !shell.acceptable,
+    })),
   ]
   if (input.current && !options.some((option) => option.value === input.current)) {
     options.push({ id: input.current, value: input.current, name: input.current, terminalOnly: false })

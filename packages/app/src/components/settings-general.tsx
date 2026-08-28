@@ -160,35 +160,24 @@ export const SettingsGeneral: Component = () => {
   const currentShell = createMemo(() => serverSync().data.config.shell ?? "")
 
   const shellOptions = createMemo<ShellSelectOption[]>(() => {
-    const list = shells.latest
-    const current = serverSync().data.config.shell
-
-    const nameCounts = new Map<string, number>()
-    for (const s of list) {
-      nameCounts.set(s.name, (nameCounts.get(s.name) || 0) + 1)
-    }
-
-    const options = [
-      autoOption,
-      ...list.map((s) => {
-        const ambiguousName = (nameCounts.get(s.name) || 0) > 1
-        const text = ambiguousName ? s.path : s.name
-        const label = s.acceptable ? text : `${text} (${language.t("settings.general.row.shell.terminalOnly")})`
-        return {
+      const list = shells.latest
+      const current = serverSync().data.config.shell
+      const options = [
+        autoOption,
+        ...list.map((s) => ({
           id: s.path,
-          // Prefer name over path - "bash" is much cleaner than the explicit full route even when it may change due to PATH.
-          value: ambiguousName ? s.path : s.name,
-          label,
-        }
-      }),
-    ]
+          // Always persist the full path for reliable config resolution
+          value: s.path,
+          label: s.acceptable ? s.name : `${s.name} (${language.t("settings.general.row.shell.terminalOnly")})`,
+        })),
+      ]
 
-    if (current && !options.some((o) => o.value === current)) {
-      options.push({ id: current, value: current, label: current })
-    }
+      if (current && !options.some((o) => o.value === current)) {
+        options.push({ id: current, value: current, label: current })
+      }
 
-    return options
-  })
+      return options
+    })
 
   const onDisplayBackendChange = (checked: boolean) => {
     const update = platform.setDisplayBackend?.(checked ? "wayland" : "auto")
