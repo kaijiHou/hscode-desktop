@@ -297,28 +297,36 @@ export const Terminal = (props: TerminalProps) => {
   }
 
   const getTerminalColors = (): TerminalColors => {
-    const mode = theme.mode() === "dark" ? "dark" : "light"
-    const fallback = DEFAULT_TERMINAL_COLORS[mode]
-    const currentTheme = theme.themes()[theme.themeId()]
-    if (!currentTheme) return fallback
-    const variant = mode === "dark" ? currentTheme.dark : currentTheme.light
-    if (!variant?.seeds && !variant?.palette) return fallback
-    const resolved = resolveThemeVariant(variant, mode === "dark")
-    const text = resolved["text-stronger"] ?? fallback.foreground
-    const background = settings.general.newLayoutDesigns()
-      ? (resolveV2Token(resolveThemeVariantV2(variant, mode === "dark"), "v2-background-bg-base") ??
-        fallback.background)
-      : (resolved["background-stronger"] ?? fallback.background)
-    const alpha = mode === "dark" ? 0.25 : 0.2
-    const base = text.startsWith("#") ? (text as HexColor) : (fallback.foreground as HexColor)
-    const selectionBackground = withAlpha(base, alpha)
-    return {
-      background,
-      foreground: text,
-      cursor: text,
-      selectionBackground,
+      const mode = theme.mode() === "dark" ? "dark" : "light"
+      const fallback = DEFAULT_TERMINAL_COLORS[mode]
+      const currentTheme = theme.themes()[theme.themeId()]
+      if (!currentTheme) return fallback
+      const variant = mode === "dark" ? currentTheme.dark : currentTheme.light
+      if (!variant?.seeds && !variant?.palette) return fallback
+      const resolved = resolveThemeVariant(variant, mode === "dark")
+      const text = resolved["text-stronger"] ?? fallback.foreground
+      const background = settings.general.newLayoutDesigns()
+        ? (resolveV2Token(resolveThemeVariantV2(variant, mode === "dark"), "v2-background-bg-base") ??
+          fallback.background)
+        : (resolved["background-stronger"] ?? fallback.background)
+      const alpha = mode === "dark" ? 0.25 : 0.2
+      const base = text.startsWith("#") ? (text as HexColor) : (fallback.foreground as HexColor)
+      const selectionBackground = withAlpha(base, alpha)
+      // Spread fallback FIRST to preserve ANSI palette keys.
+      // Then override foreground-derived values.
+      // Light mode: map yellow/brightYellow to foreground so PowerShell PSReadLine
+      // command tokens (ANSI yellow) render as normal text, not gold.
+      return {
+        ...fallback,
+        background,
+        foreground: text,
+        cursor: text,
+        selectionBackground,
+        ...(mode === "light"
+          ? { yellow: text, brightYellow: text }
+          : {}),
+      }
     }
-  }
 
   const terminalColors = createMemo(getTerminalColors)
 
