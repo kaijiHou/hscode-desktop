@@ -89,7 +89,10 @@ function rooted(file: string) {
 function resolve(file: string) {
   const shell = full(file)
   if (rooted(shell)) {
+    // stat may fail on Windows App Execution Aliases (e.g. pwsh.exe in WindowsApps)
+    // If the path is rooted and known to be a valid shell name, trust it
     if (stat(shell)?.isFile()) return shell
+    if (meta(name(shell))) return shell
     return
   }
   return which(shell) ?? undefined
