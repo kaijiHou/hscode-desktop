@@ -365,12 +365,11 @@ export const Terminal = (props: TerminalProps) => {
   }
 
   createEffect(() => {
-    const colors = terminalColors()
-    const mode = theme.mode() === "dark" ? "dark" : "light"
-    if (!term) return
-    setOptionIfSupported(term, "theme", colors)
-    setOptionIfSupported(term, "colorScheme", mode)
-  })
+      const colors = terminalColors()
+      if (!term) return
+      setOptionIfSupported(term, "theme", colors)
+      // Removed colorScheme override — it overrides ANSI colors from theme
+    })
 
   createEffect(() => {
     const font = terminalFontFamily(settings.appearance.terminalFont())
@@ -450,9 +449,9 @@ export const Terminal = (props: TerminalProps) => {
         return
       }
       _ghostty = g
-      term = t
-      setOptionIfSupported(t, "colorScheme", theme.mode() === "dark" ? "dark" : "light")
-      output = terminalWriter((data, done) =>
+            term = t
+            // Removed colorScheme — theme handles colors directly
+            output = terminalWriter((data, done) =>
         t.write(data, () => {
           done?.()
         }),
