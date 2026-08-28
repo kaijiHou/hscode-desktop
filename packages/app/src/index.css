@@ -2,6 +2,9 @@
 @import "@opencode-ai/session-ui/styles";
 @import "@opencode-ai/ui/v2/styles/tailwind.css";
 @import "tw-animate-css";
+@import "./styles/hscode-tokens.css";
+@import "./styles/hscode-shell.css";
+@import "./styles/hscode-agent-feed.css";
 
 @font-face {
   font-family: "JetBrainsMono Nerd Font Mono";

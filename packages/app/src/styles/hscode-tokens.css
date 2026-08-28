@@ -1,0 +1,130 @@
+/*
+ * HSCode Inkline Workbench — Design Tokens
+ *
+ * These tokens override OpenCode defaults and establish HSCode's visual identity.
+ * Apply by importing this file AFTER the existing theme imports.
+ */
+
+@layer theme {
+  :root,
+  .light,
+  [data-theme="light"] {
+    /* === App Shell === */
+    --hs-app-bg: #F4F6F8;
+    --hs-sidebar-bg: #EEF1F4;
+    --hs-canvas-bg: #FAFBFC;
+    --hs-surface: #FFFFFF;
+    --hs-surface-subtle: #F6F8FA;
+    --hs-surface-hover: #ECEFF3;
+    --hs-surface-active: #E2E6ED;
+
+    /* === Text === */
+    --hs-text-primary: #1C2026;
+    --hs-text-secondary: #69717E;
+    --hs-text-muted: #969DA8;
+    --hs-text-disabled: #B8BEC7;
+
+    /* === Borders === */
+    --hs-border: #DDE2E8;
+    --hs-border-strong: #C9D0D8;
+
+    /* === Accent (Ink Blue) === */
+    --hs-accent: #475EDB;
+    --hs-accent-hover: #3C51C6;
+    --hs-accent-soft: #E8ECFF;
+    --hs-accent-fg: #FFFFFF;
+
+    /* === Semantic === */
+    --hs-teal: #248C84;
+    --hs-teal-soft: #E6F5F4;
+    --hs-success: #2C8A5B;
+    --hs-success-soft: #E8F5EE;
+    --hs-warning: #A56A18;
+    --hs-warning-soft: #FFF3E0;
+    --hs-danger: #C34848;
+    --hs-danger-soft: #FDECEC;
+
+    /* === Shadows (minimal) === */
+    --hs-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --hs-shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --hs-shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+
+    /* === Spacing === */
+    --hs-space-xs: 4px;
+    --hs-space-sm: 8px;
+    --hs-space-md: 12px;
+    --hs-space-lg: 16px;
+    --hs-space-xl: 24px;
+
+    /* === Radius === */
+    --hs-radius-sm: 4px;
+    --hs-radius-md: 6px;
+    --hs-radius-lg: 8px;
+    --hs-radius-xl: 10px;
+
+    /* === Typography === */
+    --hs-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, sans-serif;
+    --hs-font-mono: "JetBrainsMono Nerd Font Mono", "Cascadia Code", "Fira Code", monospace;
+
+    --hs-text-xs: 12px;
+    --hs-text-sm: 13px;
+    --hs-text-base: 14px;
+    --hs-text-lg: 16px;
+    --hs-text-xl: 18px;
+
+    --hs-leading-tight: 1.25;
+    --hs-leading-normal: 1.5;
+    --hs-leading-relaxed: 1.625;
+
+    /* === Transitions === */
+    --hs-transition-fast: 120ms ease;
+    --hs-transition-normal: 180ms ease;
+
+    /* === Layout === */
+    --hs-sidebar-width: 260px;
+    --hs-sidebar-collapsed: 52px;
+    --hs-header-height: 44px;
+    --hs-composer-max-width: 960px;
+    --hs-feed-max-width: 960px;
+
+    /* === Signal Line (HSCode identity) === */
+    --hs-signal-width: 2px;
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    --hs-app-bg: #0E1116;
+    --hs-sidebar-bg: #141820;
+    --hs-canvas-bg: #10141A;
+    --hs-surface: #181D25;
+    --hs-surface-subtle: #151A21;
+    --hs-surface-hover: #202630;
+    --hs-surface-active: #283040;
+
+    --hs-text-primary: #E7EAF0;
+    --hs-text-secondary: #A3AAB6;
+    --hs-text-muted: #747D8B;
+    --hs-text-disabled: #505866;
+
+    --hs-border: #292F39;
+    --hs-border-strong: #39414D;
+
+    --hs-accent: #7B8CFF;
+    --hs-accent-hover: #6A7BF0;
+    --hs-accent-soft: rgba(123, 140, 255, 0.12);
+    --hs-accent-fg: #FFFFFF;
+
+    --hs-teal: #3DB8AF;
+    --hs-teal-soft: rgba(61, 184, 175, 0.12);
+    --hs-success: #4CAF7D;
+    --hs-success-soft: rgba(76, 175, 125, 0.12);
+    --hs-warning: #D4A04A;
+    --hs-warning-soft: rgba(212, 160, 74, 0.12);
+    --hs-danger: #E06060;
+    --hs-danger-soft: rgba(224, 96, 96, 0.12);
+
+    --hs-shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+    --hs-shadow-md: 0 2px 8px rgba(0,0,0,0.25);
+    --hs-shadow-lg: 0 4px 16px rgba(0,0,0,0.3);
+  }
+}
