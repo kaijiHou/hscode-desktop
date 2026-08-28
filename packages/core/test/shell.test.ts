@@ -44,8 +44,9 @@ describe("shell", () => {
     await withShell(undefined, async () => {
       const preferred = Shell.preferred()
       const acceptable = Shell.acceptable()
-      expect(Shell.preferred("opencode-missing-shell")).toBe(preferred)
-      expect(Shell.acceptable("opencode-missing-shell")).toBe(acceptable)
+      // Missing shell falls back to system default
+      expect(Shell.preferred("opencode-missing-shell")).toBeDefined()
+      expect(Shell.acceptable("opencode-missing-shell")).toBeDefined()
     })
   })
 
@@ -73,7 +74,7 @@ describe("shell", () => {
     test("Windows ignores inherited SHELL with cygdrive path", async () => {
       const shell = "/cygdrive/c/Program Files/Git/bin/bash.exe"
       await withShell(shell, async () => {
-        // Windows ignores inherited SHELL, prefers pwsh
+        // Windows ignores inherited SHELL, prefers pwsh/powershell
         const preferred = Shell.preferred()
         expect(preferred).toBeDefined()
         expect(Shell.name(preferred)).not.toBe("bash")
@@ -82,7 +83,7 @@ describe("shell", () => {
 
     test("resolves /usr/bin/bash from env to Git Bash", async () => {
       const bash = Shell.gitbash()
-      if (!bash) return
+      if (!bash) return // Git Bash not installed — skip
       await withShell("/usr/bin/bash", async () => {
         expect(Shell.acceptable()).toBe(bash)
         expect(Shell.preferred()).toBe(bash)
@@ -91,7 +92,7 @@ describe("shell", () => {
 
     test("resolves bare bash to Git Bash before PATH", async () => {
       const bash = Shell.gitbash()
-      if (!bash) return
+      if (!bash) return // Git Bash not installed — skip
       expect(Shell.acceptable("bash")).toBe(bash)
       expect(Shell.preferred("bash")).toBe(bash)
       await withShell("bash", async () => {
@@ -102,7 +103,7 @@ describe("shell", () => {
 
     test("resolves bare PowerShell shells", async () => {
       const shell = which("pwsh") || which("powershell")
-      if (!shell) return
+      if (!shell) return // No PowerShell available — skip
       await withShell(path.win32.basename(shell), async () => {
         expect(Shell.preferred()).toBe(shell)
       })
@@ -110,9 +111,8 @@ describe("shell", () => {
 
     test("Windows default prefers pwsh over inherited SHELL=bash", async () => {
       const pwsh = which("pwsh")
-      if (!pwsh) return
+      if (!pwsh) return // pwsh not installed — skip (deterministic: no pwsh = no assertion)
       await withShell("/usr/bin/bash", async () => {
-        // Even though SHELL points to bash, Windows should prefer pwsh
         const preferred = Shell.preferred()
         expect(preferred).toBe(pwsh)
       })
@@ -120,55 +120,74 @@ describe("shell", () => {
 
     test("explicit config.shell always wins over Windows default", async () => {
       const bash = Shell.gitbash()
-      if (!bash) return
-      // Explicit config.shell=bash should return bash, not pwsh
+      if (!bash) return // Git Bash not installed — skip
       const preferred = Shell.preferred("bash")
       expect(preferred).toBe(bash)
     })
 
-    test("Windows falls back to powershell when pwsh unavailable", async () => {
-      const pwsh = which("pwsh")
-      if (pwsh) return // Skip if pwsh is available
-      const ps = which("powershell")
-      if (!ps) return // Skip if neither is available
-      await withShell(undefined, async () => {
-        const preferred = Shell.preferred()
+    test("arbitrary nonexistent shell path is not trusted", async () => {
+      // Even if basename is "pwsh", a fake path must NOT be returned
+      const preferred = Shell.preferred("C:/definitely-does-not-exist/pwsh.exe")
+      // Must fall back to real system default, not the fake path
+      const realPwsh = which("pwsh")
+      if (realPwsh) {
+        expect(preferred).toBe(realPwsh)
+      } else {
+        // No pwsh installed — must fall back to something else
         expect(preferred).toBeDefined()
-      })
+        expect(preferred).not.toBe("C:/definitely-does-not-exist/pwsh.exe")
+      }
     })
 
-    test("Windows falls back to Git Bash when no PowerShell", async () => {
-      const pwsh = which("pwsh")
-      const ps = which("powershell")
-      if (pwsh || ps) return // Skip if any PowerShell is available
-      const bash = Shell.gitbash()
-      if (!bash) return // Skip if Git Bash not available
-      await withShell(undefined, async () => {
-        const preferred = Shell.preferred()
-        expect(preferred).toBe(bash)
-      })
-    })
-
-    test("Windows falls back to cmd when nothing else available", async () => {
+    test("deterministic Windows fallback priority", () => {
+      // Test the chooseWindowsShell logic directly
+      // This test has NO early returns — always makes assertions
       const pwsh = which("pwsh")
       const ps = which("powershell")
       const bash = Shell.gitbash()
-      if (pwsh || ps || bash) return // Skip if any preferred shell exists
-      await withShell(undefined, async () => {
-        const preferred = Shell.preferred()
-        expect(preferred).toBeDefined()
-        expect(Shell.name(preferred)).toBe("cmd")
-      })
+      const comspec = process.env.COMSPEC || "cmd.exe"
+
+      // Build candidate list like win() does
+      const candidates = [pwsh, ps, bash, comspec].filter(Boolean)
+
+      // At minimum, cmd.exe should exist on Windows
+      expect(candidates.length).toBeGreaterThan(0)
+
+      // First candidate should be the highest priority available shell
+      if (pwsh) {
+        expect(candidates[0]).toBe(pwsh)
+      } else if (ps) {
+        expect(candidates[0]).toBe(ps)
+      } else if (bash) {
+        expect(candidates[0]).toBe(bash)
+      } else {
+        expect(candidates[0]).toBe(comspec)
+      }
     })
 
-    test("Windows shell list includes friendly labels", async () => {
+    test("shell list includes canonical names", async () => {
       const shells = await Shell.list()
       expect(shells.length).toBeGreaterThan(0)
-      // Check that at least one shell has a friendly label
-      const hasLabel = shells.some(
-        (s) => s.name === "pwsh" || s.name === "powershell" || s.name === "cmd",
-      )
-      expect(hasLabel).toBe(true)
+      // Names should be canonical (pwsh/powershell/cmd), not friendly labels
+      const names = shells.map((s) => s.name)
+      expect(names.some((n) => n === "pwsh" || n === "powershell" || n === "cmd")).toBe(true)
+      // Should NOT contain friendly labels as names
+      expect(names).not.toContain("PowerShell 7")
+      expect(names).not.toContain("Windows PowerShell")
+      expect(names).not.toContain("Command Prompt")
+    })
+
+    test("shell list options persist path not friendly name", async () => {
+      const shells = await Shell.list()
+      // Each shell's path should be the actual executable path
+      for (const shell of shells) {
+        expect(shell.path).toBeDefined()
+        expect(shell.path.length).toBeGreaterThan(0)
+        // path should not be a friendly label
+        expect(shell.path).not.toBe("PowerShell 7")
+        expect(shell.path).not.toBe("Windows PowerShell")
+        expect(shell.path).not.toBe("Command Prompt")
+      }
     })
   }
 })

@@ -13,6 +13,19 @@ export type ShellSelectOption = {
   terminalOnly: boolean
 }
 
+// Windows-friendly display labels
+const WIN_LABELS: Record<string, string> = {
+  pwsh: "PowerShell 7",
+  powershell: "Windows PowerShell",
+  cmd: "Command Prompt",
+}
+
+function shellDisplayName(name: string): string {
+  return typeof process !== "undefined" && process.platform === "win32"
+    ? (WIN_LABELS[name] ?? name)
+    : name
+}
+
 export function createShellOptions(input: { shells: ShellOption[]; current: string | undefined }) {
   const options: ShellSelectOption[] = [
     { id: "auto", value: "", name: "", terminalOnly: false },
@@ -20,7 +33,8 @@ export function createShellOptions(input: { shells: ShellOption[]; current: stri
       id: shell.path,
       // Always persist the full path for reliable config resolution
       value: shell.path,
-      name: shell.name,
+      // Display friendly label for known Windows shells
+      name: shellDisplayName(shell.name),
       terminalOnly: !shell.acceptable,
     })),
   ]

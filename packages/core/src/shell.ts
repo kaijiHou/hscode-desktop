@@ -86,13 +86,14 @@ function rooted(file: string) {
   return path.isAbsolute(FSUtil.windowsPath(file))
 }
 
-function resolve(file: string) {
+function resolve(file: string, opts?: { trusted?: boolean }) {
   const shell = full(file)
   if (rooted(shell)) {
-    // stat may fail on Windows App Execution Aliases (e.g. pwsh.exe in WindowsApps)
-    // If the path is rooted and known to be a valid shell name, trust it
     if (stat(shell)?.isFile()) return shell
-    if (meta(name(shell))) return shell
+    // Only trust paths that came from which() (via win()/list()) —
+    // Windows App Execution Aliases fail stat() but are valid executables.
+    // Do NOT trust arbitrary user-provided paths by basename alone.
+    if (opts?.trusted && meta(name(shell))) return shell
     return
   }
   return which(shell) ?? undefined
@@ -245,5 +246,6 @@ acceptable.reset = () => {
 
 export async function list(): Promise<Item[]> {
   const shells = process.platform === "win32" ? win() : await unix()
-  return shells.filter((s) => resolve(s)).map(info)
+  // Pass trusted=true: win() returns paths from which(), safe to trust for Windows App Aliases
+  return shells.filter((s) => resolve(s, { trusted: true })).map(info)
 }
