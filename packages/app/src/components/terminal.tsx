@@ -48,6 +48,23 @@ type TerminalColors = {
   foreground: string
   cursor: string
   selectionBackground: string
+  // ANSI color overrides
+  black?: string
+  red?: string
+  green?: string
+  yellow?: string
+  blue?: string
+  magenta?: string
+  cyan?: string
+  white?: string
+  brightBlack?: string
+  brightRed?: string
+  brightGreen?: string
+  brightYellow?: string
+  brightBlue?: string
+  brightMagenta?: string
+  brightCyan?: string
+  brightWhite?: string
 }
 
 const DEFAULT_TERMINAL_COLORS: Record<"light" | "dark", TerminalColors> = {
@@ -56,6 +73,23 @@ const DEFAULT_TERMINAL_COLORS: Record<"light" | "dark", TerminalColors> = {
     foreground: "#211e1e",
     cursor: "#211e1e",
     selectionBackground: withAlpha("#211e1e", 0.2),
+    // Override ANSI colors for better readability on light background
+    black: "#211e1e",
+    red: "#c92828",
+    green: "#22863a",
+    yellow: "#b07d1a",
+    blue: "#005cc5",
+    magenta: "#953800",
+    cyan: "#1a7f37",
+    white: "#6a737d",
+    brightBlack: "#6a737d",
+    brightRed: "#c92828",
+    brightGreen: "#22863a",
+    brightYellow: "#b07d1a",
+    brightBlue: "#005cc5",
+    brightMagenta: "#953800",
+    brightCyan: "#1a7f37",
+    brightWhite: "#211e1e",
   },
   dark: {
     background: "#191515",
