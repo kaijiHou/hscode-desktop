@@ -109,17 +109,26 @@ export const SidebarContent = (props: {
           </div>
 
           {/* Bottom utilities */}
-          <div class="shrink-0 w-full pt-2 pb-4 flex flex-col items-center gap-2 border-t border-[var(--hs-border)]">
-            <TooltipKeybind placement={placement()} title={props.settingsLabel()} keybind={props.settingsKeybind() ?? ""}>
-              <IconButton
-                icon="settings-gear"
-                variant="ghost"
-                size="large"
-                onClick={props.onOpenSettings}
-                aria-label={props.settingsLabel()}
-              />
-            </TooltipKeybind>
-          </div>
+            <div class="shrink-0 w-full pt-2 pb-4 flex flex-col items-center gap-2 border-t border-[var(--hs-border)]">
+              <TooltipKeybind placement={placement()} title={props.settingsLabel()} keybind={props.settingsKeybind() ?? ""}>
+                <IconButton
+                  icon="settings-gear"
+                  variant="ghost"
+                  size="large"
+                  onClick={props.onOpenSettings}
+                  aria-label={props.settingsLabel()}
+                />
+              </TooltipKeybind>
+              <Tooltip placement={placement()} value={props.helpLabel()}>
+                <IconButton
+                  icon="help"
+                  variant="ghost"
+                  size="large"
+                  onClick={props.onOpenHelp}
+                  aria-label={props.helpLabel()}
+                />
+              </Tooltip>
+            </div>
         </div>
 
         {/* Expanded panel */}

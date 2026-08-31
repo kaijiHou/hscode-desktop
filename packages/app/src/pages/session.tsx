@@ -2315,7 +2315,7 @@ export default function Page() {
   return (
     <SessionRouteFrame>
       <SessionHeader />
-      {/* HSCode Workspace Bar — project/session breadcrumb */}
+      {/* HSCode Workspace Bar — real project/session breadcrumb */}
       <div
         data-slot="hscode-workspace-bar"
         class="flex items-center justify-between h-11 px-4 shrink-0"
@@ -2323,13 +2323,16 @@ export default function Page() {
       >
         <div class="flex items-center gap-2 text-sm" style={{ color: "var(--hs-text-secondary)" }}>
           <span class="font-medium" style={{ color: "var(--hs-text-primary)" }}>
-            HSCode
+            {getFilename(sdk().directory) || "HSCode"}
           </span>
           <Show when={params.id}>
             <>
               <span style={{ color: "var(--hs-text-muted)" }}>/</span>
               <span style={{ color: "var(--hs-text-primary)" }}>
-                Session
+                {(() => {
+                  const session = sync().session.get(params.id!)
+                  return session?.title || "Untitled"
+                })()}
               </span>
             </>
           </Show>
@@ -2346,7 +2349,9 @@ export default function Page() {
       >
         <Show when={!isDesktop() && !!params.id && !settings.general.newLayoutDesigns()}>{mobileTabs()}</Show>
 
+        {/* Agent Canvas — main conversation + composer area */}
         <div
+          data-slot="hscode-agent-canvas"
           classList={{
             "@container relative shrink-0 flex flex-col min-h-0 h-full flex-1 transition-[width]": true, "md:flex-none": !desktopSidePanelOpen(),
             "duration-[240ms] ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[width] motion-reduce:transition-none":
@@ -2472,8 +2477,9 @@ export default function Page() {
         </Show>
         <Show when={newSessionDesign()}>
           <Show when={isDesktop() ? desktopV2PanelLayout().visible : terminalOpen()}>
+            {/* Tool Dock — Terminal / Network / Review / File Tree */}
             <div
-              data-slot="network-workspace"
+              data-slot="hscode-tool-dock"
               classList={{
                 "min-w-0 h-full flex flex-col": true,
                 "flex-1": !desktopNetworkOnlyOpen(),
