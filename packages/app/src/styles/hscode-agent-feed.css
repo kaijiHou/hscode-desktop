@@ -1,235 +1,185 @@
 /*
  * HSCode Inkline Workbench — Agent Feed
  *
- * Styles for messages, tool calls, thinking blocks, code, diff
+ * Document-feed treatment of the conversation: user input as a task block
+ * (signal line, left-aligned), assistant prose directly on the canvas,
+ * quiet thinking, compact tool activity rows, restrained code + diff.
+ *
+ * Targets the real session-ui component attributes.
  */
 
-/* === Message Container === */
-[data-component="hscode-message"] {
-  margin-bottom: var(--hs-space-lg);
+/* ============================================================
+   Turn rhythm
+   ============================================================ */
+
+[data-component="session-turn"] {
+  --hs-feed-gap: 18px;
 }
 
-/* === User Message === */
-[data-component="hscode-user-message"] {
-  position: relative;
-  padding: var(--hs-space-md) var(--hs-space-lg);
-  background: var(--hs-surface-subtle);
-  border-left: var(--hs-signal-width) solid var(--hs-accent);
-  border-radius: 0 var(--hs-radius-lg) var(--hs-radius-lg) 0;
-}
+/* ============================================================
+   User message — task input block, not a chat bubble
+   ============================================================ */
 
-[data-component="hscode-user-message-label"] {
-  font-size: var(--hs-text-xs);
-  font-weight: 600;
-  color: var(--hs-accent);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: var(--hs-space-xs);
-}
-
-/* === Assistant Message === */
-[data-component="hscode-assistant-message"] {
-  padding: var(--hs-space-md) 0;
-  color: var(--hs-text-primary);
-}
-
-/* === Thinking Block === */
-[data-component="hscode-thinking"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-  padding: var(--hs-space-sm) var(--hs-space-md);
-  font-size: var(--hs-text-sm);
-  color: var(--hs-text-muted);
-}
-
-[data-component="hscode-thinking"][data-expanded="true"] {
-  flex-direction: column;
+[data-component="user-message"] {
   align-items: flex-start;
-  padding: var(--hs-space-md);
-  background: var(--hs-surface-subtle);
-  border-left: var(--hs-signal-width) solid var(--hs-border);
-  border-radius: 0 var(--hs-radius-md) var(--hs-radius-md) 0;
-  margin: var(--hs-space-sm) 0;
 }
 
-[data-component="hscode-thinking-content"] {
-  color: var(--hs-text-muted);
-  font-size: var(--hs-text-sm);
-  line-height: var(--hs-leading-relaxed);
+[data-component="user-message"] [data-slot="user-message-body"],
+[data-component="user-message"] [data-slot="user-message-attachments"] {
+  align-items: flex-start;
+  margin-inline-start: 0;
 }
 
-/* === Tool Call (Compact) === */
-[data-component="hscode-tool-call"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-  padding: var(--hs-space-xs) var(--hs-space-md);
-  margin: var(--hs-space-xs) 0;
-  border-radius: var(--hs-radius-md);
-  font-size: var(--hs-text-sm);
-  color: var(--hs-text-secondary);
-  cursor: pointer;
-  transition: background var(--hs-transition-fast);
+[data-component="user-message"] [data-slot="user-message-text"] {
+  position: relative;
+  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
+  border: 1px solid var(--v2-border-border-muted, transparent);
+  border-left: 2px solid var(--hs-accent, var(--v2-background-bg-accent));
+  border-radius: 2px 8px 8px 2px;
+  padding: 10px 14px;
+  max-width: min(100%, 82ch);
 }
 
-[data-component="hscode-tool-call"]:hover {
-  background: var(--hs-surface-hover);
+/* ============================================================
+   Assistant prose — on the canvas, no card
+   ============================================================ */
+
+[data-component="text-part"] {
+  font-size: 14px;
+  line-height: 1.62;
+  color: var(--v2-text-text-base);
 }
 
-[data-component="hscode-tool-call"][data-expanded="true"] {
-  flex-direction: column;
-  align-items: stretch;
-  background: var(--hs-surface-subtle);
-  border: 1px solid var(--hs-border);
+/* Markdown: workbench typography, no loud colors (tokens are Inkline) */
+[data-component="markdown"] {
+  line-height: 1.62;
 }
 
-[data-component="hscode-tool-call-icon"] {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  color: var(--hs-text-muted);
-  flex-shrink: 0;
+[data-component="markdown"] > :first-child {
+  margin-top: 0;
 }
 
-[data-component="hscode-tool-call-name"] {
+[data-component="markdown"] > :last-child {
+  margin-bottom: 0;
+}
+
+/* Code blocks: quiet surface, no shadow */
+[data-component="markdown"] [data-component="markdown-code"],
+[data-component="markdown-code"] {
+  background: var(--hs-code-bg, #f2f4f7);
+}
+
+[data-component="markdown"] :not(pre) > code {
+  background: var(--v2-background-bg-layer-02, var(--v2-background-bg-base));
+  border: 1px solid var(--v2-border-border-muted, transparent);
+  border-radius: 4px;
+  padding: 0.5px 4px;
+}
+
+/* Tables: 1px borders, weak header, compact padding */
+[data-component="markdown"] table {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+[data-component="markdown"] th,
+[data-component="markdown"] td {
+  border: 1px solid var(--v2-border-border-muted, transparent);
+  padding: 4px 10px;
+}
+
+[data-component="markdown"] th {
+  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
   font-weight: 500;
-  color: var(--hs-text-primary);
 }
 
-[data-component="hscode-tool-call-summary"] {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--hs-text-muted);
+/* ============================================================
+   Thinking / reasoning — inline whisper, not a box
+   ============================================================ */
+
+[data-component="reasoning-part"] {
+  border-left: 2px solid var(--v2-border-border-muted, transparent);
+  padding-left: 12px;
 }
 
-[data-component="hscode-tool-call-duration"] {
-  font-size: var(--hs-text-xs);
-  color: var(--hs-text-muted);
-  flex-shrink: 0;
+/* ============================================================
+   Tool calls — compact activity rows
+   ============================================================ */
+
+[data-component="tool-part-wrapper"] {
+  min-height: 0;
 }
 
-[data-component="hscode-tool-call-status"] {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
+[data-component="tool-trigger"] {
+  border-radius: 6px;
+  transition: background 120ms ease;
 }
 
-[data-component="hscode-tool-call-status"][data-status="running"] {
-  background: var(--hs-accent);
-  animation: pulse 1.5s infinite;
+[data-component="tool-trigger"][data-clickable="true"]:hover {
+  background: var(--v2-overlay-simple-overlay-hover, transparent);
 }
 
-[data-component="hscode-tool-call-status"][data-status="success"] {
-  background: var(--hs-success);
+[data-component="tool-trigger"] [data-slot="basic-tool-tool-title"],
+[data-component="tool-trigger"] [data-slot="tool-status-title"] {
+  font-size: 13px;
 }
 
-[data-component="hscode-tool-call-status"][data-status="error"] {
-  background: var(--hs-danger);
+/* Tool output surfaces read as terminal material, not cards */
+[data-component="tool-output"],
+[data-component="bash-output"] {
+  background: var(--hs-code-bg, #f2f4f7);
+  border-radius: 6px;
 }
 
-[data-component="hscode-tool-call-output"] {
-  margin-top: var(--hs-space-sm);
-  padding: var(--hs-space-sm);
-  background: var(--hs-surface);
-  border: 1px solid var(--hs-border);
-  border-radius: var(--hs-radius-md);
-  font-family: var(--hs-font-mono);
-  font-size: var(--hs-text-xs);
-  overflow-x: auto;
-  white-space: pre;
-}
+/* ============================================================
+   Diffs — developer-tool chrome, very soft green/red
+   ============================================================ */
 
-/* === Code Block === */
-[data-component="hscode-code-block"] {
-  margin: var(--hs-space-sm) 0;
-  border-radius: var(--hs-radius-md);
+[data-slot="session-turn-diffs"] {
+  border: 1px solid var(--v2-border-border-muted, transparent);
+  border-radius: 8px;
   overflow: hidden;
 }
 
-[data-component="hscode-code-block-header"] {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--hs-space-xs) var(--hs-space-md);
-  background: var(--hs-surface-subtle);
-  border-bottom: 1px solid var(--hs-border);
-  font-size: var(--hs-text-xs);
-  color: var(--hs-text-muted);
+[data-slot="session-turn-diff-header"],
+[data-slot="session-turn-diffs-header"] {
+  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
 }
 
-[data-component="hscode-code-block-content"] {
-  padding: var(--hs-space-md);
-  background: var(--hs-surface);
-  font-family: var(--hs-font-mono);
-  font-size: var(--hs-text-sm);
-  line-height: 1.6;
-  overflow-x: auto;
-  white-space: pre;
+/* ============================================================
+   Error card — left danger line, never a full red slab
+   ============================================================ */
+
+.error-card,
+[data-component="tool-error-card"] {
+  border-left: 2px solid var(--hs-danger, var(--v2-state-fg-danger));
 }
 
-/* === Diff === */
-[data-component="hscode-diff"] {
-  margin: var(--hs-space-sm) 0;
-  border-radius: var(--hs-radius-md);
-  overflow: hidden;
-  border: 1px solid var(--hs-border);
+/* ============================================================
+   Permission request — visible but calm
+   ============================================================ */
+
+[data-slot="permission-row"] {
+  border-left: 2px solid var(--hs-warning, var(--v2-state-fg-warning));
 }
 
-[data-component="hscode-diff-header"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-  padding: var(--hs-space-xs) var(--hs-space-md);
-  background: var(--hs-surface-subtle);
-  font-size: var(--hs-text-xs);
-  font-family: var(--hs-font-mono);
+/* ============================================================
+   Background process strip
+   ============================================================ */
+
+[data-component="shell-submessage"] {
+  border-left: 2px solid var(--v2-border-border-muted, transparent);
+  padding-left: 12px;
 }
 
-[data-component="hscode-diff-line"] {
-  padding: 0 var(--hs-space-md);
-  font-family: var(--hs-font-mono);
-  font-size: var(--hs-text-xs);
-  line-height: 1.6;
+/* ============================================================
+   Dark scheme adjustments
+   ============================================================ */
+
+[data-color-scheme="dark"] {
+  --hs-code-bg: #171b22;
 }
 
-[data-component="hscode-diff-line"][data-type="add"] {
-  background: var(--hs-success-soft);
-  color: var(--hs-success);
-}
-
-[data-component="hscode-diff-line"][data-type="remove"] {
-  background: var(--hs-danger-soft);
-  color: var(--hs-danger);
-}
-
-/* === Activity Row (Background Process) === */
-[data-component="hscode-activity"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-  padding: var(--hs-space-xs) var(--hs-space-md);
-  font-size: var(--hs-text-sm);
-  color: var(--hs-text-muted);
-}
-
-[data-component="hscode-activity-icon"] {
-  width: 14px;
-  height: 14px;
-  color: var(--hs-teal);
-}
-
-[data-component="hscode-activity-label"] {
-  font-weight: 500;
-  color: var(--hs-text-secondary);
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+[data-color-scheme="dark"] [data-component="user-message"] [data-slot="user-message-text"] {
+  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
 }

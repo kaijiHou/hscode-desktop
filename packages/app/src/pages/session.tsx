@@ -2354,7 +2354,8 @@ export default function Page() {
           {desktopNetworkOpen() && !desktopSessionResizeOpen() ? (
             // Network: real flex splitter controlling network width
             <div
-              style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize", background: "rgba(128,128,128,0.3)", "border-left": "1px solid rgba(128,128,128,0.5)", "border-right": "1px solid rgba(128,128,128,0.5)" }}
+              data-slot="network-outer-splitter"
+              style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize" }}
               onMouseDown={(e) => {
                 if (e.detail > 1) return
                 e.preventDefault()
@@ -2384,7 +2385,7 @@ export default function Page() {
             // Left drag = chat narrower = terminal wider
             <div
               data-slot="terminal-outer-splitter"
-              style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize", background: "rgba(128,128,128,0.3)", "border-left": "1px solid rgba(128,128,128,0.5)", "border-right": "1px solid rgba(128,128,128,0.5)" }}
+              style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize" }}
               onMouseDown={(e) => {
                 if (e.detail > 1) return
                 e.preventDefault()

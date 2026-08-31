@@ -1,263 +1,216 @@
 /*
- * HSCode Inkline Workbench — Shell Layout
+ * HSCode Inkline Workbench — Shell
  *
- * Core layout: Sidebar + Main Canvas + Tool Dock
+ * Targets the real component attributes of the app shell:
+ * titlebar (workspace bar), sidebar (rail + session panel), composer dock,
+ * right tool dock (terminal / network / review) and its splitters.
+ *
+ * Identity motifs: Ink Blue accent, 2px signal line, workbench density.
+ * Colors resolve through the Inkline theme (oc-2.json) via --v2-* variables;
+ * --hs-* tokens add identity values that the theme system doesn't carry.
  */
 
-/* === App Root === */
-[data-component="hscode-app"] {
-  display: flex;
-  height: 100vh;
-  background: var(--hs-app-bg);
-  font-family: var(--hs-font-sans);
-  font-size: var(--hs-text-base);
-  color: var(--hs-text-primary);
-  line-height: var(--hs-leading-normal);
-  -webkit-font-smoothing: antialiased;
+/* ============================================================
+   Global chrome
+   ============================================================ */
+
+::selection {
+  background: var(--hs-accent-soft, #e8ecff);
 }
 
-/* === Sidebar === */
-[data-component="hscode-sidebar"] {
-  display: flex;
-  flex-direction: column;
-  width: var(--hs-sidebar-width);
-  min-width: var(--hs-sidebar-width);
-  height: 100vh;
-  background: var(--hs-sidebar-bg);
-  border-right: 1px solid var(--hs-border);
-  transition: width var(--hs-transition-normal), min-width var(--hs-transition-normal);
-  overflow: hidden;
+[data-color-scheme="dark"] ::selection {
+  background: rgba(123, 140, 255, 0.28);
 }
 
-[data-component="hscode-sidebar"][data-collapsed="true"] {
-  width: var(--hs-sidebar-collapsed);
-  min-width: var(--hs-sidebar-collapsed);
+/* Thin quiet scrollbars, stronger on hover */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--v2-border-border-strong, rgba(0, 0, 0, 0.2)) transparent;
 }
 
-[data-component="hscode-sidebar-header"] {
-  display: flex;
-  flex-direction: column;
-  padding: var(--hs-space-md) var(--hs-space-lg);
-  gap: var(--hs-space-xs);
-  border-bottom: 1px solid var(--hs-border);
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-[data-component="hscode-sidebar-logo"] {
-  font-size: var(--hs-text-lg);
-  font-weight: 600;
-  color: var(--hs-text-primary);
-  letter-spacing: -0.02em;
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-[data-component="hscode-sidebar-project"] {
-  font-size: var(--hs-text-xs);
-  color: var(--hs-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--v2-border-border-strong, rgba(0, 0, 0, 0.2));
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-/* === Sidebar Actions === */
-[data-component="hscode-sidebar-actions"] {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--hs-space-sm) var(--hs-space-sm);
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--v2-icon-icon-muted, rgba(0, 0, 0, 0.35));
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
-[data-component="hscode-sidebar-action"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-  height: 36px;
-  padding: 0 var(--hs-space-md);
-  border-radius: var(--hs-radius-md);
-  font-size: var(--hs-text-sm);
-  font-weight: 500;
-  color: var(--hs-text-secondary);
-  cursor: pointer;
-  transition: background var(--hs-transition-fast), color var(--hs-transition-fast);
+*::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-[data-component="hscode-sidebar-action"]:hover {
-  background: var(--hs-surface-hover);
-  color: var(--hs-text-primary);
+/* Keyboard focus ring: 2px accent, never removed */
+:focus-visible {
+  outline: 2px solid var(--hs-accent, var(--v2-background-bg-accent));
+  outline-offset: 1px;
 }
 
-[data-component="hscode-sidebar-action"][data-active="true"] {
-  background: var(--hs-accent-soft);
-  color: var(--hs-accent);
+/* ============================================================
+   Workspace Bar (titlebar)
+   ============================================================ */
+
+[data-slot="titlebar-v2"] {
+  background: var(--v2-background-bg-deep, var(--v2-background-bg-base));
+  border-bottom: 1px solid var(--v2-border-border-muted, transparent);
 }
 
-/* === Signal Line (HSCode identity) === */
-[data-component="hscode-sidebar-action"][data-active="true"]::before {
+/* ============================================================
+   Sidebar — rail + session panel
+   ============================================================ */
+
+/* Icon rail: sit on the sidebar surface, hairline to its right */
+[data-component="sidebar-rail"] {
+  background: var(--v2-background-bg-layer-02, var(--v2-background-bg-base));
+  border-right: 1px solid var(--v2-border-border-muted, transparent);
+}
+
+/* Expanded sidebar panel uses the same surface as the rail so the
+   two halves read as one column */
+[data-component="sidebar-rail"] + div,
+body[data-new-layout] [data-slot="sidebar-panel"] {
+  background: var(--v2-background-bg-layer-02, var(--v2-background-bg-base));
+}
+
+/* Session item: 32px workbench row, signal line when active */
+[data-session-id] {
+  position: relative;
+  border-radius: 6px;
+}
+
+[data-session-id]:has(.active)::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: var(--hs-signal-width);
-  background: var(--hs-accent);
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
   border-radius: 0 1px 1px 0;
+  background: var(--hs-accent, var(--v2-background-bg-accent));
 }
 
-/* === Sidebar Section Labels === */
-[data-component="hscode-sidebar-section"] {
-  padding: var(--hs-space-sm) var(--hs-space-lg) var(--hs-space-xs);
-  font-size: var(--hs-text-xs);
-  font-weight: 600;
-  color: var(--hs-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+[data-session-id]:has(.active) {
+  background: var(--hs-accent-tint, var(--v2-overlay-simple-overlay-hover));
 }
 
-/* === Session List Items === */
-[data-component="hscode-sidebar-item"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-  height: 32px;
-  padding: 0 var(--hs-space-md);
-  margin: 0 var(--hs-space-sm);
-  border-radius: var(--hs-radius-md);
-  font-size: var(--hs-text-sm);
-  color: var(--hs-text-secondary);
-  cursor: pointer;
-  transition: background var(--hs-transition-fast);
-  position: relative;
+/* Workspace group rows inherit the same geometry */
+
+/* ============================================================
+   Composer — Floating Workbench Composer
+   ============================================================ */
+
+[data-component="prompt-input-v2"] {
+  border: 1px solid var(--v2-border-border-base, transparent);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 0 0 0.5px var(--v2-alpha-dark-4, rgba(0, 0, 0, 0.04));
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
-[data-component="hscode-sidebar-item"]:hover {
-  background: var(--hs-surface-hover);
+[data-component="prompt-input-v2"]:focus-within {
+  border-color: var(--hs-accent, var(--v2-background-bg-accent));
+  box-shadow:
+    0 0 0 1px var(--hs-accent, var(--v2-background-bg-accent)),
+    0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-[data-component="hscode-sidebar-item"][data-selected="true"] {
-  background: var(--hs-surface-active);
-  color: var(--hs-text-primary);
+[data-color-scheme="dark"] [data-component="prompt-input-v2"] {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px var(--v2-alpha-light-8, rgba(255, 255, 255, 0.08));
 }
 
-[data-component="hscode-sidebar-item"][data-selected="true"]::before {
+/* Composer sub-rows: hairline separators instead of heavy chrome */
+[data-component="prompt-input-v2"] [data-slot="prompt-attachments"] {
+  border-bottom: 1px solid var(--v2-border-border-muted, transparent);
+}
+
+/* ============================================================
+   Right Tool Dock — terminal / network / review / files
+   ============================================================ */
+
+/* Terminal panel: full-bleed surface, header hairline */
+aside#terminal-panel {
+  background: var(--v2-background-bg-base, var(--v2-background-bg-base));
+  border: none;
+  box-shadow: none;
+}
+
+aside#terminal-panel [data-slot="tabs-list"],
+aside#terminal-panel [data-component="tabs-v2"] > [data-slot="tabs-v2-list"] {
+  border-bottom: 1px solid var(--v2-border-border-muted, transparent);
+}
+
+/* Network panel: developer-tool surface */
+#network-panel[data-component="network-panel"] {
+  background: var(--v2-background-bg-base, var(--v2-background-bg-base));
+}
+
+#network-panel [data-slot="network-header"] {
+  min-height: 40px;
+  border-bottom: 1px solid var(--v2-border-border-muted, transparent);
+}
+
+#network-panel [data-slot="network-toolbar"] {
+  border-bottom: 1px solid var(--v2-border-border-muted, transparent);
+}
+
+/* Tool dock panels keep one consistent 40px header zone */
+[data-slot="session-review-v2-root"] [data-slot="tabs-list"],
+.session-review-v2-tabs-bar {
+  min-height: 40px;
+  border-bottom: 1px solid var(--v2-border-border-muted, transparent);
+}
+
+/* ============================================================
+   Splitters — invisible by default, accent hairline on hover.
+   Geometry (8px hit area) is owned by the components; only the
+   visual layer lives here.
+   ============================================================ */
+
+[data-slot="terminal-outer-splitter"],
+[data-slot="network-outer-splitter"],
+[data-component="network-splitter"] {
+  background: transparent;
+  border-left: none;
+  border-right: none;
+}
+
+[data-slot="terminal-outer-splitter"]::after,
+[data-slot="network-outer-splitter"]::after,
+[data-component="network-splitter"]::after {
   content: "";
   position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  width: var(--hs-signal-width);
-  background: var(--hs-accent);
-  border-radius: 0 1px 1px 0;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 1px;
+  background: transparent;
+  transition: background 120ms ease;
 }
 
-[data-component="hscode-sidebar-item-title"] {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* === Sidebar Footer === */
-[data-component="hscode-sidebar-footer"] {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--hs-space-sm);
-  border-top: 1px solid var(--hs-border);
-  margin-top: auto;
-}
-
-/* === Main Canvas === */
-[data-component="hscode-main"] {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  background: var(--hs-canvas-bg);
-}
-
-/* === Workspace Bar === */
-[data-component="hscode-workspace-bar"] {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: var(--hs-header-height);
-  padding: 0 var(--hs-space-lg);
-  border-bottom: 1px solid var(--hs-border);
-  background: var(--hs-canvas-bg);
-  flex-shrink: 0;
-}
-
-[data-component="hscode-workspace-bar-left"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-  font-size: var(--hs-text-sm);
-  color: var(--hs-text-secondary);
-}
-
-[data-component="hscode-workspace-bar-right"] {
-  display: flex;
-  align-items: center;
-  gap: var(--hs-space-sm);
-}
-
-/* === Agent Feed === */
-[data-component="hscode-feed"] {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--hs-space-xl) var(--hs-space-lg);
-}
-
-[data-component="hscode-feed-content"] {
-  max-width: var(--hs-feed-max-width);
-  margin: 0 auto;
-}
-
-/* === Tool Dock === */
-[data-component="hscode-tool-dock"] {
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid var(--hs-border);
-  background: var(--hs-surface);
-  min-width: 0;
-}
-
-[data-component="hscode-tool-dock-header"] {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 38px;
-  padding: 0 var(--hs-space-md);
-  border-bottom: 1px solid var(--hs-border);
-  flex-shrink: 0;
-}
-
-[data-component="hscode-tool-dock-header-title"] {
-  font-size: var(--hs-text-sm);
-  font-weight: 500;
-  color: var(--hs-text-primary);
-}
-
-[data-component="hscode-tool-dock-content"] {
-  flex: 1;
-  overflow: hidden;
-  min-height: 0;
-}
-
-/* === Composer === */
-[data-component="hscode-composer"] {
-  position: relative;
-  max-width: var(--hs-composer-max-width);
-  margin: 0 auto var(--hs-space-xl);
-  padding: 0 var(--hs-space-lg);
-}
-
-[data-component="hscode-composer-box"] {
-  background: var(--hs-surface);
-  border: 1px solid var(--hs-border-strong);
-  border-radius: var(--hs-radius-xl);
-  transition: border-color var(--hs-transition-fast), box-shadow var(--hs-transition-fast);
-}
-
-[data-component="hscode-composer-box"]:focus-within {
-  border-color: var(--hs-accent);
-  box-shadow: 0 0 0 2px var(--hs-accent-soft);
+[data-slot="terminal-outer-splitter"]:hover::after,
+[data-slot="network-outer-splitter"]:hover::after,
+[data-component="network-splitter"]:hover::after {
+  background: var(--hs-accent, var(--v2-background-bg-accent));
 }
