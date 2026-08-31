@@ -2230,6 +2230,15 @@ export default function LegacyLayout(props: ParentProps) {
       handleDragStart={handleDragStart}
       handleDragEnd={handleDragEnd}
       handleDragOver={handleDragOver}
+      newSessionLabel={language.t("command.session.new")}
+      newSessionKeybind={() => command.keybind("session.new")}
+      onNewSession={() => {
+        const directory = currentDir()
+        if (directory) {
+          navigate(`/${base64Encode(directory)}/session`)
+          layout.mobileSidebar.hide()
+        }
+      }}
       openProjectLabel={language.t("command.project.open")}
       openProjectKeybind={() => command.keybind("project.open")}
       onOpenProject={chooseProject}

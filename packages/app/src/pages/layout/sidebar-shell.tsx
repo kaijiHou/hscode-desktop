@@ -21,6 +21,9 @@ export const SidebarContent = (props: {
   handleDragStart: (event: unknown) => void
   handleDragEnd: () => void
   handleDragOver: (event: DragEvent) => void
+  newSessionLabel: JSX.Element
+  newSessionKeybind: Accessor<string | undefined>
+  onNewSession: () => void
   openProjectLabel: JSX.Element
   openProjectKeybind: Accessor<string | undefined>
   onOpenProject: () => void
@@ -67,27 +70,46 @@ export const SidebarContent = (props: {
           </div>
 
           {/* Primary actions */}
-          <div class="shrink-0 w-full flex flex-col items-center gap-1 px-2 pb-2">
-            <Tooltip
-              placement={placement()}
-              value={
-                <div class="flex items-center gap-2">
-                  <span>{props.openProjectLabel}</span>
-                  <Show when={!props.mobile && !!props.openProjectKeybind()}>
-                    <span class="text-icon-base text-12-medium">{props.openProjectKeybind()}</span>
-                  </Show>
-                </div>
-              }
-            >
-              <IconButton
-                icon="plus"
-                variant="ghost"
-                size="large"
-                onClick={props.onOpenProject}
-                aria-label={typeof props.openProjectLabel === "string" ? props.openProjectLabel : undefined}
-              />
-            </Tooltip>
-          </div>
+            <div class="shrink-0 w-full flex flex-col items-center gap-1 px-2 pb-2">
+              <Tooltip
+                placement={placement()}
+                value={
+                  <div class="flex items-center gap-2">
+                    <span>{props.newSessionLabel}</span>
+                    <Show when={!props.mobile && !!props.newSessionKeybind()}>
+                      <span class="text-icon-base text-12-medium">{props.newSessionKeybind()}</span>
+                    </Show>
+                  </div>
+                }
+              >
+                <IconButton
+                  icon="edit"
+                  variant="ghost"
+                  size="large"
+                  onClick={props.onNewSession}
+                  aria-label={typeof props.newSessionLabel === "string" ? props.newSessionLabel : undefined}
+                />
+              </Tooltip>
+              <Tooltip
+                placement={placement()}
+                value={
+                  <div class="flex items-center gap-2">
+                    <span>{props.openProjectLabel}</span>
+                    <Show when={!props.mobile && !!props.openProjectKeybind()}>
+                      <span class="text-icon-base text-12-medium">{props.openProjectKeybind()}</span>
+                    </Show>
+                  </div>
+                }
+              >
+                <IconButton
+                  icon="folder"
+                  variant="ghost"
+                  size="large"
+                  onClick={props.onOpenProject}
+                  aria-label={typeof props.openProjectLabel === "string" ? props.openProjectLabel : undefined}
+                />
+              </Tooltip>
+            </div>
 
           {/* Project list (draggable) */}
           <div class="flex-1 min-h-0 w-full">
