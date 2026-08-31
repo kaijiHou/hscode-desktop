@@ -92,7 +92,8 @@
   }
 
   .dark,
-  [data-theme="dark"] {
+  [data-theme="dark"],
+  [data-color-scheme="dark"] {
     --hs-app-bg: #0E1116;
     --hs-sidebar-bg: #141820;
     --hs-canvas-bg: #10141A;

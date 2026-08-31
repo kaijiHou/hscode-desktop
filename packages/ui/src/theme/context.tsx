@@ -44,7 +44,7 @@ function knownThemes() {
 }
 
 const names: Record<string, string> = {
-  "oc-2": "OC-2",
+  "oc-2": "HSCode Inkline",
   amoled: "AMOLED",
   aura: "Aura",
   ayu: "Ayu",
@@ -152,11 +152,12 @@ function applyThemeCss(theme: DesktopTheme, themeId: string, mode: "light" | "da
   ensureThemeStyleElement().textContent = fullCss
   document.documentElement.dataset.theme = themeId
   document.documentElement.dataset.colorScheme = mode
-  document.documentElement.style.backgroundColor = isDark ? "#080808" : "#fafafa"
+  const pageBg = resolveThemeVariant(variant, isDark)["background-base"] as string
+  document.documentElement.style.backgroundColor = pageBg
 
   // Update theme-color meta tag to match light/dark mode
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute("content", isDark ? "#080808" : "#fafafa")
+  if (meta) meta.setAttribute("content", pageBg)
 }
 
 function cacheThemeVariants(theme: DesktopTheme, themeId: string) {
