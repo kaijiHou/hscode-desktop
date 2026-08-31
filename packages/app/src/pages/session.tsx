@@ -2315,6 +2315,25 @@ export default function Page() {
   return (
     <SessionRouteFrame>
       <SessionHeader />
+      {/* HSCode Workspace Bar */}
+      <div
+        data-slot="hscode-workspace-bar"
+        class="flex items-center justify-between h-11 px-4 border-b border-[var(--hs-border)] bg-[var(--hs-canvas-bg)] shrink-0"
+      >
+        <div class="flex items-center gap-2 text-sm text-[var(--hs-text-secondary)]">
+          <span class="font-medium text-[var(--hs-text-primary)]">HSCode</span>
+          <span class="text-[var(--hs-text-muted)]">/</span>
+          <span>{getFilename(params.id ? "" : "Session")}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="px-2 py-1 text-xs rounded-md bg-[var(--hs-surface-subtle)] text-[var(--hs-text-secondary)] hover:bg-[var(--hs-surface-hover)] transition-colors">
+            Agent
+          </button>
+          <button class="px-2 py-1 text-xs rounded-md bg-[var(--hs-surface-subtle)] text-[var(--hs-text-secondary)] hover:bg-[var(--hs-surface-hover)] transition-colors">
+            Model
+          </button>
+        </div>
+      </div>
       <div
         ref={panelRow}
         class="flex-1 min-h-0 flex flex-col md:flex-row"
