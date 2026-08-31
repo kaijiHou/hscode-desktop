@@ -2315,26 +2315,29 @@ export default function Page() {
   return (
     <SessionRouteFrame>
       <SessionHeader />
-      {/* HSCode Workspace Bar */}
+      {/* HSCode Workspace Bar — project/session breadcrumb */}
       <div
         data-slot="hscode-workspace-bar"
-        class="flex items-center justify-between h-11 px-4 border-b border-[var(--hs-border)] bg-[var(--hs-canvas-bg)] shrink-0"
+        class="flex items-center justify-between h-11 px-4 shrink-0"
+        style={{ "border-bottom": "1px solid var(--hs-border)", "background": "var(--hs-canvas-bg)" }}
       >
-        <div class="flex items-center gap-2 text-sm text-[var(--hs-text-secondary)]">
-          <span class="font-medium text-[var(--hs-text-primary)]">HSCode</span>
-          <span class="text-[var(--hs-text-muted)]">/</span>
-          <span>{getFilename(params.id ? "" : "Session")}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <button class="px-2 py-1 text-xs rounded-md bg-[var(--hs-surface-subtle)] text-[var(--hs-text-secondary)] hover:bg-[var(--hs-surface-hover)] transition-colors">
-            Agent
-          </button>
-          <button class="px-2 py-1 text-xs rounded-md bg-[var(--hs-surface-subtle)] text-[var(--hs-text-secondary)] hover:bg-[var(--hs-surface-hover)] transition-colors">
-            Model
-          </button>
+        <div class="flex items-center gap-2 text-sm" style={{ color: "var(--hs-text-secondary)" }}>
+          <span class="font-medium" style={{ color: "var(--hs-text-primary)" }}>
+            HSCode
+          </span>
+          <Show when={params.id}>
+            <>
+              <span style={{ color: "var(--hs-text-muted)" }}>/</span>
+              <span style={{ color: "var(--hs-text-primary)" }}>
+                Session
+              </span>
+            </>
+          </Show>
         </div>
       </div>
+      {/* Agent Canvas — main content area */}
       <div
+        data-slot="hscode-workspace"
         ref={panelRow}
         class="flex-1 min-h-0 flex flex-col md:flex-row"
         classList={{
