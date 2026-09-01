@@ -57,10 +57,20 @@
   background: transparent;
 }
 
-/* Keyboard focus ring: 2px accent, never removed */
-:focus-visible {
+/* Keyboard focus ring: 2px accent, only on interactive controls */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+select:focus-visible,
+input:focus-visible {
   outline: 2px solid var(--hs-accent, var(--v2-background-bg-accent));
   outline-offset: 1px;
+}
+
+/* Composer textarea: no outline — the container border handles state */
+[data-component="prompt-input-v2"] textarea:focus,
+[data-component="prompt-input-v2"] [contenteditable]:focus {
+  outline: none;
 }
 
 /* ============================================================
@@ -126,10 +136,9 @@ body[data-new-layout] [data-slot="sidebar-panel"] {
 }
 
 [data-component="prompt-input-v2"]:focus-within {
-  border-color: var(--hs-accent, var(--v2-background-bg-accent));
+  border-color: var(--hs-border-strong, var(--v2-border-border-base));
   box-shadow:
-    0 0 0 1px var(--hs-accent, var(--v2-background-bg-accent)),
-    0 1px 3px rgba(0, 0, 0, 0.05);
+    0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 [data-color-scheme="dark"] [data-component="prompt-input-v2"] {
@@ -141,6 +150,23 @@ body[data-new-layout] [data-slot="sidebar-panel"] {
 /* Composer sub-rows: hairline separators instead of heavy chrome */
 [data-component="prompt-input-v2"] [data-slot="prompt-attachments"] {
   border-bottom: 1px solid var(--v2-border-border-muted, transparent);
+}
+
+/* Compact Composer: lower empty-state height */
+[data-component="prompt-input-v2"] textarea,
+[data-component="prompt-input-v2"] [contenteditable] {
+  min-height: 44px;
+  max-height: 200px;
+}
+
+/* Composer overall compact sizing */
+[data-component="session-prompt-dock"] {
+  padding-bottom: 8px;
+}
+
+/* Feed vertical rhythm: reduce excessive gaps */
+[data-component="message-timeline"] [data-component="session-turn"] + [data-component="session-turn"] {
+  margin-top: 8px;
 }
 
 /* ============================================================
