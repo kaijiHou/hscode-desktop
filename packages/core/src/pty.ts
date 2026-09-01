@@ -167,31 +167,21 @@ const layer = Layer.effect(
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
       let args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
 
-      // HSCode: inject session-local PSReadLine colors for PowerShell
+      // HSCode: PowerShell session init — set bar cursor + selection color
       const shellName = command.split(/[/\\]/).pop()?.toLowerCase() ?? ""
       const isPowerShell =
         shellName === "pwsh.exe" || shellName === "pwsh" ||
         shellName === "powershell.exe" || shellName === "powershell"
       if (isPowerShell) {
-        // Use ANSI escape sequences for PSReadLine colors.
-        // Explicit foreground + background prevents dark blocks in light theme.
-        // $([char]27) is Windows PowerShell 5.1 compatible.
-        // Feature-detect each property to avoid errors on older PSReadLine.
+        // PSReadLine 2.0.0 (Windows PowerShell 5.1) does NOT have
+        // InlinePredictionColor / ListPredictionSelectedColor.
+        // Do NOT set those — it causes ArgumentException.
+        // Set bar cursor via DECSCUSR (ESC[5 q) to override ConPTY block cursor.
         const esc = "$([char]27)"
         const cmd = [
+          "Write-Host '" + esc + "[5 q' -NoNewline",
           "if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {",
-          "  $opt = Get-PSReadLineOption",
-          "  $props = $opt.PSObject.Properties.Name",
-          "  $c = @{}",
-          // InlinePrediction: light grey foreground, transparent/light bg
-          "  if ($props -contains 'InlinePredictionColor') { $c['InlinePrediction'] = '" + esc + "[0;38;2;154;161;172m' }",
-          // ListPrediction: light grey foreground
-          "  if ($props -contains 'ListPredictionColor') { $c['ListPrediction'] = '" + esc + "[0;38;2;154;161;172m' }",
-          // ListPredictionSelected: dark text on light background
-          "  if ($props -contains 'ListPredictionSelectedColor') { $c['ListPredictionSelected'] = '" + esc + "[0;38;2;28;32;38;48;2;231;234;240m' }",
-          // Selection: dark text on light blue-grey background
-          "  if ($props -contains 'SelectionColor') { $c['Selection'] = '" + esc + "[0;38;2;28;32;38;48;2;221;229;245m' }",
-          "  if ($c.Count -gt 0) { Set-PSReadLineOption -Colors $c }",
+          "  try { Set-PSReadLineOption -Colors @{ Selection = 'DarkCyan' } } catch {}",
           "}",
         ].join("\n")
         const encoded = Buffer.from(cmd, "utf16le").toString("base64")
