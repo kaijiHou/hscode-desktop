@@ -165,7 +165,28 @@ const layer = Layer.effect(
     const create = Effect.fn("Pty.create")(function* (input: CreateInput) {
       const id = PtyID.ascending()
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
-      const args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+      let args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+
+      // HSCode: inject session-local PSReadLine colors for PowerShell
+      const shellName = command.split(/[/\\]/).pop()?.toLowerCase() ?? ""
+      const isPowerShell =
+        shellName === "pwsh.exe" || shellName === "pwsh" ||
+        shellName === "powershell.exe" || shellName === "powershell"
+      if (isPowerShell) {
+        // PSReadLine colors for HSCode — prevent black prediction backgrounds
+        const psColors = {
+          InlinePrediction: "#9AA1AC",
+          ListPrediction: "#9AA1AC",
+          ListPredictionSelected: "#E7EAF0",
+          Selection: "#DDE5F5",
+        }
+        const colorStr = Object.entries(psColors)
+          .map(([k, v]) => `${k} = '${v}'`)
+          .join(", ")
+        const cmd = `if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) { Set-PSReadLineOption -PredictionSource History -Colors @{${colorStr}} }`
+        const encoded = Buffer.from(cmd, "utf16le").toString("base64")
+        args = ["-NoExit", "-EncodedCommand", encoded, ...args]
+      }
       const cwd = input.cwd || location.directory
       const env = {
         ...process.env,
