@@ -173,17 +173,27 @@ const layer = Layer.effect(
         shellName === "pwsh.exe" || shellName === "pwsh" ||
         shellName === "powershell.exe" || shellName === "powershell"
       if (isPowerShell) {
-        // PSReadLine colors for HSCode — prevent black prediction backgrounds
-        const psColors = {
-          InlinePrediction: "#9AA1AC",
-          ListPrediction: "#9AA1AC",
-          ListPredictionSelected: "#E7EAF0",
-          Selection: "#DDE5F5",
-        }
-        const colorStr = Object.entries(psColors)
-          .map(([k, v]) => `${k} = '${v}'`)
-          .join(", ")
-        const cmd = `if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) { Set-PSReadLineOption -PredictionSource History -Colors @{${colorStr}} }`
+        // Use ANSI escape sequences for PSReadLine colors.
+        // Explicit foreground + background prevents dark blocks in light theme.
+        // $([char]27) is Windows PowerShell 5.1 compatible.
+        // Feature-detect each property to avoid errors on older PSReadLine.
+        const esc = "$([char]27)"
+        const cmd = [
+          "if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {",
+          "  $opt = Get-PSReadLineOption",
+          "  $props = $opt.PSObject.Properties.Name",
+          "  $c = @{}",
+          // InlinePrediction: light grey foreground, transparent/light bg
+          "  if ($props -contains 'InlinePredictionColor') { $c['InlinePrediction'] = '" + esc + "[0;38;2;154;161;172m' }",
+          // ListPrediction: light grey foreground
+          "  if ($props -contains 'ListPredictionColor') { $c['ListPrediction'] = '" + esc + "[0;38;2;154;161;172m' }",
+          // ListPredictionSelected: dark text on light background
+          "  if ($props -contains 'ListPredictionSelectedColor') { $c['ListPredictionSelected'] = '" + esc + "[0;38;2;28;32;38;48;2;231;234;240m' }",
+          // Selection: dark text on light blue-grey background
+          "  if ($props -contains 'SelectionColor') { $c['Selection'] = '" + esc + "[0;38;2;28;32;38;48;2;221;229;245m' }",
+          "  if ($c.Count -gt 0) { Set-PSReadLineOption -Colors $c }",
+          "}",
+        ].join("\n")
         const encoded = Buffer.from(cmd, "utf16le").toString("base64")
         args = ["-NoExit", "-EncodedCommand", encoded, ...args]
       }
