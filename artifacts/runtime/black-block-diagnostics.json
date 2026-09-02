@@ -1,0 +1,152 @@
+{
+  "active": {
+    "tag": "TEXTAREA",
+    "dc": null,
+    "ce": null
+  },
+  "sel": {
+    "range": 1,
+    "collapsed": true,
+    "type": "Caret"
+  },
+  "ce": {
+    "caret": "rgba(0, 0, 0, 0)",
+    "ov": "hidden"
+  },
+  "ta": {
+    "exists": true,
+    "focused": true,
+    "caret": "rgba(0, 0, 0, 0)",
+    "op": "0",
+    "vis": "visible",
+    "bg": "rgba(0, 0, 0, 0)",
+    "rect": {
+      "x": 901.5875244140625,
+      "y": 140,
+      "width": 1,
+      "height": 1,
+      "top": 140,
+      "right": 902.5875244140625,
+      "bottom": 141,
+      "left": 901.5875244140625
+    }
+  },
+  "cvs": {
+    "caret": "rgba(0, 0, 0, 0)",
+    "cursor": "text"
+  },
+  "ancestors": [
+    {
+      "tag": "DIV",
+      "id": "",
+      "pos": "relative",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "hidden",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    },
+    {
+      "tag": "DIV",
+      "id": "terminal-wrapper-pty_05f92cef8001N4Rp1CljBEP8aC",
+      "pos": "absolute",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "visible",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "pos": "relative",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "visible",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "pos": "static",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "visible",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "pos": "absolute",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "hidden",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    },
+    {
+      "tag": "ASIDE",
+      "id": "terminal-panel",
+      "pos": "relative",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "hidden",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "pos": "static",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "visible",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "pos": "static",
+      "z": "auto",
+      "tf": "none",
+      "wc": "auto",
+      "cnt": "none",
+      "iso": "auto",
+      "ov": "visible",
+      "op": "1",
+      "fl": "none",
+      "mb": "normal"
+    }
+  ]
+}
