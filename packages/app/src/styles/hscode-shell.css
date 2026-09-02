@@ -240,3 +240,8 @@ aside#terminal-panel [data-component="tabs-v2"] > [data-slot="tabs-v2-list"] {
 [data-component="network-splitter"]:hover::after {
   background: var(--hs-accent, var(--v2-background-bg-accent));
 }
+
+/* Hide contenteditable caret — ghostty-web renders cursor on canvas */
+aside#terminal-panel [contenteditable="true"] {
+  caret-color: transparent !important;
+}
