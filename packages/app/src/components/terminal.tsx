@@ -451,6 +451,23 @@ export const Terminal = (props: TerminalProps) => {
         scrollback: 10_000,
         ghostty: g,
       })
+      // DEV: log cursor style audit
+      if (typeof window !== 'undefined') {
+        const opts = (t as any).options
+        console.log('[DEV cursor-audit] requested cursorStyle:', 'bar')
+        console.log('[DEV cursor-audit] terminal options.cursorStyle:', opts?.cursorStyle)
+        console.log('[DEV cursor-audit] terminal options.cursorBlink:', opts?.cursorBlink)
+        console.log('[DEV cursor-audit] renderer cursorStyle:', (t as any).renderer?.cursorStyle)
+        // Expose for runtime checks
+        ;(window as any).checkCursor = () => {
+          const r = (t as any).renderer
+          const o = (t as any).options
+          console.log('[cursor-check] renderer.cursorStyle:', r?.cursorStyle)
+          console.log('[cursor-check] options.cursorStyle:', o?.cursorStyle)
+          console.log('[cursor-check] cursorBlink:', o?.cursorBlink)
+          return { rendererStyle: r?.cursorStyle, optionsStyle: o?.cursorStyle }
+        }
+      }
       cleanups.push(() => t.dispose())
       if (disposed) {
         cleanup()
