@@ -513,3 +513,67 @@ Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后�
 - 截图：artifacts/runtime/network-live-capturing.png、network-live-packets.png、
   network-buttons-light.png、network-buttons-dark.png。
 - 按钮对比度探针：light 白底黑字 rgb(255,255,255)/rgb(22,22,22)；dark 反之。
+
+## CHANGE-024：Windows PowerShell 5.1 终端黑块（PSReadLine ECH）——会话级 Remove-Module PSReadLine
+
+**日期**：2026-09-02
+
+### 修改了什么
+1. `packages/core/src/shell.ts`：新增 `LEGACY_POWERSHELL_COMPAT_CMD` 与纯函数
+   `legacyPowerShellCompatArgs(command)`——仅当 shell 为 legacy `powershell.exe`
+   时返回 `-NoExit -EncodedCommand <base64>`，EncodedCommand 内容为
+   `try { Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue } catch {}`。
+   pwsh.exe / cmd / bash 一律返回 undefined（不注入任何参数）。
+2. `packages/core/src/pty.ts`：spawn 前的 PowerShell 初始化参数改为调用上述纯函数；
+   删除旧的内联 EncodedCommand（DECSCUSR 光标 + Selection 颜色）逻辑。
+3. 新增 `packages/core/test/pty/psreadline-compat.test.ts`（8 个用例，全过）。
+4. 诊断产物入库：`scripts/psreadline-capture.ts`、`docs/psreadline-capture-*.txt`
+   （字节级捕获证据）、`docs/psreadline-diag/`（CDP 探测脚本与截图）。
+
+### 为什么
+用户报告：Windows PowerShell 5.1 终端里反复按空格/输入参数时，出现不断向右
+扩展的黑色矩形（黑块/残影）。字节级捕获（`docs/psreadline-capture-*.txt`）证明：
+- 黑块来自 PSReadLine 的 ECH（ESC[nX, "Erase Character"）序列——输入越多、
+  行越长，ECH 的 n 越大；
+- 全程没有任何 SGR-40（显式黑底）转义——黑块不是背景色问题；
+- PSReadLine 2.3.5（bundled）仍发出同样的 ECH（capture-D 证据），即升级
+  模块版本不能修复；
+- 唯一被字节级证据验证的修复是：对该 PTY 会话 `Remove-Module PSReadLine`，
+  宿主回退到内置行编辑器（不发 ECH）。副作用仅限该会话：失去历史编辑/
+  语法高亮；不触碰用户机器、$PROFILE、模块存储。pwsh/cmd/bash 不受影响。
+
+### 与任务书假设的偏差说明
+任务书假设"升级 PSReadLine 到 ≥2.0.3 即可修复"。实测（capture-D，bundled
+2.3.5 场景）该假设不成立——2.3.5 仍发出同样的 ECH 序列，故改为会话级
+Remove-Module 方案。详见 capture-D 文件头注。
+
+### 涉及文件
+| 文件 | 改动 |
+|---|---|
+| `packages/core/src/shell.ts` | +`LEGACY_POWERSHELL_COMPAT_CMD`、+`legacyPowerShellCompatArgs()` |
+| `packages/core/src/pty.ts` | PowerShell init args 改走纯函数；删除旧内联 EncodedCommand |
+| `packages/core/test/pty/psreadline-compat.test.ts` | 新增 8 用例 |
+| `scripts/psreadline-capture.ts`、`docs/psreadline-capture-*.txt` | 诊断脚本与字节级证据 |
+| `docs/psreadline-diag/` | CDP 探测脚本、初始截图 |
+
+### 是否影响原功能
+不影响。仅 legacy powershell.exe 的 PTY 会话启动参数变化（会话内失去
+PSReadLine 编辑增强）；pwsh/cmd/bash、UI、网络抓包、其余终端行为零变化。
+
+### 如何验证 / 结果
+- 单测：`bun test test/pty/psreadline-compat.test.ts` → **8 pass / 0 fail**。
+- typecheck：`bun run typecheck`（tsgo --noEmit）→ **exit 0**。
+- 字节级证据：capture-A/B/C（plain vs nopsreadline 对照）+ capture-D
+  （2.3.5 仍发 ECH）+ run1/run2 对照，均在 `docs/psreadline-capture-*.txt`。
+- 应用内 CDP 黑块扫描脚本已就绪（`docs/psreadline-diag/cdp_scan2.py`），
+  但本轮**未完成**应用内真实空格连按的 canvas 像素级最终验证
+  （IMPLEMENTED BUT NOT VERIFIED，见遗留问题）。
+
+### 遗留问题
+1. 应用内最终像素级验证（空格连按 → canvas 近黑像素/最长黑行对比）未完成——
+   需用户手动在真实终端里按空格确认黑块是否消失，或后续跑 cdp_scan2.py。
+2. CDP 反复开关终端面板会触发 "PTY session not found" dispose 竞态日志
+   （关已销毁 PTY 的 size-sync），属既有行为，本轮未改。
+
+### 对应 Git Commit
+见 CHANGELOG.md [CHANGE-024]。

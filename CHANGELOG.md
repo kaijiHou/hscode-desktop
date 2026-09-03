@@ -62,3 +62,25 @@ HSCode 是基于 [OpenCode](https://github.com/anomalyco/opencode) 的自用修�
 ### Verified
 - First real live capture closure in admin-mode dev: capturing → 1910 packets → target match (10.199.194.75:8080) → stop → clear
 - desktop network tests 71 PASS / 0 FAIL; app network tests 10 PASS / 0 FAIL; typecheck exit=0 both packages
+## [CHANGE-024] — 2026-09-02
+
+### Fixed
+- Terminal: Windows PowerShell 5.1 (legacy powershell.exe) black-block / ghosting
+  caused by PSReadLine ECH (Erase Character, ESC[nX) sequences — session-local
+  `Remove-Module PSReadLine` injected via `-NoExit -EncodedCommand` at PTY spawn.
+  pwsh.exe / cmd / bash are untouched (pure function
+  `Shell.legacyPowerShellCompatArgs`, unit-tested).
+- Deviation from original assumption: upgrading PSReadLine (tested 2.3.5,
+  bundled) does NOT fix the ECH output (byte-level evidence in
+  `docs/psreadline-capture-D_spaces_bundled235.txt`), so the fix is module
+  removal for the spawned session only — no change to the user's machine,
+  $PROFILE, or module store.
+
+### Verified
+- Unit: `packages/core` `psreadline-compat.test.ts` 8 PASS / 0 FAIL
+- Typecheck: core `tsgo --noEmit` exit 0
+- Byte-level captures (plain vs PSReadLine-removed, incl. bundled 2.3.5):
+  `docs/psreadline-capture-*.txt`
+- In-app pixel-level verification of space-mashing (canvas near-black scan,
+  `docs/psreadline-diag/cdp_scan2.py`) is prepared but NOT yet executed —
+  status: IMPLEMENTED BUT NOT VERIFIED (runtime visual confirmation pending)

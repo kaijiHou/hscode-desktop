@@ -106,3 +106,42 @@ Verification scripts kept in scripts/: live-capture-verify.cjs, theme-buttons-sh
 - Free models section shows even when no free models available (minor UI issue)
 - App-wide test suite has 12 pre-existing failures (server-session/i18n/deep-links) unrelated to network work
 - Non-admin capture start surfaces ADMIN_REQUIRED Chinese hint; live capture requires admin relaunch
+
+## CHANGE-024 Handoff (2026-09-02) — PowerShell 5.1 黑块（PSReadLine ECH）
+
+### What landed
+- `packages/core/src/shell.ts`: `LEGACY_POWERSHELL_COMPAT_CMD` + pure
+  `legacyPowerShellCompatArgs(command)` (legacy powershell.exe only;
+  pwsh/cmd/bash → undefined).
+- `packages/core/src/pty.ts`: spawn init args now via that function; old
+  inline EncodedCommand (DECSCUSR + Selection color) removed.
+- New unit test `packages/core/test/pty/psreadline-compat.test.ts` (8 cases).
+- Diagnostic evidence committed: `scripts/psreadline-capture.ts`,
+  `docs/psreadline-capture-*.txt` (byte-level), `docs/psreadline-diag/`
+  (CDP probe scripts + initial screenshot).
+
+### Root cause (byte-level)
+Black block = PSReadLine ECH (ESC[nX) erase-fill growing with line length;
+NO SGR-40 black-background escape anywhere. PSReadLine 2.3.5 (bundled) still
+emits the same ECH → upgrade path dead. Only proven fix: session-local
+Remove-Module PSReadLine (host falls back to built-in line editor, no ECH).
+Scope: spawned PTY session only; user's machine/$PROFILE/module store untouched.
+Cost: legacy powershell.exe session loses PSReadLine history-editing/highlight.
+
+### Deviation from task assumption
+Task assumed "upgrade PSReadLine ≥2.0.3 fixes it" — disproven by capture-D
+(2.3.5 still emits ECH). Fix changed to session-local module removal.
+
+### Verification status
+- VERIFIED: unit 8/8, typecheck exit 0, byte-level captures (A/B/C/D, run1/run2).
+- IMPLEMENTED BUT NOT VERIFIED: in-app real space-mashing canvas pixel scan
+  (`docs/psreadline-diag/cdp_scan2.py` ready, not yet executed) — user manual
+  confirmation or follow-up run pending.
+
+### Notes / known issues
+- CDP toggling the terminal panel repeatedly triggers "PTY session not found"
+  dispose-race logs (size-sync on already-disposed PTY) — pre-existing, not
+  introduced by this change.
+- vision_analyze: user re-enabled image analysis 2026-09-02 ("你可以看图");
+  local custom:local model (qwen3.8-27b) still rejects image input (500),
+  so screenshots must be delivered to the user via MEDIA: for human review.

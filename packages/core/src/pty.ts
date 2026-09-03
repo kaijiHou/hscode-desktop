@@ -167,26 +167,12 @@ const layer = Layer.effect(
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
       let args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
 
-      // HSCode: PowerShell session init — set bar cursor + selection color
-      const shellName = command.split(/[/\\]/).pop()?.toLowerCase() ?? ""
-      const isPowerShell =
-        shellName === "pwsh.exe" || shellName === "pwsh" ||
-        shellName === "powershell.exe" || shellName === "powershell"
-      if (isPowerShell) {
-        // PSReadLine 2.0.0 (Windows PowerShell 5.1) does NOT have
-        // InlinePredictionColor / ListPredictionSelectedColor.
-        // Do NOT set those — it causes ArgumentException.
-        // Set bar cursor via DECSCUSR (ESC[5 q) to override ConPTY block cursor.
-        const esc = "$([char]27)"
-        const cmd = [
-          "Write-Host '" + esc + "[5 q' -NoNewline",
-          "if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {",
-          "  try { Set-PSReadLineOption -Colors @{ Selection = 'DarkCyan' } } catch {}",
-          "}",
-        ].join("\n")
-        const encoded = Buffer.from(cmd, "utf16le").toString("base64")
-        args = ["-NoExit", "-EncodedCommand", encoded, ...args]
-      }
+      // HSCode: legacy Windows PowerShell (5.1) session-local PSReadLine
+      // compatibility. See Shell.legacyPowerShellCompatArgs for the full
+      // rationale (ECH black-block root cause, why Remove-Module is the only
+      // proven fix, why pwsh/cmd/bash are untouched).
+      const compatArgs = Shell.legacyPowerShellCompatArgs(command)
+      if (compatArgs) args = [...compatArgs, ...args]
       const cwd = input.cwd || location.directory
       const env = {
         ...process.env,

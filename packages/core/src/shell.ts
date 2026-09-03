@@ -157,6 +157,39 @@ export function ps(file: string) {
   return meta(file)?.ps === true
 }
 
+// Legacy Windows PowerShell (5.1) session-local PSReadLine compatibility.
+//
+// Root cause (byte-level, see docs/psreadline-capture-*.txt): when PSReadLine
+// is active in legacy powershell.exe, every typed character (space, argument,
+// operator, quote) makes it emit ECH ("Erase Character", ESC[nX) sequences
+// that grow with the line. In HSCode's light theme those erase-fills render as
+// a black block that keeps extending to the right. No SGR-40 (explicit black
+// background) is ever emitted — the block comes from ECH, not a background
+// color escape.
+//
+// PSReadLine >= 2.0.3 (incl. 2.3.5) was expected to fix this, but the capture
+// shows 2.3.5 STILL emits the same ECH sequences. The only proven fix is to
+// drop PSReadLine for THIS session, which makes the host fall back to its
+// built-in line editor (no ECH). This is session-local: it only affects the
+// spawned PTY — never the user's machine, $PROFILE, or module store. Cost:
+// the legacy powershell.exe terminal loses PSReadLine history-editing and
+// syntax highlighting. pwsh.exe / cmd / bash are intentionally left untouched.
+export const LEGACY_POWERSHELL_COMPAT_CMD =
+  "try { Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue } catch {}"
+
+/**
+ * Returns the `-NoExit -EncodedCommand …` init args for legacy Windows
+ * PowerShell session-local PSReadLine compatibility, or `undefined` for any
+ * other shell (pwsh.exe, cmd, bash, …). Pure and side-effect free so it can
+ * be unit tested without spawning a PTY.
+ */
+export function legacyPowerShellCompatArgs(command: string): string[] | undefined {
+  const shellName = command.split(/[/\\]/).pop()?.toLowerCase() ?? ""
+  if (shellName !== "powershell.exe" && shellName !== "powershell") return undefined
+  const encoded = Buffer.from(LEGACY_POWERSHELL_COMPAT_CMD, "utf16le").toString("base64")
+  return ["-NoExit", "-EncodedCommand", encoded]
+}
+
 // Windows-friendly display labels (UI only, not used in config persistence)
 const WIN_LABELS: Record<string, string> = {
   pwsh: "PowerShell 7",
