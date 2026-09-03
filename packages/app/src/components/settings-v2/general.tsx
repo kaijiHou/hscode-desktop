@@ -95,6 +95,10 @@ const ShellSetting: Component<{ controller: ShellSettingsController }> = (props)
       current: props.controller.current(),
     }),
   )
+  const legacyHint = createMemo(() => {
+    const current = options().find((option) => option.value === props.controller.current())
+    return current?.legacy ? language.t("settings.general.row.shell.legacyHint") : undefined
+  })
   return (
     <SettingsRowV2
       title={language.t("settings.general.row.shell.title")}
@@ -110,11 +114,15 @@ const ShellSetting: Component<{ controller: ShellSettingsController }> = (props)
         value={(option) => option.id}
         label={(option) => {
           if (option.id === "auto") return language.t("settings.general.row.shell.autoDefault")
+          if (option.legacy) return language.t("settings.general.row.shell.legacyLabel")
           if (!option.terminalOnly) return option.name
           return `${option.name} (${language.t("settings.general.row.shell.terminalOnly")})`
         }}
         onSelect={(option) => option && props.controller.select(option.value)}
       />
+      <Show when={legacyHint()}>
+        <div class="mt-2 text-xs text-text-text-faint">{legacyHint()}</div>
+      </Show>
     </SettingsRowV2>
   )
 }

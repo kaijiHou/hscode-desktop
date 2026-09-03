@@ -913,6 +913,8 @@ export const dict = {
   "settings.general.row.shell.description": "Shell used by the terminal and agent tools",
   "settings.general.row.shell.autoDefault": "Auto (Default)",
   "settings.general.row.shell.terminalOnly": "terminal only",
+  "settings.general.row.shell.legacyLabel": "Windows PowerShell (Legacy)",
+  "settings.general.row.shell.legacyHint": "Windows PowerShell is a legacy compatibility shell. PowerShell 7 is recommended.",
   "settings.general.row.appearance.title": "Appearance",
   "settings.general.row.appearance.description": "Customise how HSCode looks on your device",
   "settings.general.row.colorScheme.title": "Color scheme",

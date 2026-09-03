@@ -31,6 +31,7 @@ import { decode64 } from "@/utils/base64"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
 import { ExternalLink } from "./external-link"
 import { SettingsList } from "./settings-list"
+import { Shell } from "@opencode-ai/core/shell"
 
 let demoSoundState = {
   cleanup: undefined as (() => void) | undefined,
@@ -159,6 +160,18 @@ export const SettingsGeneral: Component = () => {
   const autoOption = { id: "auto", value: "", label: language.t("settings.general.row.shell.autoDefault") }
   const currentShell = createMemo(() => serverSync().data.config.shell ?? "")
 
+  // Display-only mapping: legacy Windows PowerShell 5.1 is shown as
+  // "(Legacy)" and gets a lightweight hint. config.shell keeps the path.
+  const shellDisplayName = (s: { path: string; name: string }) =>
+    Shell.isLegacyWindowsPowerShell(s.name) || Shell.isLegacyWindowsPowerShell(s.path)
+      ? language.t("settings.general.row.shell.legacyLabel")
+      : s.name
+  const legacyHint = createMemo(() =>
+    currentShell() && Shell.isLegacyWindowsPowerShell(currentShell())
+      ? language.t("settings.general.row.shell.legacyHint")
+      : undefined,
+  )
+
   const shellOptions = createMemo<ShellSelectOption[]>(() => {
       const list = shells.latest
       const current = serverSync().data.config.shell
@@ -168,7 +181,9 @@ export const SettingsGeneral: Component = () => {
           id: s.path,
           // Always persist the full path for reliable config resolution
           value: s.path,
-          label: s.acceptable ? s.name : `${s.name} (${language.t("settings.general.row.shell.terminalOnly")})`,
+          label: s.acceptable
+            ? shellDisplayName(s)
+            : `${shellDisplayName(s)} (${language.t("settings.general.row.shell.terminalOnly")})`,
         })),
       ]
 
@@ -336,6 +351,9 @@ export const SettingsGeneral: Component = () => {
             triggerVariant="settings"
             triggerStyle={{ "min-width": "180px" }}
           />
+          <Show when={legacyHint()}>
+            <div class="mt-2 text-xs text-text-text-faint">{legacyHint()}</div>
+          </Show>
         </SettingsRow>
 
         <SettingsRow

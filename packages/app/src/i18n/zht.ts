@@ -898,6 +898,8 @@ export const dict = {
   "settings.general.row.shell.description": "選擇終端機使用的 Shell。相容的 Shell 也會用於代理程式工具呼叫。",
   "settings.general.row.shell.autoDefault": "自動（預設）",
   "settings.general.row.shell.terminalOnly": "僅限終端機",
+  "settings.general.row.shell.legacyLabel": "Windows PowerShell（舊版）",
+  "settings.general.row.shell.legacyHint": "Windows PowerShell 為舊版相容 Shell，建議優先使用 PowerShell 7。",
   "settings.general.row.appearance.title": "外觀",
   "settings.general.row.appearance.description": "自訂 HSCode 在你的裝置上的外觀",
   "settings.general.row.colorScheme.title": "配色方案",

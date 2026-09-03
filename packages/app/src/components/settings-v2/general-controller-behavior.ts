@@ -11,6 +11,7 @@ export type ShellSelectOption = {
   value: string
   name: string
   terminalOnly: boolean
+  legacy: boolean
 }
 
 // Windows-friendly display labels
@@ -26,9 +27,18 @@ function shellDisplayName(name: string): string {
     : name
 }
 
+// Legacy Windows PowerShell 5.1 (canonical name "powershell") has a known
+// black-background compatibility issue in the HSCode terminal. The UI marks
+// it as legacy (label suffix + lightweight hint, i18n in the component).
+// Display-only — the persisted value stays the full path.
+export function isLegacyWindowsPowerShellOption(shell: ShellOption): boolean {
+  const base = (shell.name || shell.path).split(/[\\/]/).pop()?.toLowerCase() ?? ""
+  return base === "powershell" || base === "powershell.exe"
+}
+
 export function createShellOptions(input: { shells: ShellOption[]; current: string | undefined }) {
   const options: ShellSelectOption[] = [
-    { id: "auto", value: "", name: "", terminalOnly: false },
+    { id: "auto", value: "", name: "", terminalOnly: false, legacy: false },
     ...input.shells.map((shell) => ({
       id: shell.path,
       // Always persist the full path for reliable config resolution
@@ -36,10 +46,17 @@ export function createShellOptions(input: { shells: ShellOption[]; current: stri
       // Display friendly label for known Windows shells
       name: shellDisplayName(shell.name),
       terminalOnly: !shell.acceptable,
+      legacy: isLegacyWindowsPowerShellOption(shell),
     })),
   ]
   if (input.current && !options.some((option) => option.value === input.current)) {
-    options.push({ id: input.current, value: input.current, name: input.current, terminalOnly: false })
+    options.push({
+      id: input.current,
+      value: input.current,
+      name: input.current,
+      terminalOnly: false,
+      legacy: isLegacyWindowsPowerShellOption({ path: input.current, name: input.current, acceptable: true }),
+    })
   }
   return options
 }
