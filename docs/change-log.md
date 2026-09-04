@@ -513,3 +513,33 @@ Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后�
 - 截图：artifacts/runtime/network-live-capturing.png、network-live-packets.png、
   network-buttons-light.png、network-buttons-dark.png。
 - 按钮对比度探针：light 白底黑字 rgb(255,255,255)/rgb(22,22,22)；dark 反之。
+
+---
+
+## CHANGE-024 — 2026-09-04 — Terminal PTY cleanup + Agent Feed
+
+### 修改了什么
+
+- `packages/core/src/pty.ts` 删除 PowerShell PTY 启动时的旧 VT/PSReadLine 注入：不再自动加入 `-NoExit`、`-EncodedCommand`、`ESC[5 q`、`Set-PSReadLineOption` 或 `DarkCyan`。
+- 抽出 `buildPtyArgs()`，保留调用方参数，只对 login shell 添加 `-l`。
+- `packages/core/test/pty/args.test.ts` 增加 `pwsh.exe`、`powershell.exe` 和 POSIX login shell 的行为回归测试。
+- Workbench timeline 真实增加 Task block、HSCode Agent header、thinking activity，并将居中 feed 与 legacy 标题栏限制到 920px；配套样式放在 `hscode-agent-feed.css`。
+
+### 是否影响原功能
+
+不改变 PTY resize、Network Inspector、agent/session 数据结构或 shell selection；仅移除已废弃的 PowerShell 启动视觉注入并改变信息流呈现。
+
+### 如何验证 / 验证结果
+
+- App typecheck：PASS（bundled TypeScript native preview）。
+- Core typecheck：PASS（bundled TypeScript native preview）。
+- Prettier、`git diff --check`：PASS。
+- `packages/opencode/dist/node/node.js`：已重建并确认包含新的 `buildPtyArgs`；旧 PTY startup injection 不存在。
+- Bun tests：OPEN；本机 `D:\npm-global\bun.ps1` 指向缺失的 Bun 可执行文件，未运行安装/重装。
+- PowerShell 7 默认、clean startup、dark palette、Settings 布局、stale session：OPEN；桌面窗口未能可靠激活，未伪造 runtime PASS。
+
+### 对应 Git Commit
+
+- `cdc76e9` `fix(terminal): remove obsolete PowerShell startup injection`
+- `3e70b9b` `test(terminal): cover clean PowerShell PTY args`
+- `4553a25` `feat(ui): reshape session timeline as Agent Feed`
