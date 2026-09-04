@@ -99,30 +99,54 @@ const ShellSetting: Component<{ controller: ShellSettingsController }> = (props)
     const current = options().find((option) => option.value === props.controller.current())
     return current?.legacy ? language.t("settings.general.row.shell.legacyHint") : undefined
   })
+  // Show the "Switch to PowerShell 7" action only when the current shell is
+  // legacy Windows PowerShell AND a real PowerShell 7 option is available.
+  const showSwitchToPwsh = createMemo(() => {
+    const current = options().find((option) => option.value === props.controller.current())
+    if (!current?.legacy) return false
+    return options().some(
+      (option) => !option.legacy && !option.terminalOnly && option.name === "PowerShell 7",
+    )
+  })
   return (
     <SettingsRowV2
       title={language.t("settings.general.row.shell.title")}
       description={language.t("settings.general.row.shell.description")}
     >
-      <SelectV2
-        appearance="inline"
-        data-action="settings-shell"
-        options={options()}
-        current={options().find((option) => option.value === props.controller.current()) ?? options()[0]}
-        placement="bottom-end"
-        gutter={6}
-        value={(option) => option.id}
-        label={(option) => {
-          if (option.id === "auto") return language.t("settings.general.row.shell.autoDefault")
-          if (option.legacy) return language.t("settings.general.row.shell.legacyLabel")
-          if (!option.terminalOnly) return option.name
-          return `${option.name} (${language.t("settings.general.row.shell.terminalOnly")})`
-        }}
-        onSelect={(option) => option && props.controller.select(option.value)}
-      />
-      <Show when={legacyHint()}>
-        <div class="mt-2 text-xs text-text-text-faint">{legacyHint()}</div>
-      </Show>
+      <div data-slot="settings-shell-control">
+        <SelectV2
+          appearance="inline"
+          data-action="settings-shell"
+          options={options()}
+          current={options().find((option) => option.value === props.controller.current()) ?? options()[0]}
+          placement="bottom-end"
+          gutter={6}
+          value={(option) => option.id}
+          label={(option) => {
+            if (option.id === "auto") return language.t("settings.general.row.shell.autoDefault")
+            if (option.legacy) return language.t("settings.general.row.shell.legacyLabel")
+            if (!option.terminalOnly) return option.name
+            return `${option.name} (${language.t("settings.general.row.shell.terminalOnly")})`
+          }}
+          onSelect={(option) => option && props.controller.select(option.value)}
+        />
+        <Show when={legacyHint()}>
+          <div data-slot="settings-shell-legacy-hint">{legacyHint()}</div>
+        </Show>
+        <Show when={showSwitchToPwsh()}>
+          <ButtonV2
+            variant="ghost"
+            size="small"
+            data-action="settings-shell-switch-to-pwsh"
+            onClick={() => {
+              const pwsh = options().find((option) => !option.legacy && !option.terminalOnly && option.name === "PowerShell 7")
+              if (pwsh) props.controller.select(pwsh.value)
+            }}
+          >
+            {language.t("settings.general.row.shell.switchToPwsh")}
+          </ButtonV2>
+        </Show>
+      </div>
     </SettingsRowV2>
   )
 }

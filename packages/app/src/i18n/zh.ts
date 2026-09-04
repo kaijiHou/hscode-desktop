@@ -905,6 +905,7 @@ export const dict = {
   "settings.general.row.shell.terminalOnly": "仅终端",
   "settings.general.row.shell.legacyLabel": "Windows PowerShell（旧版）",
   "settings.general.row.shell.legacyHint": "Windows PowerShell 为旧版兼容 Shell，建议优先使用 PowerShell 7。",
+  "settings.general.row.shell.switchToPwsh": "切换到 PowerShell 7",
   "settings.general.row.appearance.title": "外观",
   "settings.general.row.appearance.description": "自定义 HSCode 在你的设备上的外观",
   "settings.general.row.colorScheme.title": "配色方案",
