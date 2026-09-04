@@ -1,108 +1,88 @@
-# HSCode Phase 2A.5 — Closure Before Provider Connection Tests
+# HSCode Developer Agent Workbench — Current Handoff
 
-## HEAD
+Updated: 2026-09-04
 
-- branch: master
-- local: 470acb0
-- origin/master: 470acb0
+## Repository state
 
-## Model UI
+- Repo: `D:/hscode`
+- Branch: `p0/pwsh-default`
+- HEAD: `4553a25`
+- Stable base: `c06f87519204f26e34b56761e1b18ae523c3dcbc`
 
-| Item | Status |
-|---|---|
-| OpenCode Go | PASS |
-| DeepSeek | PASS |
-| Custom Model | PASS |
-| Custom classification | PASS (OpenAI/Anthropic no longer misclassified) |
-| DeepSeek Test Connection | **DEFERRED** — user requested final credential phase later |
-| Self-hosted Test Connection | **DEFERRED** — user requested final connection-validation phase later |
+## Product direction
 
-## Network
+HSCode is a private desktop Agent Workbench based on OpenCode. Keep the existing Agent, Session, Provider, Network Inspector, terminal resize, and network resize behavior intact while making the visible shell and feed feel like HSCode.
 
-| Item | Status |
-|---|---|
-| Terminal | Network | text buttons | PASS |
-| Active session state | PASS |
-| Panel open | PASS (requires active session) |
-| Start/Stop | SKIPPED — administrator privilege unavailable |
-| Packet List | SKIPPED — administrator privilege unavailable |
-| Packet Detail | SKIPPED — administrator privilege unavailable |
-| HEX/ASCII | SKIPPED — administrator privilege unavailable |
-| Filter | SKIPPED — administrator privilege unavailable |
-| Bounded buffer | PASS (5000 packet limit in code) |
+PowerShell strategy remains: PowerShell 7 preferred, PowerShell Terminal fixed dark, Legacy PowerShell available but demoted. Do not spend more time on the historical PowerShell 5.1 black-block root cause.
 
-## Default Project
+## Landed in this handoff
 
-| Item | Status |
-|---|---|
-| Reproduced | NO (not on current HEAD) |
-| Actual error | N/A |
-| Root cause | Likely resolved by catalog restoration + models.dev snapshot |
-| Fix | OPENCODE_DISABLE_MODELS_FETCH restored, catalog bundled |
-| 3-run validation | PASS (start/refresh/restart all clean) |
+### Terminal
 
-## Privacy
+- `packages/core/src/pty.ts` no longer injects `ESC[5 q`, `Set-PSReadLineOption`, `Selection = DarkCyan`, `-NoExit`, or `-EncodedCommand` into PowerShell PTYs.
+- `buildPtyArgs()` keeps caller arguments unchanged and only adds `-l` for login shells.
+- `packages/core/test/pty/args.test.ts` covers clean `pwsh.exe` and `powershell.exe` arguments plus POSIX login handling.
+- Sidecar `packages/opencode/dist/node/node.js` was rebuilt and contains the new PTY argument helper.
 
-| Item | Status |
-|---|---|
-| Passive models fetch | DISABLED (OPENCODE_DISABLE_MODELS_FETCH=true) |
-| 60-min refresh | DISABLED |
-| User-triggered requests | ALLOWED |
+Commits:
 
-## Commits (this session)
+- `cdc76e9 fix(terminal): remove obsolete PowerShell startup injection`
+- `3e70b9b test(terminal): cover clean PowerShell PTY args`
 
-| Hash | Message |
-|---|---|
-| 470acb0 | feat(network-ui): add Terminal | Network text buttons to V2Actions |
-| 81bc77e | fix(models): remove misclassified customModels filter |
-| 700aa67 | fix(ui): add copyright to app root layout bottom |
-| 8c11468 | fix(ui): move copyright to app root layout bottom |
-| 4e768cc | fix(models-ui): fix providers.all() type + fix titlebar JSX |
-| 6cb1cd7 | fix(models-ui): use providers.all() for DeepSeek visibility |
-| e80c207 | fix(models-ui): rewrite unpaid selector to show 3 primary entries |
+### Workbench Agent Feed
 
-## Deferred Items
+The Agent Feed phase is committed in `4553a25` and is deliberately limited to:
 
-- DeepSeek Test Connection —留到下一轮 Provider Connection Finalization
-- Self-hosted Test Connection —留到下一轮 Provider Connection Finalization
-- EXE Packaging —留到模型和 Network 都稳定后单独处理
+- `packages/app/src/pages/session/timeline/message-timeline.tsx`
+  - user messages are presented as a Task block;
+  - assistant groups get an `HSCode Agent` identity header once per assistant turn;
+  - thinking gets a quiet activity marker;
+  - the timeline root is addressable for styling;
+  - centered feed rows and the legacy title bar are capped at 920px.
+- `packages/app/src/styles/hscode-agent-feed.css`
+  - task block signal line;
+  - assistant identity header;
+  - quiet thinking activity;
+  - compact tool activity and terminal-like output surfaces;
+  - restrained diff and error treatments.
 
-## Known Issues
+These changes are real TSX plus CSS; do not replace them with CSS-only selectors or redesign terminal/network mechanics.
 
-- Network panel only renders when in an active session (by design)
-- V2Actions Terminal|Network buttons only visible when isDesktop() is true
-- Free models section shows even when no free models available (minor UI issue)
+## Verification
 
----
+- App typecheck: PASS using the checked-in bundled TypeScript native preview.
+- Core typecheck: PASS using the checked-in bundled TypeScript native preview.
+- Prettier and `git diff --check`: PASS.
+- Bun tests: OPEN because `D:/npm-global/bun.ps1` points to a missing executable. Do not run `bun install` to repair it.
+- PowerShell 7 default: OPEN. A fresh Electron window could not be activated reliably in the last runtime attempts. Do not claim PASS without `pwsh.exe` in the PTY/process evidence and `PSVersion.Major = 7`.
+- Clean startup, dark PowerShell palette, Settings layout, and stale-session recovery: OPEN pending a reliable fresh desktop window.
 
-## CHANGE-023 Handoff (2026-08-26) — WinDivert Dev Runtime + Live Capture Closure
+## Exact next actions
 
-### What landed
-- `networkResourcesDir()` unified helper (resources.ts): dev → packages/desktop/resources, packaged → process.resourcesPath
-- Native bridge init errors surfaced: structured log + `setNativeBridgeError()` + real root cause in renderer (Chinese mapping via `networkErrorText()`)
-- Light-theme buttons fixed: ButtonV2 replaces hardcoded dark inline styles
-- capture-worker: separate rollup entry (`out/main/capture-worker.js`) + static import of ./native
-- GetLastError via koffi prototype form — real win32 codes (e.g. 87 on bad filter)
-- network-start IPC defensive re-validation; empty filter explicitly allowed
+1. If the desktop window becomes accessible, perform one narrow runtime check with all old PTY tabs closed; otherwise keep the runtime statuses OPEN.
+2. If runtime evidence changes, record it in `docs/context-checkpoint.md` and this file.
 
-### First REAL live capture (admin-mode dev)
-click 开始抓包 → capturing → packetCount=1910 → match row
-`→ 10.1.224.6:54427 → 10.199.194.75:8080 TCP 52` → stop stable → clear=0.
-Screenshots: artifacts/runtime/network-live-{capturing,packets}.png, network-buttons-{light,dark}.png
+## Preserve
 
-### Tests
-desktop network 71/0 · app network 10/0 · typecheck exit=0 (both).
-App-wide 12 pre-existing failures (server-session/i18n/deep-links) confirmed on HEAD via stash.
+- Existing untracked diagnostic files. They belong to the ongoing investigation and must not be deleted casually.
+- Terminal/network resize and reflow behavior.
+- Network capture core and native bridge.
+- Shell selection logic unless a future runtime check provides direct evidence.
+- Agent/session data structures and provider protocol.
 
-### Dev-run-as-admin note
-Desktop launcher: `D:\Desktop\HSCode-管理员启动.bat` → pwsh7 self-elevating ps1.
-WinDivert requires admin; non-admin now shows 中文提示 instead of raw error.
-Verification scripts kept in scripts/: live-capture-verify.cjs, theme-buttons-shot.cjs.
+## Never do
 
-## Known Issues (updated)
+- Do not merge `p0/psreadline-compat` (`c521235`).
+- Do not patch `node_modules` or `.vite/deps`.
+- Do not run `bun install`, Electron reinstall, delete `node_modules`, or clear Vite cache.
+- Do not continue PSReadLine, Ghostty renderer, cursor, caret, SGR-filter, or Remove-Module root-cause experiments.
 
-- Network panel only renders when in an active session (by design)
-- V2Actions Terminal|Network buttons only visible when isDesktop() is true
-- Free models section shows even when no free models available (minor UI issue)
-- App-wide test suite has 12 pre-existing failures (server-session/i18n/deep-links) unrelated to network work
-- Non-admin capture start surfaces ADMIN_REQUIRED Chinese hint; live capture requires admin relaunch
+## Runtime wording
+
+Until direct evidence exists:
+
+- `PowerShell 7 default: OPEN`
+- `black-block root cause: OPEN`
+- `black-block product mitigation: PowerShell 7 preferred + fixed dark PowerShell terminal`
+
+Never write that the black-block root cause is fixed based only on static code or Settings labels.
