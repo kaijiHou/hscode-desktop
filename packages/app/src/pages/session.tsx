@@ -214,7 +214,18 @@ function SessionErrorFallback(props: { error: unknown; sessionID?: string; serve
     if (!props.sessionID) return
     tabs.removeSessionTab({ server: props.serverKey ?? server.key, sessionId: props.sessionID })
   }
-  if (isCurrentSessionNotFoundError(props.error, props.sessionID)) {
+  const isNotFound = isCurrentSessionNotFoundError(props.error, props.sessionID)
+  // Auto-recover from a stale session: only for a confirmed NotFound, close
+  // the tab (removeSessionTab navigates to the next valid tab or home) and
+  // toast. We deliberately do NOT auto-close on offline / timeout / 500 /
+  // connection refused — those are transient and the tab may still be valid.
+  // The error fallback only mounts for a real error, so onMount runs once.
+  onMount(() => {
+    if (!isNotFound || !props.sessionID) return
+    closeTab()
+    showToast(language.t("session.error.notFound.recovered"))
+  })
+  if (isNotFound) {
     return (
       <div class="flex-1 min-h-0 overflow-hidden">
         <div class="h-full px-6 pb-42 -mt-4 flex flex-col items-center justify-center text-center gap-4">

@@ -751,6 +751,7 @@ export const dict = {
   "session.error.notFound": "找不到此会话",
   "session.error.notFound.description": "此标签页指向的会话已不存在于此服务器上。",
   "session.error.notFound.closeTab": "关闭标签页",
+  "session.error.notFound.recovered": "旧会话已失效，已关闭标签页",
   "session.error.serverConnection": "无法连接到此服务器",
   "session.review.filesChanged": "{{count}} 个文件已更改",
   "session.review.change.one": "更改",
