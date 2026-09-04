@@ -25,7 +25,7 @@ Current objective: preserve the completed Agent Feed redesign and keep runtime g
 
 ## Runtime evidence
 
-- PowerShell 7 default: **OPEN**. The dev renderer server starts, but electron-vite then reports `Error: Electron uninstall` while resolving the local Electron binary, so no desktop window is created and no claim is made about the real `pwsh.exe` process or `$PSVersionTable`.
+- PowerShell 7 default: **OPEN**. The root Electron 44 package is missing its binary metadata, while the desktop Electron 42 binary exists. With `ELECTRON_EXEC_PATH` pointed at that existing binary, Electron starts, but the sidecar exits with code 0 before becoming ready and the renderer times out after 60 seconds; no claim is made about the real `pwsh.exe` process or `$PSVersionTable`.
 - Clean startup, dark PowerShell palette, settings layout, and stale-session recovery: **OPEN** for the same reason.
 - Bun tests: **OPEN**. The configured `D:\npm-global\bun.ps1` points to a missing Bun executable. No install/reinstall was attempted.
 

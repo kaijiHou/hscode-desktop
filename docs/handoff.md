@@ -54,7 +54,7 @@ These changes are real TSX plus CSS; do not replace them with CSS-only selectors
 - Core typecheck: PASS using the checked-in bundled TypeScript native preview.
 - Prettier and `git diff --check`: PASS.
 - Bun tests: OPEN because `D:/npm-global/bun.ps1` points to a missing executable. Do not run `bun install` to repair it.
-- PowerShell 7 default: OPEN. Main/preload dev build succeeds and the renderer dev server starts, but electron-vite reports `Error: Electron uninstall` while resolving the local Electron binary; no desktop window is created. Do not claim PASS without `pwsh.exe` in the PTY/process evidence and `PSVersion.Major = 7`.
+- PowerShell 7 default: OPEN. The root Electron 44 package is missing its binary metadata, while the desktop Electron 42 binary exists. With `ELECTRON_EXEC_PATH` pointed at the existing Electron 42 binary, Electron starts, but the sidecar exits with code 0 before becoming ready and the renderer times out after 60 seconds. Do not claim PASS without `pwsh.exe` in the PTY/process evidence and `PSVersion.Major = 7`.
 - Production renderer build: OPEN due the existing `@effect/platform-node-shared` `node:stream` browser-externalization error. Do not patch dependencies to bypass it in this phase.
 - Clean startup, dark PowerShell palette, Settings layout, and stale-session recovery: OPEN pending a reliable fresh desktop window.
 
