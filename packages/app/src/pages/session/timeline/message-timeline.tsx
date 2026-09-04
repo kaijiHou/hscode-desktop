@@ -133,11 +133,28 @@ function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSu
   const language = useLanguage()
 
   return (
-    <div data-slot="session-turn-thinking">
+    <div data-component="thinking-activity" data-slot="session-turn-thinking">
+      <span data-slot="thinking-marker" aria-hidden="true">
+        <Icon name="brain" size="small" />
+      </span>
       <TextShimmer text={language.t("ui.sessionTurn.status.thinking")} />
       <Show when={!props.showReasoningSummaries}>
         <TextReveal text={props.reasoningHeading} class="session-turn-thinking-heading" travel={25} duration={700} />
       </Show>
+    </div>
+  )
+}
+
+function AgentFeedHeader(props: { active: boolean }) {
+  const language = useLanguage()
+
+  return (
+    <div data-component="agent-feed-header" data-active={props.active ? "true" : undefined}>
+      <span data-slot="agent-feed-avatar" aria-hidden="true">
+        <Icon name="brain" size="small" />
+      </span>
+      <span data-slot="agent-feed-name">HSCode {language.t("command.category.agent")}</span>
+      <span data-slot="agent-feed-rule" aria-hidden="true" />
     </div>
   )
 }
@@ -972,6 +989,15 @@ export function MessageTimeline(props: {
   }
 
   const renderAssistantPartGroup = (row: Accessor<TimelineRowMap["AssistantPart"]>, onSizeChange?: () => void) => {
+    const wrap = (content: JSX.Element) => (
+      <div data-component="assistant-feed-item">
+        <Show when={!row().previousAssistantPart}>
+          <AgentFeedHeader active={workingTurn(row().userMessageID)} />
+        </Show>
+        <div data-slot="assistant-feed-body">{content}</div>
+      </div>
+    )
+
     if (row().group.type === "context") {
       const parts = createMemo(() => {
         const group = row().group
@@ -985,7 +1011,7 @@ export function MessageTimeline(props: {
         return toolOpen[contextOpenKey()] === true
       })
 
-      return (
+      return wrap(
         <ContextToolGroup
           parts={parts()}
           open={open()}
@@ -994,7 +1020,7 @@ export function MessageTimeline(props: {
             workingTurn(row().userMessageID) && lastAssistantGroupKey().get(row().userMessageID) === row().group.key
           }
           onSizeChange={onSizeChange}
-        />
+        />,
       )
     }
 
@@ -1014,7 +1040,7 @@ export function MessageTimeline(props: {
       return partDefaultOpen(item, settings.general.shellToolPartsExpanded(), settings.general.editToolPartsExpanded())
     })
 
-    return (
+    return wrap(
       <Show when={message()}>
         {(message) => (
           <Show when={part()}>
@@ -1035,7 +1061,7 @@ export function MessageTimeline(props: {
             )}
           </Show>
         )}
-      </Show>
+      </Show>,
     )
   }
 
@@ -1056,7 +1082,7 @@ export function MessageTimeline(props: {
         data-timeline-row={input.row()._tag}
         classList={{
           "min-w-0 w-full max-w-full": true,
-          "md:max-w-200 2xl:max-w-[1000px]": props.centered,
+          "md:max-w-[920px]": props.centered,
           "md:mx-auto": props.centered,
           "pt-3": previousAssistantPart(),
         }}
@@ -1131,14 +1157,21 @@ export function MessageTimeline(props: {
             <Show when={message()}>
               {(message) => (
                 <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
-                  <div data-slot="session-turn-message-content" aria-live="off">
-                    <Message
-                      message={message()}
-                      parts={getMsgParts(userMessageRow().userMessageID)}
-                      actions={props.actions}
-                      useV2Actions={settings.general.newLayoutDesigns()}
-                      comments={messageComments()}
-                    />
+                  <div data-component="task-block">
+                    <div data-slot="task-block-header">
+                      <span data-slot="task-block-marker" aria-hidden="true" />
+                      <span data-slot="task-block-label">{language.t("settings.permissions.tool.task.title")}</span>
+                      <span data-slot="task-block-rule" aria-hidden="true" />
+                    </div>
+                    <div data-slot="session-turn-message-content" aria-live="off">
+                      <Message
+                        message={message()}
+                        parts={getMsgParts(userMessageRow().userMessageID)}
+                        actions={props.actions}
+                        useV2Actions={settings.general.newLayoutDesigns()}
+                        comments={messageComments()}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1296,7 +1329,7 @@ export function MessageTimeline(props: {
   }
 
   return (
-    <div class="relative w-full h-full min-w-0">
+    <div data-component="message-timeline" class="relative w-full h-full min-w-0">
       <div
         class="absolute left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-all duration-200 ease-out"
         classList={{
@@ -1380,7 +1413,7 @@ export function MessageTimeline(props: {
               "pr-3": true,
               "pl-2.5": settings.general.newLayoutDesigns(),
               "pl-2 md:pl-4": !settings.general.newLayoutDesigns(),
-              "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": props.centered && !settings.general.newLayoutDesigns(),
+              "md:max-w-[920px] md:mx-auto": props.centered && !settings.general.newLayoutDesigns(),
             }}
           >
             <div class="h-12 w-full flex items-center justify-between gap-2">
