@@ -29,7 +29,7 @@ function envPath(Path: string): NodeJS.ProcessEnv {
   }
 }
 
-function same(a: string | null, b: string) {
+function same(a: string | undefined, b: string) {
   if (process.platform === "win32") {
     expect(a?.toLowerCase()).toBe(b.toLowerCase())
     return
@@ -39,8 +39,8 @@ function same(a: string | null, b: string) {
 }
 
 describe("util.which", () => {
-  test("returns null when command is missing", () => {
-    expect(which("opencode-missing-command-for-test")).toBeNull()
+  test("returns undefined when command is missing", () => {
+    expect(which("opencode-missing-command-for-test")).toBeUndefined()
   })
 
   test("finds a command from PATH override", async () => {
@@ -72,7 +72,7 @@ describe("util.which", () => {
     await fs.mkdir(bin)
     await cmd(bin, "noexec", false)
 
-    expect(which("noexec", env(bin))).toBeNull()
+    expect(which("noexec", env(bin))).toBeUndefined()
   })
 
   test("uses PATHEXT on windows", async () => {
