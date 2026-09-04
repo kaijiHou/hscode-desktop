@@ -6,7 +6,7 @@ Updated: 2026-09-04
 
 - Repo: `D:/hscode`
 - Branch: `p0/pwsh-default`
-- HEAD: `4553a25`
+- HEAD: `83af730`
 - Stable base: `c06f87519204f26e34b56761e1b18ae523c3dcbc`
 
 ## Product direction
@@ -54,12 +54,13 @@ These changes are real TSX plus CSS; do not replace them with CSS-only selectors
 - Core typecheck: PASS using the checked-in bundled TypeScript native preview.
 - Prettier and `git diff --check`: PASS.
 - Bun tests: OPEN because `D:/npm-global/bun.ps1` points to a missing executable. Do not run `bun install` to repair it.
-- PowerShell 7 default: OPEN. A fresh Electron window could not be activated reliably in the last runtime attempts. Do not claim PASS without `pwsh.exe` in the PTY/process evidence and `PSVersion.Major = 7`.
+- PowerShell 7 default: OPEN. Main/preload dev build succeeds and the renderer dev server starts, but electron-vite reports `Error: Electron uninstall` while resolving the local Electron binary; no desktop window is created. Do not claim PASS without `pwsh.exe` in the PTY/process evidence and `PSVersion.Major = 7`.
+- Production renderer build: OPEN due the existing `@effect/platform-node-shared` `node:stream` browser-externalization error. Do not patch dependencies to bypass it in this phase.
 - Clean startup, dark PowerShell palette, Settings layout, and stale-session recovery: OPEN pending a reliable fresh desktop window.
 
 ## Exact next actions
 
-1. If the desktop window becomes accessible, perform one narrow runtime check with all old PTY tabs closed; otherwise keep the runtime statuses OPEN.
+1. If the desktop window becomes accessible after an external environment repair, perform one narrow runtime check with all old PTY tabs closed; otherwise keep the runtime statuses OPEN.
 2. If runtime evidence changes, record it in `docs/context-checkpoint.md` and this file.
 
 ## Preserve

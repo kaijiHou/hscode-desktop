@@ -1,7 +1,7 @@
 # HSCode Context Checkpoint
 
 Current branch: `p0/pwsh-default`
-Current HEAD: `4553a25`
+Current HEAD: `83af730`
 Base: `c06f87519204f26e34b56761e1b18ae523c3dcbc`
 Current objective: preserve the completed Agent Feed redesign and keep runtime gaps explicitly tracked.
 
@@ -15,6 +15,7 @@ Current objective: preserve the completed Agent Feed redesign and keep runtime g
 - App typecheck: PASS via the bundled TypeScript native preview.
 - Core typecheck: PASS via the bundled TypeScript native preview.
 - Formatter and diff checks: PASS.
+- Desktop main/preload build: PASS with Node heap raised to 8GB; renderer production build is blocked by an existing `node:stream` browser-externalization error in `@effect/platform-node-shared`.
 
 ## Commits
 
@@ -24,7 +25,7 @@ Current objective: preserve the completed Agent Feed redesign and keep runtime g
 
 ## Runtime evidence
 
-- PowerShell 7 default: **OPEN**. A fresh desktop window could not be activated reliably, so no claim is made about the real `pwsh.exe` process or `$PSVersionTable`.
+- PowerShell 7 default: **OPEN**. The dev renderer server starts, but electron-vite then reports `Error: Electron uninstall` while resolving the local Electron binary, so no desktop window is created and no claim is made about the real `pwsh.exe` process or `$PSVersionTable`.
 - Clean startup, dark PowerShell palette, settings layout, and stale-session recovery: **OPEN** for the same reason.
 - Bun tests: **OPEN**. The configured `D:\npm-global\bun.ps1` points to a missing Bun executable. No install/reinstall was attempted.
 
@@ -39,7 +40,7 @@ Working tree contains only existing untracked diagnostic files; no tracked work 
 
 ## ONE exact next action
 
-If the desktop window becomes accessible, close old PTY tabs and perform the narrow fresh-terminal check described in `docs/handoff.md`; otherwise leave the runtime statuses OPEN.
+If the desktop window becomes accessible after an external environment repair, close old PTY tabs and perform the narrow fresh-terminal check described in `docs/handoff.md`; otherwise leave the runtime statuses OPEN.
 
 ## Important files/functions
 
