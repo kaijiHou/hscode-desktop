@@ -43,6 +43,10 @@ export const CreateInput = Pty.CreateInput
 
 export type CreateInput = Types.DeepMutable<typeof CreateInput.Type>
 
+export function buildPtyArgs(command: string, inputArgs: readonly string[] = []) {
+  return Shell.login(command) ? [...inputArgs, "-l"] : [...inputArgs]
+}
+
 export const UpdateInput = Pty.UpdateInput
 
 export type UpdateInput = Types.DeepMutable<typeof UpdateInput.Type>
@@ -165,28 +169,7 @@ const layer = Layer.effect(
     const create = Effect.fn("Pty.create")(function* (input: CreateInput) {
       const id = PtyID.ascending()
       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
-      let args = Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
-
-      // HSCode: PowerShell session init — set bar cursor + selection color
-      const shellName = command.split(/[/\\]/).pop()?.toLowerCase() ?? ""
-      const isPowerShell =
-        shellName === "pwsh.exe" || shellName === "pwsh" ||
-        shellName === "powershell.exe" || shellName === "powershell"
-      if (isPowerShell) {
-        // PSReadLine 2.0.0 (Windows PowerShell 5.1) does NOT have
-        // InlinePredictionColor / ListPredictionSelectedColor.
-        // Do NOT set those — it causes ArgumentException.
-        // Set bar cursor via DECSCUSR (ESC[5 q) to override ConPTY block cursor.
-        const esc = "$([char]27)"
-        const cmd = [
-          "Write-Host '" + esc + "[5 q' -NoNewline",
-          "if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {",
-          "  try { Set-PSReadLineOption -Colors @{ Selection = 'DarkCyan' } } catch {}",
-          "}",
-        ].join("\n")
-        const encoded = Buffer.from(cmd, "utf16le").toString("base64")
-        args = ["-NoExit", "-EncodedCommand", encoded, ...args]
-      }
+      const args = buildPtyArgs(command, input.args)
       const cwd = input.cwd || location.directory
       const env = {
         ...process.env,
