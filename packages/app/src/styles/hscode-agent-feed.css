@@ -16,6 +16,13 @@
   --hs-feed-gap: 18px;
 }
 
+/* Rows inside one assistant turn stack tightly — the identity header must
+   sit directly on its answer. Turn-level separation is owned by the task
+   block's margin-top. */
+[data-timeline-row="AssistantPart"] {
+  padding-top: 2px;
+}
+
 /* ============================================================
    User message — task input block, not a chat bubble
    ============================================================ */
@@ -47,7 +54,15 @@
   position: relative;
   width: 100%;
   min-width: 0;
+  /* A task starts a user turn — separate it clearly from the previous
+     assistant answer above. */
+  margin-top: 20px;
   padding: 10px 0 2px 12px;
+}
+
+[data-timeline-row="UserMessage"]:first-child [data-component="task-block"],
+[data-timeline-row="UserMessage"][data-first-row] [data-component="task-block"] {
+  margin-top: 0;
 }
 
 /* 2px Ink Blue signal line — the HSCode identity marker */
@@ -108,7 +123,9 @@
 [data-component="assistant-feed-item"] {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  /* Answer hugs its identity header; turn separation lives above the
+     next task block instead. */
+  gap: 4px;
   width: 100%;
   min-width: 0;
 }
@@ -223,12 +240,30 @@
 }
 
 [data-component="thinking-activity"] {
-  margin-top: 2px;
-  padding: 4px 0 4px 10px;
-  min-height: 28px;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 3px 0 3px 10px;
+  min-height: 24px;
   border-left: 2px solid color-mix(in srgb, var(--hs-accent, #475edb) 40%, transparent);
   color: var(--hs-text-secondary, var(--v2-text-text-muted));
   font-size: 12px;
+}
+
+/* Reasoning text collapses right under the thinking marker */
+[data-component="reasoning-part"] [data-component="markdown"] {
+  margin-top: 6px;
+}
+
+/* First content inside an assistant answer never carries a top margin —
+   the header must sit directly on the reply. */
+[data-slot="assistant-feed-body"] > :first-child,
+[data-slot="assistant-feed-body"] [data-component="text-part"]:first-child,
+[data-slot="assistant-feed-body"] [data-component="markdown"]:first-child {
+  margin-top: 0 !important;
+}
+
+[data-slot="assistant-feed-body"] [data-component="markdown"] > :first-child {
+  margin-top: 0;
 }
 
 [data-slot="thinking-marker"] {

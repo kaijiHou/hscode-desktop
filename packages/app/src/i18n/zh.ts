@@ -1086,7 +1086,7 @@ export const dict = {
   "settings.permissions.tool.list.description": "列出目录中的文件",
   "settings.permissions.tool.bash.title": "Bash",
   "settings.permissions.tool.bash.description": "运行 shell 命令",
-  "settings.permissions.tool.task.title": "任务",
+  "settings.permissions.tool.task.title": "当前任务",
   "settings.permissions.tool.task.description": "启动子智能体",
   "settings.permissions.tool.skill.title": "技能",
   "settings.permissions.tool.skill.description": "按名称加载技能",
