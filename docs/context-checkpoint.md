@@ -106,3 +106,9 @@ User acceptance pass on the live app: restart HSCode once (to pick up the remove
 ## Sidebar root cause fixed
 
 - The new-layout shell (`layout-new.tsx`) never rendered any sidebar — session pages were full-width with no navigation. Added `pages/layout/workbench-rail.tsx` (54px rail: brand→home, new session via command.trigger, per-project switch with live active state, settings/help) mounted left of main in the shell. Verified in the running web renderer: rail renders with the live project list and active state (`artifacts/ui-redesign/v2-fixes/session-with-rail-1600.png`).
+
+## Sidebar convergence (rail + panel)
+
+- `workbench-rail.tsx` is now the new-layout's single sidebar source: [54px Rail][240px expandable Panel]. The panel lists the current project's real sessions (server store child + sortedRootSessions) with real navigation and active state; open/close reuses `layout.sidebar` (no second signal); rail survives panel close; defaults open when projects exist.
+- Legacy `sidebar-shell.tsx`/`SidebarContent` stays only for the legacy layout mode; the standalone rail-only version was superseded by this rail+panel component (no third sidebar created).
+- Verified in the running web renderer: panel 240px with the real session row, collapse → rail remains, re-expand → rows back. Desktop-window screenshots still pending (computer control locked this session).
