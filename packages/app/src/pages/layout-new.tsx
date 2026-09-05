@@ -8,7 +8,9 @@ import { setV2Toast, ToastRegion } from "@/utils/toast"
 
 export default function NewLayout(props: ParentProps) {
   const platform = usePlatform()
-  const [state, setState] = createStore({ debugTools: true })
+  // HSCode Workbench: the perf overlay is opt-in via the DEV chip, not a
+  // permanent fixture of the chrome.
+  const [state, setState] = createStore({ debugTools: false })
 
   createEffect(() => setV2Toast(true))
 
