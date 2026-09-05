@@ -102,3 +102,7 @@ User acceptance pass on the live app: restart HSCode once (to pick up the remove
 - `f021444` chrome/composer/branding: send button Ink Blue with hover/active CSS; DEV chip reduced to lowercase ghost mono text; footer copyright moved from absolute overlay to a static strip below main (never touches composer/send); rail logo group hairline separation.
 - Visual verification (web renderer, light): `artifacts/ui-redesign/v2-fixes/session-full-1600.png` + `task-assistant-closeup.png` + `composer-closeup.png` — all seven reported issues addressed in the running UI.
 - Sidebar note: rail group separation + session-row rhythm shipped; expanded-panel screenshot still needs a desktop-window pass (computer control locked in this session).
+
+## Sidebar root cause fixed
+
+- The new-layout shell (`layout-new.tsx`) never rendered any sidebar — session pages were full-width with no navigation. Added `pages/layout/workbench-rail.tsx` (54px rail: brand→home, new session via command.trigger, per-project switch with live active state, settings/help) mounted left of main in the shell. Verified in the running web renderer: rail renders with the live project list and active state (`artifacts/ui-redesign/v2-fixes/session-with-rail-1600.png`).
