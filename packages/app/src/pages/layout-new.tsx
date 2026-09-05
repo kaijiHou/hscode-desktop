@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store"
 import { DebugBar } from "@/components/debug-bar"
 import { TabsInfoPopup } from "@/components/help-button"
 import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
-import { WorkbenchRail } from "@/pages/layout/workbench-rail"
+import { WorkbenchSidebar } from "@/pages/layout/workbench-rail"
 import { usePlatform } from "@/context/platform"
 import { setV2Toast, ToastRegion } from "@/utils/toast"
 
@@ -42,7 +42,7 @@ export default function NewLayout(props: ParentProps) {
         }
       />
       <div class="flex-1 min-h-0 min-w-0 flex flex-row items-stretch">
-        <WorkbenchRail />
+        <WorkbenchSidebar />
         <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
           <Suspense>{props.children}</Suspense>
         </main>
