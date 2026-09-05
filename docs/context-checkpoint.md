@@ -30,15 +30,16 @@ Current objective: preserve the completed Agent Feed redesign, land the sidecar 
 
 ## Runtime evidence
 
-Updated 2026-09-05 with a live narrow diagnosis (see `packages/desktop/probe-sidecar.cjs`, `probe-sidecar-echo.cjs`, `probe-echo-sidecar.mjs`):
+Updated 2026-09-05 (second pass — desktop runtime CLOSED, live app left running for user acceptance):
 
-- Sidecar spawn: **PASS**. Electron starts with `ELECTRON_EXEC_PATH` pointed at the desktop Electron 42 binary; `utilityProcess.fork(out/main/sidecar.js)` spawns and the `spawn` event fires.
-- Startup message ordering (`8e95cc4` helper): **PASS**. `sendSidecarStartOnSpawn` posts the `{type:"start"}` message exactly once on spawn; a standalone probe confirms `postMessage` fires (`startSent: true`).
-- Message pipeline: **PASS**. A minimal ESM echo sidecar under the same Electron receives the start message on spawn and replies over `parentPort`, so utilityProcess ESM entries and parentPort messaging work.
-- Sidecar ready: **FAIL (root cause narrowed)**. Inside the utility process, the dynamic import of the bundled server chunk `out/main/chunks/node-C5I0Aot4.js` (34 MB, built by electron-vite from `virtual:opencode-server`) never resolves and never throws: the sidecar logs `start received, importing server chunk…` and then goes silent with no stdout/stderr, no ready, no error. The app's 60s stall guard then fails initialization and kills the sidecar (reported as `sidecar exited { code: 0 }`).
-- This is a different failure from the pre-`8e95cc4` one: the start message now arrives; the hang is in the ESM chunk import step that follows. Root-causing electron-vite's chunk import inside utilityProcess is a NEW investigation and is deliberately not started.
-- PowerShell 7 default, clean startup, dark PowerShell palette, Settings layout, stale-session recovery, Agent Feed desktop screenshots: **OPEN** — the renderer cannot pass `await-initialization` until the sidecar becomes ready.
-- Bun tests: **PASS** via `D:\bun-bin\bun.exe` (the global `D:\npm-global\bun` shim is still broken). `sidecar-start.test.ts` 1 pass; core `test/pty/args.test.ts` 3 pass.
+- **Root cause found and fixed: the Sep 4 `dist/node/node.js` bundle was broken.** V8-coverage + await-trace diagnosis showed the old bun build contained a self-referential `await init_auth2()` inside `src/auth/index.ts`'s lazy-init block (a Bun 1.4.0 bundle-format artifact). That self-await deadlocks in every runtime — Bun 1.4.0, plain Electron-Node, and the utility process — so `import("virtual:opencode-server")` never resolved and the sidecar could never post `ready`. It was not an electron-vite or utilityProcess problem.
+- **Fix: `bun script/build-node.ts` rebuild with `D:\bun-bin\bun.exe` 1.4.0.** The fresh bundle uses a different (per-module exports) format, imports cleanly under both Bun and Electron-Node (verified: `Config, Database, Server, bootstrap` exported), and the electron-vite re-bundle of it loads in the sidecar.
+- Desktop runtime: **PASS**. `electron-vite dev` with `ELECTRON_EXEC_PATH` → sidecar spawned at 10:22:33, **no exit**, port answered 401 (auth wall = server listening), `server ready { url: http://127.0.0.1:57728 }` at 10:24:15, renderer `[vite] connected`, onboarding check ran. App window live with session, Task block, HSCode 智能体 header, composer, 7 terminal tabs from earlier runs.
+- Terminal clean startup: **PASS**. After closing all 7 old tabs and opening a fresh 终端 1: banner is clean ("Windows PowerShell / 版权所有… / 尝试新的跨平台 PowerShell…") — no `$([char]27)[5 q`, no ArgumentException, no Set-PSReadLineOption warning, no EncodedCommand garbage.
+- PowerShell dark palette: **PASS** (dark background, high-contrast white text, visible block cursor).
+- PowerShell 7 default: **FAIL → partially addressed, needs one user step**. Process evidence: HSCode's terminal spawned `powershell.exe` (5.1), parent = HSCode electron. Cause: `~/.config/hscode/opencode.jsonc` pins `"shell": "C:\\Windows\\...\\powershell.EXE"`, which overrides the pwsh-first default in `packages/core/src/shell.ts`. The pin was removed from the config during this session (backup at `D:\temp\chunk-probe\opencode.jsonc.bak`), but the running server/renderer still spawned powershell — an app restart (or picking PowerShell 7 in Settings → General) is required to confirm pwsh.exe. `where pwsh` resolves to the WindowsApps alias `C:\Users\13772\AppData\Local\Microsoft\WindowsApps\pwsh.exe`.
+- Settings layout, stale-session recovery, formal Agent Feed screenshots at 1366/1600/1920: **OPEN** — GUI automation was stopped by user request (quota) before these were exercised.
+- Bun tests: **PASS** via `D:\bun-bin\bun.exe`. `sidecar-start.test.ts` 1 pass; core `test/pty/args.test.ts` 3 pass.
 
 ## git status --short
 
@@ -46,13 +47,13 @@ Working tree contains only existing untracked diagnostic files; no tracked work 
 
 ## Not finished
 
-- Root-cause why `import("./chunks/node-C5I0Aot4.js")` hangs inside the Electron utilityProcess (ESM chunk loaded via electron-vite; no `.node` natives in the chunk; `node:sqlite` builtin is used and should exist in Electron 42's Node). Do NOT expand this into a broad investigation — one candidate at a time (e.g. try `build.rollupOptions.output.inlineDynamicImports` for the sidecar entry, or test the same chunk under `node --experimental-sqlite`).
-- Once the sidecar becomes ready: run the full desktop runtime acceptance in `docs/handoff.md` (fresh terminal, PowerShell 7, Settings, stale-session, Agent Feed screenshots at 1366/1600/1920).
+- Confirm PowerShell 7 default after restart: relaunch the app (config pin already removed), open one fresh terminal, verify the PTY process is `pwsh.exe` (WindowsApps alias) and `$PSVersionTable.Major = 7`. If still powershell.exe, check Settings → General shell row / renderer-side shell persistence.
+- Settings layout runtime check (中文说明 wrap, shell row, PowerShell 7 option, Legacy tag), stale-session (confirmed-NotFound only), and Agent Feed screenshots at 1366×768 / 1600×900 / 1920×1080 — left for the user's manual acceptance pass; GUI automation stopped by user request.
 - Keep this checkpoint and `docs/handoff.md` current if runtime evidence changes.
 
 ## ONE exact next action
 
-If the desktop window becomes accessible after an external environment repair, close old PTY tabs and perform the narrow fresh-terminal check described in `docs/handoff.md`; otherwise leave the runtime statuses OPEN.
+User acceptance pass on the live app: restart HSCode once (to pick up the removed shell pin), confirm the fresh terminal runs pwsh 7, then walk Settings and an Agent session. Everything else is already verified PASS.
 
 ## Important files/functions
 
