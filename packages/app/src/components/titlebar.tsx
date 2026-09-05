@@ -653,13 +653,13 @@ function ChannelIndicator(props: { debugTools?: { visible: boolean; toggle: () =
     return (
       <button
         type="button"
-        class="text-[10px] leading-none font-mono uppercase tracking-[0.08em] px-1.5 py-1 rounded-[3px] cursor-pointer text-v2-text-text-faint border border-[var(--v2-border-border-muted)] transition-colors hover:text-v2-text-text-muted hover:border-[var(--v2-border-border-base)] data-[pressed]:text-v2-text-text-accent data-[pressed]:border-[var(--v2-border-border-base)]"
+        class="text-[10px] leading-none font-mono lowercase tracking-[0.06em] px-1 cursor-pointer text-v2-text-text-faint/80 hover:text-v2-text-text-muted transition-colors"
         data-pressed={props.debugTools.visible}
         onClick={props.debugTools.toggle}
         aria-label="Toggle debug tools"
         aria-pressed={props.debugTools.visible}
       >
-        DEV
+        dev
       </button>
     )
   }
@@ -667,8 +667,8 @@ function ChannelIndicator(props: { debugTools?: { visible: boolean; toggle: () =
   return (
     <>
       {["beta", "dev"].includes(channel) && (
-        <div class="text-[10px] leading-none font-mono uppercase tracking-[0.08em] px-1.5 py-1 rounded-[3px] text-v2-text-text-faint border border-[var(--v2-border-border-muted)]">
-          {channel.toUpperCase()}
+        <div class="text-[10px] leading-none font-mono lowercase tracking-[0.06em] px-1 text-v2-text-text-faint/80">
+          {channel}
         </div>
       )}
     </>

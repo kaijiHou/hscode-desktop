@@ -46,7 +46,10 @@ export default function NewLayout(props: ParentProps) {
       {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
       <TabsInfoPopup />
       <ToastRegion v2 />
-      <div class="absolute bottom-8 inset-x-0 text-center text-[10px] text-v2-text-text-faint/40 select-none pointer-events-none z-50">武汉环声海洋科技有限公司 版权所有</div>
+      {/* HSCode: static footer strip — never overlaps the composer */}
+      <div class="shrink-0 py-0.5 text-center text-[10px] text-v2-text-text-faint/50 select-none pointer-events-none">
+        武汉环声海洋科技有限公司 版权所有
+      </div>
     </div>
   )
 }

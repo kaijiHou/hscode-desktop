@@ -274,3 +274,12 @@ aside#terminal-panel [data-component="tabs-v2"] > [data-slot="tabs-v2-list"] {
 aside#terminal-panel [contenteditable="true"] {
   caret-color: transparent !important;
 }
+
+/* Send button: Ink Blue, brand hover/active */
+[data-action="prompt-submit"]:hover:not(:disabled) {
+  background-color: var(--hs-accent-hover, var(--v2-blue-700)) !important;
+}
+
+[data-action="prompt-submit"]:active:not(:disabled) {
+  background-color: var(--v2-blue-800, #32439f) !important;
+}

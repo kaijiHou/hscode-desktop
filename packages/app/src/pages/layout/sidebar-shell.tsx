@@ -60,7 +60,9 @@ export const SidebarContent = (props: {
           onMouseMove={props.aimMove}
         >
           {/* Logo */}
-          <div class="shrink-0 w-full flex flex-col items-center pt-3 pb-2">
+          <div
+            class="shrink-0 w-full flex flex-col items-center pt-3 pb-3 border-b border-[var(--hs-border)]"
+          >
             <div
               class="w-7 h-7 rounded-md flex items-center justify-center"
               style={{ background: "var(--hs-accent)" }}
@@ -70,7 +72,7 @@ export const SidebarContent = (props: {
           </div>
 
           {/* Primary actions */}
-            <div class="shrink-0 w-full flex flex-col items-center gap-1 px-2 pb-2">
+            <div class="shrink-0 w-full flex flex-col items-center gap-1 px-2 pt-2 pb-3">
               <Tooltip
                 placement={placement()}
                 value={
