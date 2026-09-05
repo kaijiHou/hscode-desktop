@@ -95,3 +95,10 @@ User acceptance pass on the live app: restart HSCode once (to pick up the remove
 
 - Commit on this branch: desktop sidebar session rows moved to the workbench rhythm — 32px min-height rows, 13px text, active row = 2px Inkline signal line + accent tint + primary-weight title (`hscode-shell.css`, scoped to `[data-component="sidebar-nav-desktop"] [data-session-id]`). Section labels small-caps muted; workspace group rows share the rhythm.
 - Verification caveat: computer-control session is locked for this ZCode session (user quota stop), and the desktop sidebar is bridge-gated (absent in the plain-browser renderer), so the sidebar polish is verified by code inspection against the mapped DOM only. Desktop-window screenshot still recommended on next manual run.
+
+## Delta fixes round (user issue list P1-P7)
+
+- `875650d` task/assistant hierarchy: 当前任务 label 13px semibold + larger marker; hairline + padding between user task and agent block; assistant body is a 28px-indented content column under the header avatar (prose/tool rows no longer flush to the canvas edge).
+- `f021444` chrome/composer/branding: send button Ink Blue with hover/active CSS; DEV chip reduced to lowercase ghost mono text; footer copyright moved from absolute overlay to a static strip below main (never touches composer/send); rail logo group hairline separation.
+- Visual verification (web renderer, light): `artifacts/ui-redesign/v2-fixes/session-full-1600.png` + `task-assistant-closeup.png` + `composer-closeup.png` — all seven reported issues addressed in the running UI.
+- Sidebar note: rail group separation + session-row rhythm shipped; expanded-panel screenshot still needs a desktop-window pass (computer control locked in this session).
