@@ -90,3 +90,8 @@ User acceptance pass on the live app: restart HSCode once (to pick up the remove
 - Visual acceptance (web renderer of the same source, light + dark): `artifacts/ui-redesign/v2/session-1920-light.png`, `session-1600-light.png`, `session-1366-light.png`, `session-1920.png` (dark). Giant card REMOVED; no triple title; feed centered ≤920px; composer compact.
 - Runtime regressions on the modified branch: composer input + send-enable PASS; terminal panel open PASS; terminal splitter drag PASS (chat 450→600, terminal 874→724; 450 is the clamp minimum); network panel open + splitter drag PASS (600→720). Send-submit could not be driven by synthetic events in the harness (untrusted events), but the submit path is untouched this round and was proven live earlier the same day on the same server.
 - No Terminal/PowerShell/sidecar code touched (per work order §3).
+
+## Sidebar polish (follow-up)
+
+- Commit on this branch: desktop sidebar session rows moved to the workbench rhythm — 32px min-height rows, 13px text, active row = 2px Inkline signal line + accent tint + primary-weight title (`hscode-shell.css`, scoped to `[data-component="sidebar-nav-desktop"] [data-session-id]`). Section labels small-caps muted; workspace group rows share the rhythm.
+- Verification caveat: computer-control session is locked for this ZCode session (user quota stop), and the desktop sidebar is bridge-gated (absent in the plain-browser renderer), so the sidebar polish is verified by code inspection against the mapped DOM only. Desktop-window screenshot still recommended on next manual run.
