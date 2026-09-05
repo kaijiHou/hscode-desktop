@@ -5,8 +5,8 @@ Updated: 2026-09-05
 ## Repository state
 
 - Repo: `D:/hscode`
-- Branch: `p0/pwsh-default`
-- HEAD: `8e95cc46961af76689211a08f0a88510dbca0105`
+- Branch: `ui/workbench-visual-correction-v2` (active UI branch; runtime base `p0/pwsh-default@1ac5aef`)
+- HEAD: Workbench Visual V2 — `d5b0c09` (feed/card restructure) + `4d06c0b` (chrome/composer) + docs
 - Stable base: `c06f87519204f26e34b56761e1b18ae523c3dcbc`
 
 ## Product direction
@@ -102,3 +102,11 @@ Until direct evidence exists:
 - `black-block product mitigation: PowerShell 7 preferred + fixed dark PowerShell terminal`
 
 Never write that the black-block root cause is fixed based only on static code or Settings labels.
+
+## Workbench Visual V2 (ui branch)
+
+- Commit `d5b0c09`: giant session card removed (flat canvas), duplicate breadcrumb row deleted, sticky Session Context Header (56px hairline, title 14px + project subtitle, 920px column), task block = 2px signal line + flowing 15px text (chip/bubble gone), agent header = Ink Blue 13px name + short tick, thinking/tool rows compact.
+- Commit `4d06c0b`: DEV chip demoted to ghost mono indicator, perf overlay opt-in, titlebar tabs are IDE document tabs (active = canvas tone + 2px Ink Blue signal line), composer dock aligned to the feed column (max 960) with 76px resting height.
+- Visual acceptance screenshots: `artifacts/ui-redesign/v2/session-{1920,1600,1366}-light.png` + `session-1920.png` (dark). Giant card REMOVED, title duplication gone, feed centered ≤920px.
+- Runtime regressions on this branch: composer input/send-enable PASS, terminal open PASS, terminal splitter PASS (450→600 chat / 874→724 terminal; 450 is the clamp min), network open + splitter PASS (600→720). Submit action not drivable by synthetic events in the harness; submit path untouched this round.
+- Terminal/PowerShell/sidecar code untouched (work order §3). PowerShell 7 confirm-after-restart remains OPEN from the runtime round.

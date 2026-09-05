@@ -1,9 +1,9 @@
 # HSCode Context Checkpoint
 
-Current branch: `p0/pwsh-default`
-Current HEAD: `8e95cc46961af76689211a08f0a88510dbca0105`
-Base: `c06f87519204f26e34b56761e1b18ae523c3dcbc`
-Current objective: preserve the completed Agent Feed redesign, land the sidecar spawn-ordering fix, and close the desktop runtime acceptance.
+Current branch: `ui/workbench-visual-correction-v2` (cut from `p0/pwsh-default@1ac5aef`)
+Current HEAD: see `git rev-parse HEAD` — docs commit on top of `4d06c0b` (Workbench visual V2)
+Base: `1ac5aef26f709994f655956b3a2161c15b43e782`
+Current objective: Workbench visual correction V2 — real DOM/layout restructure (no giant session card, document-style Agent Feed, compact chrome/composer), verified at 1366/1600/1920 with runtime regressions.
 
 ## Completed
 
@@ -82,3 +82,11 @@ User acceptance pass on the live app: restart HSCode once (to pick up the remove
 ## Screenshots
 
 - No new runtime screenshots were produced in this continuation because the desktop window was not reliably accessible.
+
+## Workbench Visual V2 (this branch)
+
+- `d5b0c09 feat(ui): remove giant session card and reshape task/agent feed` — SessionPanelFrame flattened (no radius/shadow), duplicate breadcrumb row removed, sticky Session Context Header (56px hairline bar, title 14px + project subtitle, 920px column), task block = signal line + flowing 15px text (no chip), agent feed header = Ink Blue 13px name + short tick, thinking/tool rows compacted.
+- `4d06c0b feat(ui): compact workbench chrome and composer` — DEV chip demoted to ghost mono indicator, perf overlay opt-in, titlebar tabs are IDE document tabs (active = canvas tone + 2px signal line, top-rounded), composer aligned to the 920px column (max 960) with 76px resting height.
+- Visual acceptance (web renderer of the same source, light + dark): `artifacts/ui-redesign/v2/session-1920-light.png`, `session-1600-light.png`, `session-1366-light.png`, `session-1920.png` (dark). Giant card REMOVED; no triple title; feed centered ≤920px; composer compact.
+- Runtime regressions on the modified branch: composer input + send-enable PASS; terminal panel open PASS; terminal splitter drag PASS (chat 450→600, terminal 874→724; 450 is the clamp minimum); network panel open + splitter drag PASS (600→720). Send-submit could not be driven by synthetic events in the harness (untrusted events), but the submit path is untouched this round and was proven live earlier the same day on the same server.
+- No Terminal/PowerShell/sidecar code touched (per work order §3).
