@@ -457,7 +457,7 @@ export function MessageTimeline(props: {
     followOnAppend: true,
     scrollEndThreshold: 80,
     get scrollMargin() {
-      return showHeader() ? 64 : 0
+      return showHeader() ? 56 : 0
     },
     overscan: 50,
     paddingEnd: 64,
@@ -1299,7 +1299,7 @@ export function MessageTimeline(props: {
         data-timeline-key={props.rowKey}
         style={{
           position: "absolute",
-          top: `${item().start - (showHeader() ? 64 : 0)}px`,
+          top: `${item().start - (showHeader() ? 56 : 0)}px`,
           left: "0",
           width: "100%",
           height: `${item().size}px`,
@@ -1396,34 +1396,33 @@ export function MessageTimeline(props: {
         onClick={props.onAutoScrollInteraction}
         class="relative min-w-0 w-full h-full"
         style={{
-          "--sticky-accordion-top": showHeader() ? "48px" : "0px",
+          "--sticky-accordion-top": showHeader() ? "56px" : "0px",
         }}
       >
         <Show when={showHeader()}>
           <div
             data-session-title
+            data-component="session-context-header"
             classList={{
               "sticky top-0 z-30": true,
-              "bg-[linear-gradient(to_bottom,var(--v2-background-bg-base)_48px,transparent)]":
-                settings.general.newLayoutDesigns(),
-              "bg-[linear-gradient(to_bottom,var(--background-stronger)_48px,transparent)]":
-                !settings.general.newLayoutDesigns(),
+              // HSCode Workbench: flat context header — hairline instead of a
+              // gradient scrim; content column aligns with the feed (<=920px).
+              "bg-v2-background-bg-base": settings.general.newLayoutDesigns(),
+              "bg-background-stronger": !settings.general.newLayoutDesigns(),
+              "border-b border-[var(--v2-border-border-muted)]": true,
               "w-full": true,
-              "pb-4": true,
-              "pr-3": true,
-              "pl-2.5": settings.general.newLayoutDesigns(),
-              "pl-2 md:pl-4": !settings.general.newLayoutDesigns(),
-              "md:max-w-[920px] md:mx-auto": props.centered && !settings.general.newLayoutDesigns(),
+              "md:max-w-[920px] md:mx-auto": true,
+              "px-4 md:px-5": true,
             }}
           >
-            <div class="h-12 w-full flex items-center justify-between gap-2">
+            <div class="h-14 w-full flex items-center justify-between gap-2">
               <div
                 classList={{
                   "flex items-center gap-1 min-w-0 flex-1": true,
                   "pr-3": !settings.general.newLayoutDesigns(),
                 }}
               >
-                <div class="flex items-center min-w-0 flex-1 w-full">
+                <div class="flex flex-col justify-center min-w-0 flex-1 w-full gap-0.5">
                   <Show when={parentID()}>
                     <button
                       type="button"
@@ -1448,8 +1447,8 @@ export function MessageTimeline(props: {
                         <h1
                           data-slot="session-title-child"
                           classList={{
-                            "truncate text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base": true,
-                            "w-fit rounded-[6px] px-2 py-1 hover:bg-v2-overlay-simple-overlay-hover":
+                            "truncate text-[14px] font-semibold leading-5 tracking-[-0.1px] text-v2-text-text-base": true,
+                            "w-fit rounded-[4px] -mx-1 px-1 hover:bg-v2-overlay-simple-overlay-hover":
                               settings.general.newLayoutDesigns(),
                             "grow-1 min-w-0": !settings.general.newLayoutDesigns(),
                           }}
@@ -1467,7 +1466,7 @@ export function MessageTimeline(props: {
                         value={title.draft}
                         disabled={titleMutation.isPending}
                         classList={{
-                          "block text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base": true,
+                          "block text-[14px] font-semibold leading-5 tracking-[-0.1px] text-v2-text-text-base": true,
                           "w-full flex-1 grow-1 min-w-0 pl-1 -ml-1 rounded-[6px]": !settings.general.newLayoutDesigns(),
                           "field-sizing-content self-start rounded-[6px] px-2 py-1 ":
                             settings.general.newLayoutDesigns(),
@@ -1493,6 +1492,16 @@ export function MessageTimeline(props: {
                         onBlur={closeTitleEditor}
                       />
                     </Show>
+                  </Show>
+                  {/* HSCode Session Context: project line — the only place the
+                      project name shows besides the document tab. */}
+                  <Show when={!parentID()}>
+                    <div
+                      data-slot="session-context-project"
+                      class="truncate text-[11px] leading-3.5 font-medium tracking-[0.01em] text-v2-text-text-faint pl-0.5"
+                    >
+                      {getFilename(sdk().directory) || "HSCode"}
+                    </div>
                   </Show>
                 </div>
               </div>

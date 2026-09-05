@@ -30,28 +30,45 @@
   margin-inline-start: 0;
 }
 
+/* HSCode Workbench: the user's words flow as task content — no bordered
+   bubble, no chip. The task-block signal line carries the hierarchy. */
 [data-component="user-message"] [data-slot="user-message-text"] {
   position: relative;
-  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
-  border: 1px solid var(--v2-border-border-muted, transparent);
-  border-left: 2px solid var(--hs-accent, var(--v2-background-bg-accent));
-  border-radius: 2px 8px 8px 2px;
-  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 2px 0 2px 14px;
+  font-size: 15px;
+  line-height: 1.6;
   max-width: min(100%, 82ch);
 }
 
 [data-component="task-block"] {
+  position: relative;
   width: 100%;
   min-width: 0;
+  padding: 10px 0 2px 12px;
 }
 
-[data-slot="task-block-header"],
-[data-component="agent-feed-header"] {
+/* 2px Ink Blue signal line — the HSCode identity marker */
+[data-component="task-block"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 0 1px 1px 0;
+  background: var(--hs-accent, var(--v2-background-bg-accent));
+}
+
+[data-slot="task-block-header"] {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 24px;
-  color: var(--hs-text-muted, var(--v2-text-text-faint));
+  min-height: 18px;
+  margin-bottom: 6px;
+  color: var(--hs-accent, var(--v2-background-bg-accent));
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -60,17 +77,16 @@
 }
 
 [data-slot="task-block-marker"] {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   flex: 0 0 auto;
   background: var(--hs-accent, var(--v2-background-bg-accent));
   border-radius: 1px;
 }
 
-[data-slot="task-block-rule"],
-[data-slot="agent-feed-rule"] {
+[data-slot="task-block-rule"] {
   height: 1px;
-  flex: 1 1 auto;
+  flex: 0 1 48px;
   background: var(--hs-border, var(--v2-border-border-muted));
 }
 
@@ -81,8 +97,7 @@
 [data-component="task-block"] [data-slot="user-message-text"] {
   width: 100%;
   max-width: 100%;
-  border-left-width: 3px;
-  border-radius: 2px 8px 8px 2px;
+  padding: 0;
   box-shadow: none;
 }
 
@@ -93,25 +108,43 @@
 [data-component="assistant-feed-item"] {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   min-width: 0;
 }
 
 [data-component="agent-feed-header"] {
-  min-height: 22px;
-  color: var(--hs-text-secondary, var(--v2-text-text-muted));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  color: var(--hs-text-primary, var(--v2-text-text-base));
+}
+
+[data-slot="agent-feed-name"] {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--hs-accent, var(--v2-background-bg-accent));
+  text-transform: none;
 }
 
 [data-slot="agent-feed-avatar"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: var(--hs-accent, var(--v2-background-bg-accent));
-  border: 1px solid var(--hs-border-strong, var(--v2-border-border-muted));
-  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--hs-accent, #475edb) 35%, transparent);
+  border-radius: 5px;
+}
+
+/* Short tick after the name — not a full-width section separator */
+[data-slot="agent-feed-rule"] {
+  height: 1px;
+  flex: 0 1 40px;
+  background: var(--hs-border, var(--v2-border-border-muted));
 }
 
 [data-slot="assistant-feed-body"] {
@@ -119,23 +152,27 @@
   min-width: 0;
 }
 
-[data-component="agent-feed-header"][data-active] {
-  color: var(--hs-accent, var(--v2-text-text-base));
+[data-component="agent-feed-header"][data-active] [data-slot="agent-feed-name"] {
+  color: var(--hs-accent, var(--v2-background-bg-accent));
+}
+
+[data-component="agent-feed-header"][data-active] [data-slot="agent-feed-avatar"] {
+  background: color-mix(in srgb, var(--hs-accent, #475edb) 10%, transparent);
 }
 
 /* ============================================================
-   Assistant prose — on the canvas, no card
+   Assistant prose — document-style on the canvas, no card
    ============================================================ */
 
 [data-component="text-part"] {
-  font-size: 14px;
-  line-height: 1.62;
+  font-size: 15px;
+  line-height: 1.65;
   color: var(--v2-text-text-base);
 }
 
 /* Markdown: workbench typography, no loud colors (tokens are Inkline) */
 [data-component="markdown"] {
-  line-height: 1.62;
+  line-height: 1.65;
 }
 
 [data-component="markdown"] > :first-child {
@@ -186,10 +223,12 @@
 }
 
 [data-component="thinking-activity"] {
-  margin-top: 4px;
-  padding: 6px 0 6px 10px;
-  border-left: 2px solid var(--hs-accent, var(--v2-border-border-muted));
+  margin-top: 2px;
+  padding: 4px 0 4px 10px;
+  min-height: 28px;
+  border-left: 2px solid color-mix(in srgb, var(--hs-accent, #475edb) 40%, transparent);
   color: var(--hs-text-secondary, var(--v2-text-text-muted));
+  font-size: 12px;
 }
 
 [data-slot="thinking-marker"] {
@@ -206,6 +245,7 @@
 }
 
 [data-component="tool-trigger"] {
+  min-height: 30px;
   border-radius: 6px;
   transition: background 120ms ease;
 }
@@ -273,8 +313,4 @@
 
 [data-color-scheme="dark"] {
   --hs-code-bg: #171b22;
-}
-
-[data-color-scheme="dark"] [data-component="user-message"] [data-slot="user-message-text"] {
-  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
 }
