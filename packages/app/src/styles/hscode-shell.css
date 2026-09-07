@@ -243,6 +243,7 @@ aside#terminal-panel [data-component="tabs-v2"] > [data-slot="tabs-v2-list"] {
 
 [data-slot="terminal-outer-splitter"],
 [data-slot="network-outer-splitter"],
+[data-slot="workbench-sidebar-splitter"],
 [data-component="network-splitter"] {
   background: transparent;
   border-left: none;
@@ -251,6 +252,7 @@ aside#terminal-panel [data-component="tabs-v2"] > [data-slot="tabs-v2-list"] {
 
 [data-slot="terminal-outer-splitter"]::after,
 [data-slot="network-outer-splitter"]::after,
+[data-slot="workbench-sidebar-splitter"]::after,
 [data-component="network-splitter"]::after {
   content: "";
   position: absolute;
@@ -266,6 +268,7 @@ aside#terminal-panel [data-component="tabs-v2"] > [data-slot="tabs-v2-list"] {
 
 [data-slot="terminal-outer-splitter"]:hover::after,
 [data-slot="network-outer-splitter"]:hover::after,
+[data-slot="workbench-sidebar-splitter"]:hover::after,
 [data-component="network-splitter"]:hover::after {
   background: var(--hs-accent, var(--v2-background-bg-accent));
 }

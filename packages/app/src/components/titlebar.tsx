@@ -647,19 +647,22 @@ function TitlebarUpdateIconButton(props: { state: TitlebarUpdatePillState }) {
   )
 }
 
+const CHANNEL_LABEL: Record<string, string> = { dev: "开发版", beta: "测试版" }
+
 function ChannelIndicator(props: { debugTools?: { visible: boolean; toggle: () => void } }) {
   const channel = import.meta.env.VITE_OPENCODE_CHANNEL
   if (channel === "dev" && props.debugTools) {
     return (
       <button
         type="button"
-        class="text-[10px] leading-none font-mono lowercase tracking-[0.06em] px-1 cursor-pointer text-v2-text-text-faint/80 hover:text-v2-text-text-muted transition-colors"
+        class="text-[10px] leading-none tracking-[0.06em] px-1 cursor-pointer text-v2-text-text-faint/80 hover:text-v2-text-text-muted transition-colors"
         data-pressed={props.debugTools.visible}
         onClick={props.debugTools.toggle}
-        aria-label="Toggle debug tools"
+        title="开发版构建 · 点击切换调试工具"
+        aria-label="切换调试工具"
         aria-pressed={props.debugTools.visible}
       >
-        dev
+        {CHANNEL_LABEL[channel] ?? channel}
       </button>
     )
   }
@@ -667,8 +670,8 @@ function ChannelIndicator(props: { debugTools?: { visible: boolean; toggle: () =
   return (
     <>
       {["beta", "dev"].includes(channel) && (
-        <div class="text-[10px] leading-none font-mono lowercase tracking-[0.06em] px-1 text-v2-text-text-faint/80">
-          {channel}
+        <div class="text-[10px] leading-none tracking-[0.06em] px-1 text-v2-text-text-faint/80">
+          {CHANNEL_LABEL[channel] ?? channel}
         </div>
       )}
     </>

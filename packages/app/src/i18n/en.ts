@@ -129,7 +129,7 @@ export const dict = {
   "dialog.model.manage.provider.toggle": "Toggle all {{provider}} models",
 
   "dialog.model.unpaid.freeModels.title": "Free models provided by HSCode",
-  "dialog.model.unpaid.addMore.title": "Add more models from popular providers",
+  "dialog.model.unpaid.addMore.title": "Add self-hosted or paid models",
   "dialog.model.unpaid.viewMoreProviders": "See 70+ more providers",
 
   "dialog.provider.viewAll": "Show more providers",

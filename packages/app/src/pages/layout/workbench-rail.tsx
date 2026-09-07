@@ -1,6 +1,6 @@
-import { createMemo, For, onMount, Show, type JSX } from "solid-js"
+import { createMemo, createSignal, For, onMount, Show, type JSX } from "solid-js"
 import { useNavigate, useLocation } from "@solidjs/router"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Decode, base64Encode } from "@opencode-ai/core/util/encode"
 import { getFilename } from "@opencode-ai/core/util/path"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
@@ -14,6 +14,10 @@ import { usePlatform } from "@/context/platform"
 import { useServerSync } from "@/context/server-sync"
 import { sortedRootSessions } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
+
+const SIDEBAR_PANEL_WIDTH_MIN = 200
+const SIDEBAR_PANEL_WIDTH_MAX = 480
+const SIDEBAR_PANEL_WIDTH_KEY = "hscode.workbench.sidebar.panelWidth"
 
 /**
  * HSCode Workbench Sidebar — the new-layout navigation column.
@@ -43,6 +47,21 @@ export function WorkbenchSidebar(): JSX.Element {
 
   const currentSession = createMemo(() => (route().sessionID ? serverSync().session.get(route().sessionID!) : undefined))
 
+  // Project implied by the route alone — no fallback, so the rail's active
+  // state only lights the project the user is actually viewing.
+  const routeProject = createMemo(() => {
+    const r = route()
+    if (r.sessionID) return currentSession()?.directory
+    if (r.dir64) {
+      try {
+        return base64Decode(r.dir64)
+      } catch {
+        return undefined
+      }
+    }
+    return undefined
+  })
+
   const projects = createMemo(() => layout.projects.list().slice(0, 8))
 
   const currentProject = createMemo(() => {
@@ -63,12 +82,16 @@ export function WorkbenchSidebar(): JSX.Element {
   })
 
   const projectActive = (worktree: string) => {
-    const project = currentProject()
-    return project ? pathKey(project.worktree) === pathKey(worktree) : false
+    const dir = routeProject()
+    return dir ? pathKey(dir) === pathKey(worktree) : false
   }
 
   const opened = () => layout.sidebar.opened()
-  const panelWidth = 240
+  const [panelWidth, setPanelWidth] = createSignal((() => {
+    const raw = Number(localStorage.getItem(SIDEBAR_PANEL_WIDTH_KEY))
+    if (!Number.isFinite(raw) || raw < SIDEBAR_PANEL_WIDTH_MIN) return 240
+    return Math.min(SIDEBAR_PANEL_WIDTH_MAX, raw)
+  })())
 
   // The workbench sidebar defaults to visible — the rail alone reads as an
   // unfinished half-navigation. Users can collapse it; it reopens next launch.
@@ -83,9 +106,14 @@ export function WorkbenchSidebar(): JSX.Element {
   }
 
   const openProjectSessions = (worktree: string) => {
+    const [store] = serverSync().child(worktree, { bootstrap: true })
+    const first = sortedRootSessions(store, Date.now())[0]
     const key = route().serverKey
-    if (key) navigate(`/server/${key}/session`)
-    else navigate(`/${base64Encode(worktree)}/session`)
+    // Id-less session paths have no route in the new layout — land on the
+    // project's most recent session (or home when it has none) instead.
+    if (first && key) navigate(`/server/${key}/session/${first.id}`)
+    else if (first) navigate(`/${base64Encode(worktree)}/session/${first.id}`)
+    else navigate("/")
   }
 
   return (
@@ -184,7 +212,7 @@ export function WorkbenchSidebar(): JSX.Element {
           data-component="workbench-sidebar-panel"
           class="h-full shrink-0 flex flex-col min-h-0 overflow-hidden border-r border-[var(--hs-border)]"
           style={{
-            width: `${panelWidth}px`,
+            width: `${panelWidth()}px`,
             background: "var(--hs-sidebar-bg, var(--v2-background-bg-layer-02))",
           }}
         >
@@ -202,8 +230,8 @@ export function WorkbenchSidebar(): JSX.Element {
                   <div class="text-[13px] font-semibold text-v2-text-text-base truncate">
                     {project().name || getFilename(project().worktree)}
                   </div>
-                  <div class="text-[11px] text-v2-text-text-faint truncate mt-0.5">
-                    {getFilename(project().worktree)}
+                  <div class="text-[11px] text-v2-text-text-faint truncate mt-0.5" title={project().worktree}>
+                    {project().worktree}
                   </div>
                 </div>
                 <div class="flex-1 min-h-0 overflow-y-auto px-2 py-2">
@@ -240,6 +268,34 @@ export function WorkbenchSidebar(): JSX.Element {
             )}
           </Show>
         </div>
+
+        {/* Drag handle — resize the panel like the terminal splitters */}
+        <div
+          data-slot="workbench-sidebar-splitter"
+          style={{ position: "relative", width: "8px", height: "100%", "flex-shrink": "0", cursor: "col-resize" }}
+          onMouseDown={(e) => {
+            if (e.detail > 1) return
+            e.preventDefault()
+            const startX = e.clientX
+            const startWidth = panelWidth()
+            document.body.style.userSelect = "none"
+            document.body.style.overflow = "hidden"
+            const onMove = (me: MouseEvent) => {
+              const delta = me.clientX - startX
+              const next = Math.min(SIDEBAR_PANEL_WIDTH_MAX, Math.max(SIDEBAR_PANEL_WIDTH_MIN, startWidth + delta))
+              setPanelWidth(next)
+            }
+            const onUp = () => {
+              localStorage.setItem(SIDEBAR_PANEL_WIDTH_KEY, String(panelWidth()))
+              document.body.style.userSelect = ""
+              document.body.style.overflow = ""
+              document.removeEventListener("mousemove", onMove)
+              document.removeEventListener("mouseup", onUp)
+            }
+            document.addEventListener("mousemove", onMove)
+            document.addEventListener("mouseup", onUp)
+          }}
+        />
       </Show>
     </div>
   )

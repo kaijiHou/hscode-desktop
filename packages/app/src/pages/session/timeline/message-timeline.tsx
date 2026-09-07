@@ -1082,8 +1082,7 @@ export function MessageTimeline(props: {
         data-timeline-row={input.row()._tag}
         classList={{
           "min-w-0 w-full max-w-full": true,
-          "md:max-w-[920px]": props.centered,
-          "md:mx-auto": props.centered,
+          "md:max-w-[920px] md:mr-auto md:ml-[max(1.25rem,calc((100%-920px)/4))]": props.centered,
           "pt-3": previousAssistantPart(),
         }}
       >
@@ -1411,7 +1410,7 @@ export function MessageTimeline(props: {
               "bg-background-stronger": !settings.general.newLayoutDesigns(),
               "border-b border-[var(--v2-border-border-muted)]": true,
               "w-full": true,
-              "md:max-w-[920px] md:mx-auto": true,
+              "md:max-w-[920px] md:mr-auto md:ml-[max(1.25rem,calc((100%-920px)/4))]": true,
               "px-4 md:px-5": true,
             }}
           >

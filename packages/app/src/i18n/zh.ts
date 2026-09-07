@@ -252,7 +252,7 @@ export const dict = {
   "dialog.model.manage.description": "自定义模型选择器中显示的模型。",
   "dialog.model.manage.provider.toggle": "切换所有 {{provider}} 模型",
   "dialog.model.unpaid.freeModels.title": "HSCode 提供的免费模型",
-  "dialog.model.unpaid.addMore.title": "从热门提供商添加更多模型",
+  "dialog.model.unpaid.addMore.title": "添加自部署或付费模型",
   "dialog.model.unpaid.viewMoreProviders": "查看另外 70 多个提供商",
 
   "dialog.provider.viewAll": "查看更多提供商",
