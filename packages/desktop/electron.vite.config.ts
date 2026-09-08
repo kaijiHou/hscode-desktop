@@ -382,17 +382,7 @@ export default defineConfig({
           // that does not exist in out/main → MODULE_NOT_FOUND / instant crash.
           "capture-worker": "src/main/network/capture-worker.ts",
         },
-        // Keep this identical to electron-vite's Node 20.11+ shim. Its regex insertion can
-        // corrupt bundled TypeScript, while a Rollup banner places the shim safely.
-        output: {
-          banner: `
-// -- CommonJS Shims --
-import __cjs_mod__ from 'node:module';
-const __filename = import.meta.filename;
-const __dirname = import.meta.dirname;
-const require = __cjs_mod__.createRequire(import.meta.url);
-`,
-        },
+},
       },
       externalizeDeps: { include: [nodePtyPkg] },
     },
