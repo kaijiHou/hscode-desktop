@@ -58,6 +58,7 @@ const getBase = (appId: string): Configuration => ({
   },
   files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
   extraResources: [
+    ...(process.platform === "win32" ? [{ from: "resources/win", to: "win" }] : []),
     ...(channel === "dev"
       ? [
           {
