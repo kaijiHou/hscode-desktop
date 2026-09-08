@@ -149,3 +149,27 @@ This continuation is based on `17ae7ec` and the unpushed recovery baseline `a00b
 ### Next handoff action
 
 Use a normal interactive Windows desktop session to launch the generated Desktop app and capture sidecar spawn, `assertServerExport`, `Server.listen`, local server health, and renderer-ready evidence. If that succeeds, run the fresh-clone reproduction check; otherwise use the first concrete Electron log as the next debugging input.
+
+## Review after d3d3c33 — report correction and Electron acceptance
+
+- The report now starts with a current-status summary so the old historical Bun/build OPEN entries cannot be mistaken for current state.
+- `a00b23a` is now documented with its exact files and direct `@lydell/node-pty` dependency rationale. It is a recovery-specific divergence from `master@e012402`; do not remove it before a separate clean-clone audit.
+- Root declares Bun `1.3.14`; successful verification used `D:\bun-bin\bun.exe` Bun `1.4.0`. Keep this reproducibility gap OPEN and do not change `packageManager` in this phase.
+- A visible Electron 42.3.3 launch of the production output was attempted through a temporary wrapper. The process exited before JavaScript logging, with no stderr and no wrapper log file. No new product code was changed; Electron GUI, utility process, sidecar ready, Electron server ready, renderer, window, and fresh-clone reproduction remain OPEN.
+- Do not add another shim or dependency based only on this exit. The next modification requires the first concrete Electron runtime error from a normal interactive desktop session.
+
+### ONE exact next action
+
+Run production Electron 42 from a normal interactive Windows desktop session and capture the first main/utility/sidecar/renderer log before changing code.
+
+## Packaged Electron PASS after d3d3c33
+
+- The current recovery output was rebuilt and packaged as `dist/win-unpacked/HSCode Dev.exe` with Electron 42.3.3.
+- Interactive launch is PASS: main process responsive, Node utility process spawned, sidecar connection started, server ready on `127.0.0.1:54439`, renderer running, and HSCode window visible.
+- The original `Server.listen` TypeError appeared in the stale 14:13 package but is absent from the rebuilt package, providing a direct before/after runtime comparison.
+- The only observed application error is a separate missing `resources/win/WinDivert.dll` Network warning. It is outside the recovery scope; do not mix it into the fresh-clone server-start fix.
+- Product code changed in this acceptance run: NONE. CI is still unverified because GitHub reported `statuses=[]`.
+
+### ONE exact next action
+
+Create `D:\hscode-repro-check` only if absent and perform the full recovery-branch fresh-clone verification. Do not delete or reset `D:\hscode-new`.

@@ -1,5 +1,58 @@
 # HSCode Agent Change Report
 
+## Current Status Summary
+
+Current HEAD at the start of this review: `d3d3c33f7b98d6dfc5181182bdafc4b1a3da0ea9`
+
+Confirmed PASS:
+
+- Bun found at `D:\bun-bin\bun.exe`; verified version `1.4.0`.
+- Canonical `build-node.ts` execution.
+- Node 24 and Bun 1.4.0 bundle exports: `Config`, `Database`, `Server`, `bootstrap`.
+- Node and Bun `typeof Server.listen === "function"`.
+- Node and Bun authenticated `/global/health`: HTTP 200.
+- Desktop production build.
+- Desktop typecheck and generated chunk syntax checks.
+- Packaged Electron 42.3.3 main process startup.
+- Electron Node utility sidecar spawn and `server ready` signal.
+- Desktop local server listening on `127.0.0.1` through the utility process.
+- Renderer process and responsive HSCode window.
+
+OPEN:
+
+- Fresh-clone reproduction.
+
+Declared Bun: `1.3.14` (`packageManager` in the root `package.json`).
+
+Verified Bun: `1.4.0` (`D:\bun-bin\bun.exe`). This version gap is an open reproducibility risk; it is intentionally not changed in this recovery.
+
+ONE Exact Next Action: run the full recovery branch verification from a separate fresh clone at `D:\hscode-repro-check` without deleting or modifying `D:\hscode-new`.
+
+Historical sections below preserve the status that was true at the time they were written; later run sections are authoritative for current verification.
+
+## a00b23a — direct `@lydell/node-pty` dependency
+
+Commit: `a00b23a8610c3e866f3e36c7b58d3b56d7c004f7`
+
+Status: MODIFIED
+
+Files:
+
+- `packages/opencode/package.json`
+- `bun.lock`
+
+Exact change: added direct `"@lydell/node-pty": "catalog:"` to `packages/opencode` and synchronized the workspace lock entry.
+
+Problem / original evidence: the canonical Node bundle deliberately leaves `@lydell/node-pty` external. When the fresh-clone bundle was loaded from `packages/opencode/dist/node/node.js`, the module-resolution path for that external dependency did not have a direct `packages/opencode/node_modules/@lydell/node-pty` link; the available workspace links under sibling packages were not sufficient for resolution from the bundle owner. The preserved evidence is the module-resolution failure class, not a verbatim stderr line; no invented error quote is used here.
+
+Why a direct dependency: Node resolves an external package from the importing bundle's package path and its ancestors. A dependency declared only by `packages/core` or `packages/desktop` does not make it a dependency of `packages/opencode`, and adding it does not change the bundle's externalization behavior.
+
+Runtime impact: this is a build/module-resolution prerequisite for loading the external native PTY package from the embedded server bundle. It does not change PTY behavior or bundle the native package into the server chunk.
+
+Verified after the change: canonical `build-node.ts` PASS; Node 24 and Bun 1.4.0 import of `dist/node/node.js` PASS; both expose `Server.listen`; both direct server smoke checks reached authenticated `/global/health` with HTTP 200.
+
+Recovery-specific divergence: `@lydell/node-pty` is not directly declared by the upstream recovery base `master@e012402e24b07c4e055fffcb263728891f8d589f`. Keep this dependency for the recovery branch and audit it separately after clean-clone verification.
+
 ## Current Recovery
 
 Date: 2026-09-08
@@ -298,3 +351,69 @@ Forbidden:
 ### ONE Exact Next Action
 
 Launch `packages/desktop/out/main/index.js` through the installed Electron 42 binary from a normal interactive Windows desktop session and capture the first sidecar error or ready/health log.
+
+## Run 2026-09-08 19:10 — Interactive Electron Acceptance
+
+HEAD before: `d3d3c33f7b98d6dfc5181182bdafc4b1a3da0ea9`
+
+HEAD after: pending documentation commit
+
+No-code runtime run: YES
+
+Electron binary: `D:\hscode-new\packages\desktop\node_modules\electron\dist\electron.exe`
+
+Electron version: `42.3.3`
+
+Command: visible `Start-Process` launch of a temporary Electron app wrapper that dynamically imported `D:\hscode-new\packages\desktop\out\main\index.js`, with `--enable-logging --no-sandbox` and isolated onboarding/database environment.
+
+- Main: OPEN — Electron exited before the wrapper emitted its first JavaScript log line.
+- Utility process: OPEN — no observable Electron main process evidence.
+- Sidecar: OPEN — no startup command or sidecar log was emitted.
+- Server: OPEN — already confirmed separately by direct Node/Bun smoke tests, but not through Electron.
+- Renderer: OPEN — no Electron renderer process evidence.
+- Window: OPEN — no targetable window appeared.
+
+First concrete failure: none captured. The Electron process exited with no stderr and before the temporary wrapper created its log file; this is an execution-session limitation, not evidence for another code change. No additional shim, dependency, or Electron change was made.
+
+Files changed: documentation only; the temporary wrapper was removed before commit.
+
+Tests: no new code tests; prior Node/Bun server smoke, Desktop production build, typecheck, and syntax checks remain PASS.
+
+Fresh Clone: OPEN.
+
+Reviewer Assessment: the lower-level build/export/health chain is genuinely PASS; full Desktop runtime is still unproven. Do not merge master or claim startup recovery complete.
+
+ONE Exact Next Action: run the same production output from a normal interactive Windows desktop session where Electron can remain attached, then capture main, utility, sidecar, server, renderer, and window evidence.
+
+## Run 2026-09-08 19:30 — Packaged Electron Acceptance
+
+HEAD before: `d3d3c33f7b98d6dfc5181182bdafc4b1a3da0ea9`
+
+HEAD after: pending documentation commit
+
+No-code runtime run: YES
+
+Electron binary: `D:\hscode-new\packages\desktop\dist\win-unpacked\HSCode Dev.exe`
+
+Electron version: `42.3.3`
+
+Command: rebuilt the existing production output with Bun 1.4.0 and `NODE_OPTIONS=--max-old-space-size=8192`, packaged it with Electron Builder in unpacked Windows form, then launched `HSCode Dev.exe --enable-logging --no-sandbox` from the interactive Windows desktop session.
+
+- Main: PASS — PID 15312 remained responsive and `main.log` recorded `app starting`.
+- Utility process: PASS — Electron spawned a `node.mojom.NodeService` utility process (PID 24608).
+- Sidecar: PASS — `main.log` recorded `sidecar connection started` and `spawning sidecar`.
+- Server: PASS — `main.log` recorded `server ready { url: 'http://127.0.0.1:54439' }`; PID 24608 owned the listening socket on port 54439.
+- Renderer: PASS — a renderer process remained active and the main log recorded `loading task finished`.
+- Window: PASS — the responsive main window was visible with title `HSCode`.
+
+First concrete failure: NONE for the recovery target. The prior `Cannot read properties of undefined (reading 'listen')` error was reproduced only from the stale 14:13 packaged output, then was absent from the rebuilt package. A separate pre-existing Network warning reports missing `resources/win/WinDivert.dll`; Network is outside this recovery scope and was not modified.
+
+Files changed: documentation only. Generated `out` and `dist` artifacts are ignored build outputs.
+
+Tests: canonical Desktop production build PASS; Windows unpacked packaging PASS; packaged Electron main/utility/sidecar/server/renderer/window acceptance PASS.
+
+Fresh Clone: OPEN.
+
+Reviewer Assessment: the original Node bundle / `Server.listen` startup failure is fixed in the current recovery branch and the rebuilt packaged Desktop now starts end to end. Merge remains blocked only on the required fresh-clone reproduction and CI remains unverified (`statuses=[]`).
+
+ONE Exact Next Action: create `D:\hscode-repro-check` only if it does not exist, clone the recovery branch there, and repeat dependency install, canonical server build/export/health, Desktop build/package, and Electron acceptance.

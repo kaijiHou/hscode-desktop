@@ -196,3 +196,27 @@ Code commit: `f884436 fix(desktop): guard server bundle from electron-vite shim 
 ### ONE exact next action
 
 Run the generated Desktop app from a normal interactive Windows desktop session and capture the first sidecar startup log or ready/health evidence.
+
+## Review continuation after d3d3c33 (2026-09-08)
+
+- Added the current-status summary at the top of `docs/agent-change-report.md`; historical OPEN sections remain intentionally preserved.
+- Documented `a00b23a` precisely: direct `@lydell/node-pty` in `packages/opencode/package.json` plus the matching `bun.lock` entry. This is a recovery-specific module-resolution prerequisite because the canonical server bundle externalizes the package.
+- Recorded the reproducibility gap: root declares Bun `1.3.14`, while all successful build/export/server evidence used `D:\bun-bin\bun.exe` Bun `1.4.0`.
+- Attempted a visible Electron 42.3.3 launch with a temporary wrapper around the production `out/main/index.js`. Electron exited before the wrapper emitted its first log and produced no stderr. Main, utility, sidecar, Electron server, renderer, and window therefore remain OPEN; no new code was changed.
+
+### ONE exact next action
+
+Use a normal interactive Windows desktop session to run the production Electron app and capture the first concrete runtime log. Do not make another code change without that evidence.
+
+## Packaged Electron acceptance (2026-09-08 19:30)
+
+- Rebuilt the current recovery output with Bun 1.4.0 and an 8 GB Node heap; Desktop production build passed.
+- Packaged the current output as `dist/win-unpacked/HSCode Dev.exe` with Electron 42.3.3; packaging passed.
+- Interactive launch passed: responsive `HSCode` window, renderer process, Node utility process, sidecar startup, and local server ready on `127.0.0.1:54439`.
+- `main.log` recorded `sidecar connection started`, `spawning sidecar`, `awaiting server ready`, and `server ready`.
+- The stale 14:13 package reproduced `Cannot read properties of undefined (reading 'listen')`; the rebuilt package did not. This directly demonstrates the current recovery changes close the original startup failure.
+- A separate missing `WinDivert.dll` Network warning remains outside this recovery scope. No product code was changed.
+
+### ONE exact next action
+
+Run the complete verification from a separate fresh clone at `D:\hscode-repro-check`. Keep `D:\hscode-new` intact.
