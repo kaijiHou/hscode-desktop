@@ -15,11 +15,6 @@ const channel = (() => {
 
 const nodePtyPkg = `@lydell/node-pty-${process.platform}-${process.arch}`
 
-// Every named export the renderer graph's node-only packages (@effect/
-// platform-node*, undici, llm protocols, glob) pull from node builtins.
-// Stubbed at build time: that chain is statically reachable but never
-// executes in the renderer. Missing a name fails the build with its exact
-// spelling — add it to this list.
 const NODE_STUB_EXPORT_NAMES = [
   "Abortable",
   "AddressInfo",
@@ -382,7 +377,6 @@ export default defineConfig({
           // that does not exist in out/main → MODULE_NOT_FOUND / instant crash.
           "capture-worker": "src/main/network/capture-worker.ts",
         },
-},
       },
       externalizeDeps: { include: [nodePtyPkg] },
     },
@@ -427,11 +421,6 @@ export default defineConfig({
     plugins: [
       appPlugin,
       {
-        // Renderer stub for node builtins: the app graph statically reaches
-        // node-only packages (@effect/platform-node*, undici, llm protocols)
-        // through lazy code paths that never execute in the renderer. Stub
-        // every node:/bare builtin import so the production build passes; a
-        // missing named export fails the build with the exact name to add.
         name: "hscode:renderer-node-stub",
         enforce: "pre",
         resolveId(id) {
