@@ -1,5 +1,6 @@
 import * as http from "node:http"
 import * as tls from "node:tls"
+import { assertServerExport } from "./server-contract"
 
 type NodeHttpWithEnvProxy = typeof http & {
   setGlobalProxyFromEnv: () => void
@@ -54,7 +55,9 @@ async function start(command: StartCommand) {
     ensureLoopbackNoProxy()
     useSystemCertificates()
     useEnvProxy()
-    const { Server } = await import("virtual:opencode-server")
+    const serverModule = await import("virtual:opencode-server")
+    assertServerExport(serverModule)
+    const Server = serverModule.Server
 
     listener = await Server.listen({
       port: command.port,
