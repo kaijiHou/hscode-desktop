@@ -17,6 +17,7 @@ Confirmed PASS:
 - Electron Node utility sidecar spawn and `server ready` signal.
 - Desktop local server listening on `127.0.0.1` through the utility process.
 - Renderer process and responsive HSCode window.
+- Packaged WinDivert DLL/driver resources and native network bridge initialization.
 
 OPEN:
 
@@ -417,3 +418,41 @@ Fresh Clone: OPEN.
 Reviewer Assessment: the original Node bundle / `Server.listen` startup failure is fixed in the current recovery branch and the rebuilt packaged Desktop now starts end to end. Merge remains blocked only on the required fresh-clone reproduction and CI remains unverified (`statuses=[]`).
 
 ONE Exact Next Action: create `D:\hscode-repro-check` only if it does not exist, clone the recovery branch there, and repeat dependency install, canonical server build/export/health, Desktop build/package, and Electron acceptance.
+
+## Run 2026-09-08 20:06 — Packaged Network Runtime Recovery
+
+HEAD before: `3c832d2dbd392e22002f91a0de245db461d59743`
+
+Code HEAD: `8938e58` (`fix(desktop): package network capture runtime`)
+
+HEAD after: pending documentation commit
+
+Problem: opening Network Capture reported `WinDivert.dll not found` because the tracked `resources/win` files were not copied to the packaged runtime path. After fixing that path, the next concrete error was `Cannot find module 'koffi'` because the runtime FFI package was classified as a development dependency and omitted from production packaging.
+
+Focused fix:
+
+- `packages/desktop/electron-builder.config.ts`: copy `resources/win` to the Windows package's `resources/win` runtime directory.
+- `packages/desktop/package.json`: move existing `koffi@3.1.6` from `devDependencies` to `dependencies` without changing its version.
+- `bun.lock`: synchronize the dependency classification.
+
+Runtime evidence:
+
+- Packaged `WinDivert.dll`, `WinDivert64.sys`, and license files exist at the expected path and match source SHA-256 hashes.
+- Packaged Koffi native modules exist under `app.asar.unpacked`.
+- `main.log` reports `dllExists: true`, `sysExists: true`, and `[hscode:network] native bridge initialized`.
+- Initial validation packages made from the flattened `node_modules/electron/dist` directory had an empty packaged `locales` directory and the renderer crashed after about 10 seconds with Windows access violation `0xC0000005` (`-1073741819`). This was a malformed local Electron distribution artifact, not a Network Capture crash.
+- Repackaging from the complete cached official Electron 42.3.3 zip produced 55 locale files. The application remained responsive beyond 40 seconds with no `render-process-gone` entry, while the native bridge initialized and the sidecar reported `server ready`.
+
+Tests:
+
+- `bun test src/main/network/resources.test.ts src/main/network/native-filter.test.ts`: 20 PASS, 0 FAIL.
+- Windows unpacked packaging with Electron 42.3.3: PASS.
+- Interactive packaged runtime from the complete official Electron distribution: PASS.
+
+Known unrelated test debt: `electron-builder.config.test.ts` has three pre-existing branding expectations for `ai.opencode.*` while the current product IDs are `ai.hscode.*`; four other assertions pass. These stale assertions were not changed in this focused recovery.
+
+Fresh Clone: OPEN.
+
+Reviewer Assessment: the packaged Network Capture runtime dependency chain is restored. The original Desktop server startup recovery remains PASS. CI remains unverified (`statuses=[]`), so do not merge before fresh-clone verification.
+
+ONE Exact Next Action: perform the full recovery-branch verification from a separate fresh clone at `D:\hscode-repro-check`.

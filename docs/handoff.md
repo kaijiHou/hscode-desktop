@@ -173,3 +173,18 @@ Run production Electron 42 from a normal interactive Windows desktop session and
 ### ONE exact next action
 
 Create `D:\hscode-repro-check` only if absent and perform the full recovery-branch fresh-clone verification. Do not delete or reset `D:\hscode-new`.
+
+## Packaged Network Capture runtime PASS
+
+- The visible Network Capture panel initially failed because `WinDivert.dll` was absent from packaged `resources/win`.
+- Corrected Windows packaging to copy the tracked WinDivert DLL, driver, and license to that exact runtime directory.
+- Runtime then exposed missing `koffi`; moved the already-pinned `koffi@3.1.6` dependency from development to production dependencies.
+- Rebuilt package evidence: all three files match source hashes, Koffi native modules are unpacked, and `main.log` reports `native bridge initialized`.
+- Do not package from the flattened `packages/desktop/node_modules/electron/dist` directory: it produced an empty `locales` directory and repeatable renderer access violations. The complete cached official Electron 42.3.3 zip produced 55 locales and a responsive window beyond 40 seconds.
+- Focused network tests: 20 PASS, 0 FAIL. Desktop main/sidecar/server/renderer/window remains PASS.
+
+Code commit: `8938e58 fix(desktop): package network capture runtime`
+
+### ONE exact next action
+
+Fresh-clone verification at `D:\hscode-repro-check`; CI is still unverified and merge is not yet ready.

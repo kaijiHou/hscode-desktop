@@ -220,3 +220,19 @@ Use a normal interactive Windows desktop session to run the production Electron 
 ### ONE exact next action
 
 Run the complete verification from a separate fresh clone at `D:\hscode-repro-check`. Keep `D:\hscode-new` intact.
+
+## Packaged network runtime recovery (2026-09-08 20:06)
+
+- User runtime reproduced `WinDivert.dll not found` from the packaged Network Capture panel.
+- Added a Windows-only top-level `extraResources` rule mapping source `resources/win` to packaged `resources/win`.
+- The next runtime error was `MODULE_NOT_FOUND: koffi`; moved existing `koffi@3.1.6` from Desktop development dependencies to runtime dependencies and synchronized `bun.lock`.
+- Repackaged with Electron 42.3.3. All WinDivert files exist at the exact runtime path and match source SHA-256 hashes.
+- Interactive `main.log` now records `dllExists: true`, `sysExists: true`, and `native bridge initialized`; Desktop sidecar/server startup remains PASS.
+- Validation packages created from the flattened local Electron directory had zero packaged locale files and crashed the renderer with `0xC0000005` after about 10 seconds. Repackaging from the complete cached official Electron zip restored all 55 locales and remained responsive beyond 40 seconds without another renderer crash.
+- Focused native network tests: 20 PASS, 0 FAIL.
+
+Code commit: `8938e58 fix(desktop): package network capture runtime`
+
+### ONE exact next action
+
+Run the full recovery branch from a separate fresh clone at `D:\hscode-repro-check` before merge.
