@@ -15,6 +15,18 @@ const channel = (() => {
 
 const nodePtyPkg = `@lydell/node-pty-${process.platform}-${process.arch}`
 
+// Electron-vite 5's ESM shim scans generated chunks with a regex. The server
+// bundle contains source-code strings with `require(...)` and `import ...`,
+// which can make that scan insert the shim inside a string literal. Put the
+// real shim in the chunk first so electron-vite detects it and leaves it alone.
+const ELECTRON_CJS_SHIM = `
+// -- CommonJS Shims --
+import __cjs_mod__ from 'node:module';
+const __filename = import.meta.filename;
+const __dirname = import.meta.dirname;
+const require = __cjs_mod__.createRequire(import.meta.url);
+`
+
 const NODE_STUB_EXPORT_NAMES = [
   "Abortable",
   "AddressInfo",
@@ -381,6 +393,15 @@ export default defineConfig({
       externalizeDeps: { include: [nodePtyPkg] },
     },
     plugins: [
+      {
+        name: "hscode:preempt-electron-vite-cjs-shim",
+        enforce: "pre",
+        renderChunk(code, _chunk, { format }) {
+          if (format !== "es" || code.includes(ELECTRON_CJS_SHIM)) return
+          if (!/__filename|__dirname|require\(|require\.resolve\(/.test(code)) return
+          return { code: ELECTRON_CJS_SHIM + code, map: null }
+        },
+      },
       {
         name: "opencode:node-pty-narrower",
         enforce: "pre",
