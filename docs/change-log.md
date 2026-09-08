@@ -543,3 +543,31 @@ Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后�
 - `cdc76e9` `fix(terminal): remove obsolete PowerShell startup injection`
 - `3e70b9b` `test(terminal): cover clean PowerShell PTY args`
 - `4553a25` `feat(ui): reshape session timeline as Agent Feed`
+
+---
+
+## CHANGE-025 — 2026-09-08 — Fresh Clone Server Startup Recovery
+
+### 当前恢复范围
+
+本轮只处理 fresh clone 启动失败，不修改 UI、Sidebar、模型、Network 或 Terminal。
+
+### 修改了什么
+
+- 恢复 `packages/opencode/script/build-node.ts`，使用 canonical `packages/opencode/src/node.ts` 作为 Node bundle 入口，并将文件强制加入 Git；原因是 `packages/opencode/.gitignore` 的 `script/build-*.ts` 规则会忽略它。
+- `packages/desktop/src/main/sidecar.ts` 在调用 `Server.listen` 前验证 embedded server export contract。
+- 新增 `packages/desktop/src/main/server-contract.ts` 及 focused test，错误会列出实际 exports。
+
+### 当前验证
+
+- `packages/opencode/script/build-node.ts` Git-tracked：YES。
+- Desktop typecheck：PASS。
+- Prettier / `git diff --check`：PASS。
+- Bun：OPEN；`D:\npm-global\bun.ps1` 存在但目标 `bun.exe` 缺失，未安装、升级或降级 Bun。
+- 真实 Node bundle build、Node/Bun export contract、Desktop build、sidecar ready、server ready、renderer：OPEN，必须在 Bun 恢复后验证。
+- 旧 `packages/opencode/dist/node/node.js` 的 Node import 报 `SyntaxError: Unexpected identifier '_'`，未将其视为有效产物。
+
+### 对应 Git Commit
+
+- `7a80635` `fix(build): restore canonical opencode node build entry`
+- `24215b4` `fix(desktop): validate embedded server export contract`

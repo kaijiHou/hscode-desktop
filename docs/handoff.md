@@ -1,8 +1,32 @@
 # HSCode Developer Agent Workbench — Current Handoff
 
-Updated: 2026-09-05
+Updated: 2026-09-08
 
-## Repository state
+## Current fresh-clone recovery
+
+- Repository: `D:/hscode-new`
+- Branch: `recovery/fresh-clone-server-start`
+- HEAD: `24215b4`
+- Recovery commits: `7a80635`, `24215b4`
+- Goal: restore canonical `packages/opencode/script/build-node.ts`, build from `packages/opencode/src/node.ts`, and verify the embedded `Server.listen` contract before starting Electron.
+- `build-node.ts` is Git-tracked despite `packages/opencode/.gitignore` matching `script/build-*.ts`.
+- Sidecar now validates `virtual:opencode-server` and reports its actual export names when `Server.listen` is absent.
+- Desktop typecheck and formatting checks pass.
+- Real build/runtime verification is OPEN because this machine has only a broken `D:/npm-global/bun` shim; the referenced `bun.exe` is missing. No Bun replacement or dependency reinstall was attempted.
+- The existing `packages/opencode/dist/node/node.js` fails a Node import with `SyntaxError: Unexpected identifier '_'`; it is not accepted as a valid rebuilt bundle.
+
+### Exact next action
+
+Restore/use the pinned Bun runtime, run `cd D:/hscode-new/packages/opencode && bun script/build-node.ts`, then verify `Config`, `Database`, `Server`, `bootstrap`, and `typeof Server.listen === "function"` under Node and Bun. Only after that build Desktop and launch Electron.
+
+### Preserve
+
+- Keep `server-entry.ts` and `opencode-web-ui.gen.ts` until the real build has passed and their necessity is confirmed.
+- Do not delete `D:/hscode-new`, `node_modules`, or `packages`.
+- Do not run recursive deletion, `git clean`, `git reset --hard`, force push, `bun install`, Electron reinstall, or random dependency additions.
+- Do not continue UI, Sidebar, model, Network, or Terminal work in this recovery.
+
+## Historical repository state
 
 - Repo: `D:/hscode`
 - Branch: `ui/workbench-visual-correction-v2` (active UI branch; runtime base `p0/pwsh-default@1ac5aef`)

@@ -1,9 +1,62 @@
 # HSCode Context Checkpoint
 
-Current branch: `ui/workbench-visual-correction-v2` (cut from `p0/pwsh-default@1ac5aef`)
-Current HEAD: see `git rev-parse HEAD` — docs commit on top of `4d06c0b` (Workbench visual V2)
-Base: `1ac5aef26f709994f655956b3a2161c15b43e782`
-Current objective: Workbench visual correction V2 — real DOM/layout restructure (no giant session card, document-style Agent Feed, compact chrome/composer), verified at 1366/1600/1920 with runtime regressions.
+## Current fresh-clone recovery (2026-09-08)
+
+Repository: `D:\hscode-new`
+Branch: `recovery/fresh-clone-server-start`
+Current HEAD: `24215b4`
+Base: `e012402e24b07c4e055fffcb263728891f8d589f`
+Current objective: restore the tracked Node sidecar build entry and close the `Server.listen` export contract so a fresh clone can start.
+
+### Completed
+
+- `packages/opencode/script/build-node.ts` restored with the canonical `./src/node.ts` entrypoint and force-added to Git because `packages/opencode/.gitignore` ignores `script/build-*.ts`.
+- `packages/desktop/src/main/server-contract.ts` validates that the embedded server module exposes `Server.listen`.
+- `packages/desktop/src/main/sidecar.ts` now reports the module exports instead of throwing `Cannot read properties of undefined (reading 'listen')`.
+- `packages/desktop/src/main/server-contract.test.ts` covers valid and invalid export shapes.
+- Desktop typecheck: PASS.
+- Prettier and `git diff --check`: PASS.
+
+### Commits
+
+- `7a80635 fix(build): restore canonical opencode node build entry`
+- `24215b4 fix(desktop): validate embedded server export contract`
+
+### Verification status
+
+- Git-tracked `packages/opencode/script/build-node.ts`: YES.
+- Bun version: UNAVAILABLE; `D:\npm-global\bun.ps1` and shims exist, but `bun.exe` is missing.
+- `bun script/build-node.ts`: OPEN — blocked by missing Bun.
+- Existing `packages/opencode/dist/node/node.js`: not valid for Node import (`SyntaxError: Unexpected identifier '_'`); no export contract claim is made from it.
+- Node/Bun `Server.listen` contract: OPEN pending a real rebuild.
+- Desktop build, sidecar ready, server ready, renderer: OPEN pending the real rebuild.
+- `server-entry.ts`: KEPT pending real build verification.
+- `opencode-web-ui.gen.ts`: KEPT pending real build verification; `packages/opencode/src/server/shared/ui.ts` still references it.
+- `node-fetch`: KEPT as existing dependency; not changed in this recovery.
+
+### git status --short
+
+Tracked worktree changes are clean after `24215b4`; no diagnostic files were deleted or staged.
+
+### Not finished / ONE exact next action
+
+Provide or restore the pinned Bun runtime without upgrading/downgrading it, then run `cd D:\hscode-new\packages\opencode && bun script/build-node.ts` and verify `typeof Server.listen === "function"` with both Node and Bun before touching Electron.
+
+### Important files
+
+- `packages/opencode/script/build-node.ts`
+- `packages/opencode/src/node.ts`
+- `packages/desktop/src/main/sidecar.ts`
+- `packages/desktop/src/main/server-contract.ts`
+- `packages/desktop/electron.vite.config.ts`
+
+### Root cause candidate / constraints
+
+- Fresh clone was missing the tracked `build-node.ts` required by `predev`/`prebuild`; the embedded server bundle also lacks a verified `Server.listen` export contract.
+- Do not run `rm -rf`, recursive project deletion, `git clean`, `git reset --hard`, force push, dependency guessing, Electron reinstall, or broad config rewrites.
+- Do not touch UI, Sidebar, model, Network, Terminal, `node_modules`, or `.vite/deps` in this recovery.
+
+## Historical workbench checkpoint
 
 ## Completed
 
