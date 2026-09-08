@@ -10,7 +10,7 @@ Branch: `recovery/fresh-clone-server-start`
 
 Base: `e012402e24b07c4e055fffcb263728891f8d589f`
 
-HEAD: `0480c8f5d310b89a02963d94f63528550d04709f`
+HEAD at the last code run: `f884436`
 
 Objective: 恢复 fresh clone 后 Desktop local server 启动失败的问题。当前用户可见错误为 `Cannot read properties of undefined (reading 'listen')`；本阶段只处理 Node sidecar build/export contract，禁止 UI、Terminal、Network、Sidebar 和模型改动。
 
@@ -171,6 +171,7 @@ Do not claim: FIXED。当前只能确认代码恢复方向和 contract guard 已
 | [`7a80635`](https://github.com/kaijiHou/hscode-desktop/commit/7a806352b085c6f029b1338e6f95fa377d6dfec7) | restore `packages/opencode/script/build-node.ts` | NO |
 | [`24215b4`](https://github.com/kaijiHou/hscode-desktop/commit/24215b4f1a143ab228f6d4ec06b62e493a9c26c7) | add `Server.listen` export contract guard and focused test | NO |
 | [`0480c8f`](https://github.com/kaijiHou/hscode-desktop/commit/0480c8f5d310b89a02963d94f63528550d04709f) | record recovery docs | N/A |
+| [`f884436`](https://github.com/kaijiHou/hscode-desktop/commit/f884436) | guard Desktop build from Electron-vite shim scan | YES for build and direct server smoke; full Electron OPEN |
 
 ## Known Open Items
 
@@ -194,3 +195,106 @@ Do not claim: FIXED。当前只能确认代码恢复方向和 contract guard 已
 cd D:\hscode-new\packages\opencode
 bun script/build-node.ts
 ```
+
+## Run 2026-09-08 18:35
+
+Branch: `recovery/fresh-clone-server-start`
+
+HEAD before: `a00b23a`
+
+HEAD after: `f884436`
+
+Objective: close the fresh-clone build path from the canonical Node bundle through Desktop production build, without changing UI, Sidebar, Network, Terminal, or model behavior.
+
+### Exact files changed
+
+- `packages/desktop/electron.vite.config.ts`
+  - Added `hscode:preempt-electron-vite-cjs-shim` as a narrowly scoped main-build `renderChunk` guard.
+  - It places Electron-vite 5's own CommonJS shim before the built-in regex shim scan when an ESM chunk contains CommonJS markers.
+  - No server entry, renderer, dependency, node stub, or runtime product behavior was changed.
+
+### Why
+
+The real Desktop build failed in Electron-vite 5 after transforming the generated server bundle. Its `vite:esm-shim` regex matched source-code strings inside the bundled TypeScript/Ajv code and inserted the shim inside `namespacePrefix + "."`, producing `Unterminated string literal`. The failure was a real stack in the Desktop build path, so the frozen config was changed only at this exact boundary and only with a pre-scan guard.
+
+### Before / After
+
+- Before: Desktop production build failed after about three minutes at `chunks/node-!~{002}~.js` with `Unterminated string literal`.
+- After: Desktop production build PASS; main, sidecar, preload, renderer, WASM, and native chunks were emitted. Main output includes the valid shim at the chunk boundary.
+
+### Tests
+
+- `D:\bun-bin\bun.exe --version`: `1.4.0`.
+- Canonical `packages/opencode/script/build-node.ts`: PASS.
+- Node 24.19.0 import of `packages/opencode/dist/node/node.js`: PASS; exports `Config`, `Database`, `Server`, `bootstrap`; `Server.listen` is a function.
+- Bun 1.4.0 import of the same bundle: PASS; same exports and `Server.listen` contract.
+- Node 24 direct `Server.listen` smoke: PASS; authenticated `/global/health` returned HTTP 200.
+- Bun direct `Server.listen` smoke: PASS; authenticated `/global/health` returned HTTP 200.
+- Desktop production build: PASS.
+- Desktop typecheck: PASS.
+- `node --check` for generated main, sidecar, and node chunks: PASS.
+- `git diff --check`: PASS.
+
+### Runtime
+
+- Embedded server bundle, `Server.listen`, and health endpoint: **runtime-confirmed PASS** in Node 24 and Bun 1.4.0.
+- `electron-vite dev`: main and preload built; renderer dev server started; Electron child exited with code 1 and no stderr in the current Codex terminal session. Direct Electron launch behaved the same, so utility sidecar ready, Desktop server ready, and renderer window remain **OPEN**, not PASS.
+- Fresh-clone reproduction from GitHub: **OPEN**.
+
+### Environment changes
+
+- Used existing `D:\bun-bin\bun.exe`; no install, upgrade, downgrade, Electron reinstall, node_modules deletion, Vite cache deletion, or destructive Git command.
+- Temporary Electron smoke harness was created only for diagnosis and removed before commit.
+- Kept `packages/opencode/script/server-entry.ts`, `packages/opencode/opencode-web-ui.gen.ts`, and `node-fetch` as required by the recovery boundary.
+
+### Reviewer Assessment
+
+What is confirmed:
+
+- `build-node.ts` is Git-tracked and canonical.
+- The server contract guard is present.
+- The real bundle exports `Server.listen` under both Node and Bun.
+- The real server listens and answers health checks under both runtimes.
+- The Desktop production build now completes.
+
+What is code-only:
+
+- The export guard and focused unit test remain code-level checks.
+- The Electron-vite pre-scan guard is covered by the successful production build, but not by a standalone plugin unit test.
+
+What is runtime-confirmed:
+
+- Bundle import, `Server.listen`, authenticated health, and generated chunk syntax are confirmed.
+
+What remains open:
+
+- Electron utility-process startup message, sidecar ready, Desktop server ready, renderer window, and fresh-clone reproduction.
+
+Risk:
+
+- The current environment still does not expose a usable Electron GUI runtime from the Codex terminal, so full Desktop startup is not proven in this run.
+
+Recommended next modification:
+
+- Do not modify product code. Re-run the built app from a normal interactive Windows desktop session and capture sidecar/renderer logs; only change code if that run produces a new concrete stack.
+
+Forbidden:
+
+- No random dependencies, Electron reinstall, broad Electron config rewrite, UI/Sidebar/Terminal/Network/model changes, or destructive cleanup.
+
+### Next Modification Plan
+
+1. Keep the current build fix and run one interactive Desktop launch outside the restricted terminal session.
+2. If sidecar and renderer pass, perform the fresh-clone reproduction check.
+3. Only then evaluate whether recovery-only files can be cleaned up in a separate change.
+
+### Open items
+
+- Desktop utility sidecar ready: OPEN.
+- Desktop local server ready: OPEN.
+- Renderer ready: OPEN.
+- Fresh-clone reproducibility: OPEN.
+
+### ONE Exact Next Action
+
+Launch `packages/desktop/out/main/index.js` through the installed Electron 42 binary from a normal interactive Windows desktop session and capture the first sidecar error or ready/health log.

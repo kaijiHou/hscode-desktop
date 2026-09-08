@@ -165,3 +165,34 @@ User acceptance pass on the live app: restart HSCode once (to pick up the remove
 - `workbench-rail.tsx` is now the new-layout's single sidebar source: [54px Rail][240px expandable Panel]. The panel lists the current project's real sessions (server store child + sortedRootSessions) with real navigation and active state; open/close reuses `layout.sidebar` (no second signal); rail survives panel close; defaults open when projects exist.
 - Legacy `sidebar-shell.tsx`/`SidebarContent` stays only for the legacy layout mode; the standalone rail-only version was superseded by this rail+panel component (no third sidebar created).
 - Verified in the running web renderer: panel 240px with the real session row, collapse → rail remains, re-expand → rows back. Desktop-window screenshots still pending (computer control locked this session).
+
+## Current recovery continuation (2026-09-08)
+
+Repository: `D:\hscode-new`
+
+Branch: `recovery/fresh-clone-server-start`
+
+Code commit: `f884436 fix(desktop): guard server bundle from electron-vite shim scan`
+
+### Confirmed
+
+- Existing `D:\bun-bin\bun.exe` is Bun `1.4.0`; no install or dependency reset was performed.
+- Canonical `packages/opencode/script/build-node.ts` rebuilt `dist/node/node.js` successfully.
+- Node 24 and Bun 1.4.0 both import the real bundle with `Config`, `Database`, `Server`, `bootstrap`; `Server.listen` is a function.
+- Node and Bun direct server smoke checks both returned authenticated `/global/health` HTTP 200.
+- Desktop production build, Desktop typecheck, generated main/sidecar/node syntax checks, and `git diff --check` passed.
+- The build failure was traced to Electron-vite 5's regex ESM shim scan; the minimal pre-scan guard is limited to `packages/desktop/electron.vite.config.ts`.
+
+### Open
+
+- Electron-vite dev builds main/preload and starts the renderer dev server, but the Electron child exits code 1 with no stderr in the current Codex terminal session.
+- Utility sidecar ready, Desktop local server ready, renderer window, and fresh-clone reproduction remain OPEN because the GUI process was not observable.
+
+### Preserve
+
+- Do not delete `packages/opencode/script/server-entry.ts`, `packages/opencode/opencode-web-ui.gen.ts`, or `node-fetch` in this recovery.
+- Do not touch UI, Sidebar, Network, Terminal, models, node_modules, or Vite caches.
+
+### ONE exact next action
+
+Run the generated Desktop app from a normal interactive Windows desktop session and capture the first sidecar startup log or ready/health evidence.

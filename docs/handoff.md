@@ -134,3 +134,18 @@ Never write that the black-block root cause is fixed based only on static code o
 - Visual acceptance screenshots: `artifacts/ui-redesign/v2/session-{1920,1600,1366}-light.png` + `session-1920.png` (dark). Giant card REMOVED, title duplication gone, feed centered ≤920px.
 - Runtime regressions on this branch: composer input/send-enable PASS, terminal open PASS, terminal splitter PASS (450→600 chat / 874→724 terminal; 450 is the clamp min), network open + splitter PASS (600→720). Submit action not drivable by synthetic events in the harness; submit path untouched this round.
 - Terminal/PowerShell/sidecar code untouched (work order §3). PowerShell 7 confirm-after-restart remains OPEN from the runtime round.
+
+## Fresh-clone server recovery continuation (2026-09-08)
+
+This continuation is based on `17ae7ec` and the unpushed recovery baseline `a00b23a`.
+
+- `f884436` adds one narrowly scoped Desktop build guard for an Electron-vite 5 false-positive CommonJS shim scan. The scan was inserting code inside a string from the generated server bundle and caused `Unterminated string literal`.
+- Bun `1.4.0` at `D:\bun-bin\bun.exe` rebuilt the canonical node bundle successfully.
+- Node 24 and Bun both confirmed the real exports and `Server.listen`; both completed an authenticated `/global/health` smoke check with HTTP 200.
+- Desktop production build and typecheck passed. Generated main, sidecar, and node chunks parse successfully.
+- The full Electron GUI startup remains OPEN: `electron-vite dev` reached main/preload/renderer build and started the renderer dev server, but Electron exited code 1 without stderr in the current Codex terminal session. Do not claim sidecar ready, Desktop server ready, or renderer ready from this run.
+- No dependency installation, Electron reinstall, node_modules deletion, Vite cache deletion, or destructive Git operation was performed.
+
+### Next handoff action
+
+Use a normal interactive Windows desktop session to launch the generated Desktop app and capture sidecar spawn, `assertServerExport`, `Server.listen`, local server health, and renderer-ready evidence. If that succeeds, run the fresh-clone reproduction check; otherwise use the first concrete Electron log as the next debugging input.
