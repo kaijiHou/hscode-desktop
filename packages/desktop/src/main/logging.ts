@@ -29,6 +29,17 @@ export function initLogging() {
     )
   log.initialize({ preload: false, spyRendererConsole: true })
   initConsoleTransport()
+
+  // A closed stdout/stderr pipe (e.g. launched from a script whose pipe got
+  // collected) must never take the whole app down with an EPIPE dialog.
+  process.on("uncaughtException", (error) => {
+    const code = (error as NodeJS.ErrnoException).code
+    if (code === "EPIPE") {
+      log.warn("ignored EPIPE write to closed pipe")
+      return
+    }
+    throw error
+  })
   cleanup()
   return (logger = log)
 }
