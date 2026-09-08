@@ -5,6 +5,12 @@ HSCode 是基于 [OpenCode](https://github.com/anomalyco/opencode) 的自用修�
 
 ## [Unreleased]
 
+### Changed（2026-09-04）
+
+- Terminal：移除 PowerShell PTY 启动时注入的旧 VT/PSReadLine 视觉脚本，避免新终端首行出现字面量污染。
+- Workbench Agent Feed：用户输入改为 Task block，助手输出增加 HSCode Agent 身份栏，thinking/tool activity 改为更安静的开发台信息流；居中 feed 最大宽度收窄至 920px。
+- Runtime 验收仍待完成：PowerShell 7 默认、全新终端首行、设置布局和 stale session 需要可靠的桌面窗口实测。
+
 ### Added（Phase 2A）
 
 - 实验性 Windows Network Inspector（命令面板 "Network Inspector" 打开）

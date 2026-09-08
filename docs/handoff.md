@@ -1,108 +1,112 @@
-# HSCode Phase 2A.5 — Closure Before Provider Connection Tests
+# HSCode Developer Agent Workbench — Current Handoff
 
-## HEAD
+Updated: 2026-09-05
 
-- branch: master
-- local: 470acb0
-- origin/master: 470acb0
+## Repository state
 
-## Model UI
+- Repo: `D:/hscode`
+- Branch: `ui/workbench-visual-correction-v2` (active UI branch; runtime base `p0/pwsh-default@1ac5aef`)
+- HEAD: Workbench Visual V2 — `d5b0c09` (feed/card restructure) + `4d06c0b` (chrome/composer) + docs
+- Stable base: `c06f87519204f26e34b56761e1b18ae523c3dcbc`
 
-| Item | Status |
-|---|---|
-| OpenCode Go | PASS |
-| DeepSeek | PASS |
-| Custom Model | PASS |
-| Custom classification | PASS (OpenAI/Anthropic no longer misclassified) |
-| DeepSeek Test Connection | **DEFERRED** — user requested final credential phase later |
-| Self-hosted Test Connection | **DEFERRED** — user requested final connection-validation phase later |
+## Product direction
 
-## Network
+HSCode is a private desktop Agent Workbench based on OpenCode. Keep the existing Agent, Session, Provider, Network Inspector, terminal resize, and network resize behavior intact while making the visible shell and feed feel like HSCode.
 
-| Item | Status |
-|---|---|
-| Terminal | Network | text buttons | PASS |
-| Active session state | PASS |
-| Panel open | PASS (requires active session) |
-| Start/Stop | SKIPPED — administrator privilege unavailable |
-| Packet List | SKIPPED — administrator privilege unavailable |
-| Packet Detail | SKIPPED — administrator privilege unavailable |
-| HEX/ASCII | SKIPPED — administrator privilege unavailable |
-| Filter | SKIPPED — administrator privilege unavailable |
-| Bounded buffer | PASS (5000 packet limit in code) |
+PowerShell strategy remains: PowerShell 7 preferred, PowerShell Terminal fixed dark, Legacy PowerShell available but demoted. Do not spend more time on the historical PowerShell 5.1 black-block root cause.
 
-## Default Project
+## Landed in this handoff
 
-| Item | Status |
-|---|---|
-| Reproduced | NO (not on current HEAD) |
-| Actual error | N/A |
-| Root cause | Likely resolved by catalog restoration + models.dev snapshot |
-| Fix | OPENCODE_DISABLE_MODELS_FETCH restored, catalog bundled |
-| 3-run validation | PASS (start/refresh/restart all clean) |
+### Terminal
 
-## Privacy
+- `packages/core/src/pty.ts` no longer injects `ESC[5 q`, `Set-PSReadLineOption`, `Selection = DarkCyan`, `-NoExit`, or `-EncodedCommand` into PowerShell PTYs.
+- `buildPtyArgs()` keeps caller arguments unchanged and only adds `-l` for login shells.
+- `packages/core/test/pty/args.test.ts` covers clean `pwsh.exe` and `powershell.exe` arguments plus POSIX login handling.
+- Sidecar `packages/opencode/dist/node/node.js` was rebuilt and contains the new PTY argument helper.
 
-| Item | Status |
-|---|---|
-| Passive models fetch | DISABLED (OPENCODE_DISABLE_MODELS_FETCH=true) |
-| 60-min refresh | DISABLED |
-| User-triggered requests | ALLOWED |
+Commits:
 
-## Commits (this session)
+- `cdc76e9 fix(terminal): remove obsolete PowerShell startup injection`
+- `3e70b9b test(terminal): cover clean PowerShell PTY args`
 
-| Hash | Message |
-|---|---|
-| 470acb0 | feat(network-ui): add Terminal | Network text buttons to V2Actions |
-| 81bc77e | fix(models): remove misclassified customModels filter |
-| 700aa67 | fix(ui): add copyright to app root layout bottom |
-| 8c11468 | fix(ui): move copyright to app root layout bottom |
-| 4e768cc | fix(models-ui): fix providers.all() type + fix titlebar JSX |
-| 6cb1cd7 | fix(models-ui): use providers.all() for DeepSeek visibility |
-| e80c207 | fix(models-ui): rewrite unpaid selector to show 3 primary entries |
+### Sidecar startup ordering (`8e95cc4`)
 
-## Deferred Items
+- `packages/desktop/src/main/sidecar-start.ts`: `sendSidecarStartOnSpawn()` registers a one-shot `spawn` listener on the Electron utility process and posts `{type:"start", hostname, port, password, userDataPath}` only from that callback, returning an unsubscribe that removes the listener.
+- `packages/desktop/src/main/sidecar-start.test.ts`: covers "no postMessage before spawn" and "postMessage exactly once on spawn".
+- `packages/desktop/src/main/server.ts`: the sidecar startup path now uses the spawn-ordered helper, so the previous failure mode (sidecar receiving/losing the start message before it was ready, exiting with code 0) is addressed at the source. Unit tests cover the helper only; the desktop runtime loop still needs live confirmation.
 
-- DeepSeek Test Connection —留到下一轮 Provider Connection Finalization
-- Self-hosted Test Connection —留到下一轮 Provider Connection Finalization
-- EXE Packaging —留到模型和 Network 都稳定后单独处理
+### Workbench Agent Feed
 
-## Known Issues
+The Agent Feed phase is committed in `4553a25` and is deliberately limited to:
 
-- Network panel only renders when in an active session (by design)
-- V2Actions Terminal|Network buttons only visible when isDesktop() is true
-- Free models section shows even when no free models available (minor UI issue)
+- `packages/app/src/pages/session/timeline/message-timeline.tsx`
+  - user messages are presented as a Task block;
+  - assistant groups get an `HSCode Agent` identity header once per assistant turn;
+  - thinking gets a quiet activity marker;
+  - the timeline root is addressable for styling;
+  - centered feed rows and the legacy title bar are capped at 920px.
+- `packages/app/src/styles/hscode-agent-feed.css`
+  - task block signal line;
+  - assistant identity header;
+  - quiet thinking activity;
+  - compact tool activity and terminal-like output surfaces;
+  - restrained diff and error treatments.
 
----
+These changes are real TSX plus CSS; do not replace them with CSS-only selectors or redesign terminal/network mechanics.
 
-## CHANGE-023 Handoff (2026-08-26) — WinDivert Dev Runtime + Live Capture Closure
+## Verification
 
-### What landed
-- `networkResourcesDir()` unified helper (resources.ts): dev → packages/desktop/resources, packaged → process.resourcesPath
-- Native bridge init errors surfaced: structured log + `setNativeBridgeError()` + real root cause in renderer (Chinese mapping via `networkErrorText()`)
-- Light-theme buttons fixed: ButtonV2 replaces hardcoded dark inline styles
-- capture-worker: separate rollup entry (`out/main/capture-worker.js`) + static import of ./native
-- GetLastError via koffi prototype form — real win32 codes (e.g. 87 on bad filter)
-- network-start IPC defensive re-validation; empty filter explicitly allowed
+- App typecheck: PASS using the checked-in bundled TypeScript native preview.
+- Core typecheck: PASS using the checked-in bundled TypeScript native preview.
+- Prettier and `git diff --check`: PASS.
+- Bun tests: PASS via `D:\bun-bin\bun.exe` (global `D:\npm-global\bun` shim still broken; do NOT `bun install` to fix it). `packages/desktop/src/main/sidecar-start.test.ts`: 1 pass. `packages/core/test/pty/args.test.ts`: 3 pass.
+- Production renderer build: OPEN due the existing `@effect/platform-node-shared` `node:stream` browser-externalization error. Do not patch dependencies to bypass it in this phase.
 
-### First REAL live capture (admin-mode dev)
-click 开始抓包 → capturing → packetCount=1910 → match row
-`→ 10.1.224.6:54427 → 10.199.194.75:8080 TCP 52` → stop stable → clear=0.
-Screenshots: artifacts/runtime/network-live-{capturing,packets}.png, network-buttons-{light,dark}.png
+### Desktop runtime (narrow diagnosis, 2026-09-05)
 
-### Tests
-desktop network 71/0 · app network 10/0 · typecheck exit=0 (both).
-App-wide 12 pre-existing failures (server-session/i18n/deep-links) confirmed on HEAD via stash.
+Launched with `ELECTRON_EXEC_PATH=D:\hscode\packages\desktop\node_modules\electron\dist\electron.exe` (root electron-vite dependency lacks binary metadata; this override is the documented workaround — the desktop Electron 42 binary works).
 
-### Dev-run-as-admin note
-Desktop launcher: `D:\Desktop\HSCode-管理员启动.bat` → pwsh7 self-elevating ps1.
-WinDivert requires admin; non-admin now shows 中文提示 instead of raw error.
-Verification scripts kept in scripts/: live-capture-verify.cjs, theme-buttons-shot.cjs.
+- Sidecar spawn + one-shot start message on spawn (`8e95cc4` helper): **working as designed**, proven by `packages/desktop/probe-sidecar.cjs` (`[probe] spawned` → `start message posted on spawn`).
+- utilityProcess ESM + parentPort messaging: **working**, proven by `probe-sidecar-echo.cjs` + `probe-echo-sidecar.mjs` (echo round-trip succeeds).
+- Sidecar ready: **RESOLVED same day.** The 34 MB chunk was innocent; the Sep 4 `dist/node/node.js` bundle itself was broken — V8 coverage + await tracing showed evaluation stalled at a bun-emitted self-await (`await init_auth2()` inside `src/auth/index.ts`'s own `__esm` init), which deadlocks under Bun 1.4.0, plain Electron-Node, and the utility process alike. **Rebuilding with `bun script/build-node.ts` via `D:\bun-bin\bun.exe` 1.4.0 produces a working per-module-exports bundle** that loads everywhere (verified: `Config, Database, Server, bootstrap` exported; sidecar went ready).
+- Live desktop after the rebuild: sidecar spawned, port 401 (listening, auth wall), `server ready { url: http://127.0.0.1:57728 }`, renderer connected, no sidecar exit. Fresh terminal tab (after closing all 7 old ones): **clean banner, dark palette, no injection garbage** — clean-startup and dark-palette checks PASS.
+- PowerShell 7 default: **FAIL at process level, cause found** — `~/.config/hscode/opencode.jsonc` pinned `shell` to Windows PowerShell 5.1, overriding the pwsh-first default in `packages/core/src/shell.ts`. Pin removed (backup: `D:\temp\chunk-probe\opencode.jsonc.bak`); needs an app restart + one fresh terminal to confirm `pwsh.exe` (WindowsApps alias) is now the PTY process.
+- Settings runtime, stale-session runtime, Agent Feed screenshots at 1366/1600/1920: OPEN, left for the user's manual acceptance pass (GUI automation stopped by user request).
 
-## Known Issues (updated)
+## Exact next actions
 
-- Network panel only renders when in an active session (by design)
-- V2Actions Terminal|Network buttons only visible when isDesktop() is true
-- Free models section shows even when no free models available (minor UI issue)
-- App-wide test suite has 12 pre-existing failures (server-session/i18n/deep-links) unrelated to network work
-- Non-admin capture start surfaces ADMIN_REQUIRED Chinese hint; live capture requires admin relaunch
+1. If the desktop window becomes accessible after an external environment repair, perform one narrow runtime check with all old PTY tabs closed; otherwise keep the runtime statuses OPEN.
+2. If runtime evidence changes, record it in `docs/context-checkpoint.md` and this file.
+
+## Preserve
+
+- Existing untracked diagnostic files. They belong to the ongoing investigation and must not be deleted casually.
+- Terminal/network resize and reflow behavior.
+- Network capture core and native bridge.
+- Shell selection logic unless a future runtime check provides direct evidence.
+- Agent/session data structures and provider protocol.
+
+## Never do
+
+- Do not merge `p0/psreadline-compat` (`c521235`).
+- Do not patch `node_modules` or `.vite/deps`.
+- Do not run `bun install`, Electron reinstall, delete `node_modules`, or clear Vite cache.
+- Do not continue PSReadLine, Ghostty renderer, cursor, caret, SGR-filter, or Remove-Module root-cause experiments.
+
+## Runtime wording
+
+Until direct evidence exists:
+
+- `PowerShell 7 default: OPEN`
+- `black-block root cause: OPEN`
+- `black-block product mitigation: PowerShell 7 preferred + fixed dark PowerShell terminal`
+
+Never write that the black-block root cause is fixed based only on static code or Settings labels.
+
+## Workbench Visual V2 (ui branch)
+
+- Commit `d5b0c09`: giant session card removed (flat canvas), duplicate breadcrumb row deleted, sticky Session Context Header (56px hairline, title 14px + project subtitle, 920px column), task block = 2px signal line + flowing 15px text (chip/bubble gone), agent header = Ink Blue 13px name + short tick, thinking/tool rows compact.
+- Commit `4d06c0b`: DEV chip demoted to ghost mono indicator, perf overlay opt-in, titlebar tabs are IDE document tabs (active = canvas tone + 2px Ink Blue signal line), composer dock aligned to the feed column (max 960) with 76px resting height.
+- Visual acceptance screenshots: `artifacts/ui-redesign/v2/session-{1920,1600,1366}-light.png` + `session-1920.png` (dark). Giant card REMOVED, title duplication gone, feed centered ≤920px.
+- Runtime regressions on this branch: composer input/send-enable PASS, terminal open PASS, terminal splitter PASS (450→600 chat / 874→724 terminal; 450 is the clamp min), network open + splitter PASS (600→720). Submit action not drivable by synthetic events in the harness; submit path untouched this round.
+- Terminal/PowerShell/sidecar code untouched (work order §3). PowerShell 7 confirm-after-restart remains OPEN from the runtime round.

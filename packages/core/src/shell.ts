@@ -60,7 +60,14 @@ export async function killTree(proc: ChildProcess, opts?: { exited?: () => boole
 }
 
 function stat(file: string) {
-  return statSync(file, { throwIfNoEntry: false }) ?? undefined
+  try {
+    return statSync(file, { throwIfNoEntry: false }) ?? undefined
+  } catch {
+    // Windows App Execution Aliases (e.g. WindowsApps pwsh.exe) throw
+    // EACCES on stat() even though they are valid executables. Treat as
+    // "not directly stat-able" — callers fall back to which()/trusted meta.
+    return undefined
+  }
 }
 
 function full(file: string) {
@@ -102,7 +109,12 @@ function resolve(file: string, opts?: { trusted?: boolean }) {
 function win() {
   return Array.from(
     new Set(
-      [which("pwsh"), which("powershell"), gitbash(), process.env.COMSPEC || "cmd.exe"]
+      // HSCode: pwsh > Git Bash > cmd > powershell.
+      // Legacy Windows PowerShell 5.1 has a known black-background
+      // compatibility issue in the HSCode terminal (see docs/change-log.md
+      // CHANGE-024 / handoff.md). It is demoted to the last fallback and is
+      // still user-selectable, but never the default.
+      [which("pwsh"), gitbash(), process.env.COMSPEC || "cmd.exe", which("powershell")]
         .filter((item): item is string => Boolean(item))
         .map(full),
     ),
@@ -157,11 +169,23 @@ export function ps(file: string) {
   return meta(file)?.ps === true
 }
 
-// Windows-friendly display labels (UI only, not used in config persistence)
+// Windows-friendly display labels (UI only, not used in config persistence).
+// "powershell" (Windows PowerShell 5.1) is marked Legacy: known
+// black-background compatibility issue in the HSCode terminal; pwsh (PowerShell 7)
+// is the recommended default. The label is display-only — config.shell still
+// stores the canonical name/path (see info()).
 const WIN_LABELS: Record<string, string> = {
   pwsh: "PowerShell 7",
-  powershell: "Windows PowerShell",
+  powershell: "Windows PowerShell (Legacy)",
   cmd: "Command Prompt",
+}
+
+/**
+ * True when the shell is legacy Windows PowerShell 5.1 — the shell selector
+ * shows a lightweight hint recommending PowerShell 7. Display-only.
+ */
+export function isLegacyWindowsPowerShell(file: string): boolean {
+  return process.platform === "win32" && name(file) === "powershell"
 }
 
 /** Returns a user-friendly display label for a shell. */
@@ -223,7 +247,8 @@ let defaultAcceptable: string | undefined
 export function preferred(configShell?: string) {
   if (configShell) return select(configShell)
   // On Windows, ignore inherited SHELL env (e.g. from Git Bash/MSYS).
-  // Use native Windows shell priority: pwsh → powershell → Git Bash → cmd.
+  // Use native Windows shell priority: pwsh → Git Bash → cmd → powershell
+  // (legacy Windows PowerShell 5.1 is a known-problem fallback, last place).
   if (process.platform === "win32") {
     defaultPreferred ??= win()[0]
     return defaultPreferred

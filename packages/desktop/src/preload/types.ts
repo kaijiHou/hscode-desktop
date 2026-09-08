@@ -68,6 +68,7 @@ export type NetworkAPI = {
 
 export type ElectronAPI = {
   killSidecar: () => Promise<void>
+  processStats?: () => Promise<{ cpuPercent: number; rssMB: number }>
   installCli: () => Promise<string>
   awaitInitialization: () => Promise<ServerReadyData>
   wslServers: WslServersAPI

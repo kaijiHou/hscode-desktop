@@ -14,12 +14,24 @@ describe("settings v2 controllers", () => {
         current: "fish",
       }),
     ).toEqual([
-      { id: "auto", value: "", name: "", terminalOnly: false },
-      { id: "/bin/bash", value: "/bin/bash", name: "/bin/bash", terminalOnly: false },
-      { id: "/opt/bash", value: "/opt/bash", name: "/opt/bash", terminalOnly: true },
-      { id: "/bin/zsh", value: "zsh", name: "zsh", terminalOnly: false },
-      { id: "fish", value: "fish", name: "fish", terminalOnly: false },
+      { id: "auto", value: "", name: "", terminalOnly: false, legacy: false },
+      { id: "/bin/bash", value: "/bin/bash", name: "bash", terminalOnly: false, legacy: false },
+      { id: "/opt/bash", value: "/opt/bash", name: "bash", terminalOnly: true, legacy: false },
+      { id: "/bin/zsh", value: "/bin/zsh", name: "zsh", terminalOnly: false, legacy: false },
+      { id: "fish", value: "fish", name: "fish", terminalOnly: false, legacy: false },
     ])
+  })
+
+  test("marks legacy Windows PowerShell 5.1 as legacy", () => {
+    const options = createShellOptions({
+      shells: [
+        { path: "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.EXE", name: "powershell", acceptable: true },
+        { path: "C:/Users/x/AppData/Local/Microsoft/WindowsApps/pwsh.exe", name: "pwsh", acceptable: true },
+      ],
+      current: "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.EXE",
+    })
+    expect(options.find((o) => o.value.endsWith("powershell.EXE"))?.legacy).toBe(true)
+    expect(options.find((o) => o.value.endsWith("pwsh.exe"))?.legacy).toBe(false)
   })
 
   test("debounces previews and stops owned audio on disposal", async () => {

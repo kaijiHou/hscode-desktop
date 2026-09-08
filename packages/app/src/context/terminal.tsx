@@ -14,6 +14,10 @@ export type LocalPTY = {
   id: string
   title: string
   titleNumber: number
+  /** The actual command the PTY was spawned with (e.g. pwsh.exe path).
+   *  Used only to pick the terminal color palette. Not used to guess the
+   *  shell for any other purpose. */
+  command?: string
   rows?: number
   cols?: number
   buffer?: string
@@ -53,11 +57,13 @@ function pty(value: unknown): LocalPTY | undefined {
   const buffer = text(value.buffer)
   const scrollY = num(value.scrollY)
   const cursor = num(value.cursor)
+  const command = text(value.command)
 
   return {
     id,
     title,
     titleNumber: number && number > 0 ? number : (numberFromTitle(title) ?? 0),
+    ...(command !== undefined ? { command } : {}),
     ...(rows !== undefined ? { rows } : {}),
     ...(cols !== undefined ? { cols } : {}),
     ...(buffer !== undefined ? { buffer } : {}),
@@ -299,6 +305,7 @@ function createWorkspaceTerminalSession(
         id: data.id,
         title: data.title ?? pty.title,
         titleNumber: pty.titleNumber,
+        ...(data.command ? { command: data.command } : {}),
         buffer: undefined,
         cursor: undefined,
         scrollY: undefined,
@@ -342,6 +349,7 @@ function createWorkspaceTerminalSession(
             id,
             title: data?.title ?? defaultTitle(nextNumber),
             titleNumber: nextNumber,
+            ...(data?.command ? { command: data.command } : {}),
           }
           batch(() => {
             setStore("all", store.all.length, newTerminal)

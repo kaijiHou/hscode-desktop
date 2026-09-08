@@ -114,6 +114,21 @@
   }
 }
 
+/* Desktop: switch the row to a two-column grid so a wide control
+   (e.g. shell Select + legacy hint) can no longer squeeze the copy
+   column into a single character per line. */
+@media (min-width: 768px) {
+  [data-component="settings-v2-row"] {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(280px, 420px);
+    column-gap: 24px;
+    align-items: center;
+  }
+  [data-slot="settings-v2-row-control"] {
+    width: auto;
+  }
+}
+
 [data-slot="settings-v2-row-copy"] {
   display: flex;
   min-width: 0;
@@ -138,11 +153,15 @@
   font-weight: 440;
   line-height: 20px;
   color: var(--v2-text-text-muted);
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 [data-slot="settings-v2-row-control"] {
   display: flex;
   width: 100%;
+  min-width: 0;
   justify-content: flex-end;
 }
 
@@ -157,6 +176,37 @@
   [data-slot="settings-v2-row-control"] {
     width: auto;
     flex-shrink: 0;
+  }
+}
+
+/* Shell row: keep the Select and the legacy hint stacked vertically so
+   the hint never widens the control column into the copy column. */
+[data-slot="settings-shell-control"] {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+[data-slot="settings-shell-legacy-hint"] {
+  max-width: 360px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--v2-text-text-faint);
+  text-align: right;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 767px) {
+  [data-slot="settings-shell-control"] {
+    align-items: flex-start;
+  }
+  [data-slot="settings-shell-legacy-hint"] {
+    text-align: left;
   }
 }
 

@@ -37,6 +37,7 @@ const networkApi: NetworkAPI = {
 
 const api: ElectronAPI = {
   killSidecar: () => ipcRenderer.invoke("kill-sidecar"),
+  processStats: () => ipcRenderer.invoke("process-stats"),
   installCli: () => ipcRenderer.invoke("install-cli"),
   network: networkApi,
   awaitInitialization: () => ipcRenderer.invoke("await-initialization"),

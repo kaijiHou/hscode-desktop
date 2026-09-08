@@ -273,6 +273,8 @@ declare global {
     api?: {
       setTitlebar?: (theme: { mode: "light" | "dark"; scheme?: "system" | "light" | "dark" }) => Promise<void>
       exportDebugLogs?: () => Promise<string>
+      processStats?: () => Promise<{ cpuPercent: number; rssMB: number }>
+      awaitInitialization?: () => Promise<{ url: string; username: string | null; password: string | null }>
     }
   }
 }

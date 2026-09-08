@@ -214,7 +214,18 @@ function SessionErrorFallback(props: { error: unknown; sessionID?: string; serve
     if (!props.sessionID) return
     tabs.removeSessionTab({ server: props.serverKey ?? server.key, sessionId: props.sessionID })
   }
-  if (isCurrentSessionNotFoundError(props.error, props.sessionID)) {
+  const isNotFound = isCurrentSessionNotFoundError(props.error, props.sessionID)
+  // Auto-recover from a stale session: only for a confirmed NotFound, close
+  // the tab (removeSessionTab navigates to the next valid tab or home) and
+  // toast. We deliberately do NOT auto-close on offline / timeout / 500 /
+  // connection refused — those are transient and the tab may still be valid.
+  // The error fallback only mounts for a real error, so onMount runs once.
+  onMount(() => {
+    if (!isNotFound || !props.sessionID) return
+    closeTab()
+    showToast(language.t("session.error.notFound.recovered"))
+  })
+  if (isNotFound) {
     return (
       <div class="flex-1 min-h-0 overflow-hidden">
         <div class="h-full px-6 pb-42 -mt-4 flex flex-col items-center justify-center text-center gap-4">
@@ -342,8 +353,8 @@ function SessionPanelFrame(props: ParentProps<{ newLayout: boolean; raised?: boo
         "flex-1 min-h-0 flex flex-col": true,
         "bg-v2-background-bg-base": props.newLayout,
         "bg-background-stronger": !props.newLayout,
-        "rounded-[10px] overflow-hidden": props.newLayout,
-        "shadow-[var(--v2-elevation-raised)]": props.newLayout && props.raised,
+        // HSCode Workbench: flat canvas — no giant rounded conversation card.
+        "overflow-hidden": props.newLayout,
       }}
     >
       {props.children}
@@ -2315,29 +2326,8 @@ export default function Page() {
   return (
     <SessionRouteFrame>
       <SessionHeader />
-      {/* HSCode Workspace Bar — real project/session breadcrumb */}
-      <div
-        data-slot="hscode-workspace-bar"
-        class="flex items-center justify-between h-11 px-4 shrink-0"
-        style={{ "border-bottom": "1px solid var(--hs-border)", "background": "var(--hs-canvas-bg)" }}
-      >
-        <div class="flex items-center gap-2 text-sm" style={{ color: "var(--hs-text-secondary)" }}>
-          <span class="font-medium" style={{ color: "var(--hs-text-primary)" }}>
-            {getFilename(sdk().directory) || "HSCode"}
-          </span>
-          <Show when={params.id}>
-            <>
-              <span style={{ color: "var(--hs-text-muted)" }}>/</span>
-              <span style={{ color: "var(--hs-text-primary)" }}>
-                {(() => {
-                  const session = sync().session.get(params.id!)
-                  return session?.title || "Untitled"
-                })()}
-              </span>
-            </>
-          </Show>
-        </div>
-      </div>
+      {/* HSCode Workbench: no breadcrumb row — project/session context lives in
+          the single Session Context Header inside the agent feed. */}
       {/* Agent Canvas — main content area */}
       <div
         data-slot="hscode-workspace"

@@ -15,9 +15,9 @@ import { ModelTooltip } from "./model-tooltip"
 type ModelState = ReturnType<typeof useLocal>["model"]
 
 // HSCode: three primary provider entries for the model selector.
-// OpenCode Go, DeepSeek are real providers from the catalog.
+// GLM (Zhipu), DeepSeek are real providers from the catalog.
 // Custom Model opens the custom provider form for self-hosted OpenAI Compatible.
-const PRIMARY_PROVIDERS = ["opencode-go", "deepseek"]
+const PRIMARY_PROVIDERS = ["zhipuai", "deepseek"]
 
 const displayModelName = (name: string) => name.replace(/\s+(?:\(free\)|free)$/i, "")
 
@@ -143,7 +143,7 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
               </div>
             </div>
             <div class="grid w-full grid-cols-1 gap-y-1.5 gap-x-2 sm:grid-cols-2">
-              {/* Primary provider cards: OpenCode Go + DeepSeek */}
+              {/* Primary provider cards: GLM + DeepSeek */}
               <For
                 each={Array.from(providers.all().values())
                   .filter((provider) => PRIMARY_PROVIDERS.includes(provider.id))
@@ -163,15 +163,14 @@ export const DialogSelectModelUnpaidV2: Component<{ model?: ModelState }> = (pro
                   >
                     <ProviderIcon id={provider.id} class="mt-0.5 size-4 shrink-0 text-v2-icon-icon-base" />
                     <span class="flex min-w-0 flex-col">
-                      <span class="truncate">{provider.name}</span>
-                      <Show when={provider.id === "opencode" || provider.id === "opencode-go"}>
+                      <span class="truncate">{provider.id === "zhipuai" ? "GLM" : provider.name}</span>
+                      <Show when={provider.id === "opencode"}>
                         <span class="truncate font-[440] text-v2-text-text-muted">
-                          {language.t(
-                            provider.id === "opencode"
-                              ? "dialog.provider.opencode.tagline"
-                              : "dialog.provider.opencodeGo.tagline",
-                          )}
+                          {language.t("dialog.provider.opencode.tagline")}
                         </span>
+                      </Show>
+                      <Show when={provider.id === "zhipuai"}>
+                        <span class="truncate font-[440] text-v2-text-text-muted">智谱 GLM 官方 API</span>
                       </Show>
                       <Show when={provider.id === "deepseek"}>
                         <span class="truncate font-[440] text-v2-text-text-muted">

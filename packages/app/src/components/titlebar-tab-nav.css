@@ -148,3 +148,38 @@
     transform: translateX(-50%);
   }
 }
+
+/* ============================================================
+   HSCode Workbench document tabs (appended last so these win the
+   cascade over the generic hover/pressed surfaces above):
+   inactive tabs are quiet text on the chrome; the active tab lifts
+   to the canvas tone with a 2px Ink Blue signal line — no gray pill.
+   ============================================================ */
+
+[data-titlebar-tab] {
+  border-radius: 6px 6px 0 0;
+}
+
+[data-titlebar-tab]:not([data-active="true"]):not(:hover):not([data-state="pressed"]):not([data-dragging="true"]):not(
+    [data-editing="true"]
+  ) {
+  --tab-base: transparent;
+  --tab-overlay: transparent;
+}
+
+[data-titlebar-tab][data-active="true"] {
+  --tab-base: var(--v2-background-bg-base);
+  --tab-overlay: transparent;
+}
+
+[data-titlebar-tab][data-active="true"]::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 1px 1px 0 0;
+  background: var(--hs-accent, var(--v2-background-bg-accent));
+  pointer-events: none;
+}

@@ -6,6 +6,7 @@ import { getLogger } from "./logging"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
+import { sendSidecarStartOnSpawn } from "./sidecar-start"
 
 export type HealthCheck = { wait: Promise<void> }
 
@@ -90,6 +91,7 @@ export async function spawnLocalServer(
   await new Promise<void>((resolve, reject) => {
     let done = false
     let timeout: NodeJS.Timeout
+    let cancelStart = () => {}
 
     const fail = (error: Error) => {
       if (done) return
@@ -122,6 +124,7 @@ export async function spawnLocalServer(
     }
     const cleanup = () => {
       clearTimeout(timeout)
+      cancelStart()
       child.off("message", onMessage)
       child.off("exit", onExit)
     }
@@ -129,7 +132,7 @@ export async function spawnLocalServer(
     child.on("message", onMessage)
     child.on("exit", onExit)
     refreshTimeout()
-    child.postMessage({
+    cancelStart = sendSidecarStartOnSpawn(child, {
       type: "start",
       hostname,
       port,

@@ -129,7 +129,7 @@ export const dict = {
   "dialog.model.manage.provider.toggle": "Toggle all {{provider}} models",
 
   "dialog.model.unpaid.freeModels.title": "Free models provided by HSCode",
-  "dialog.model.unpaid.addMore.title": "Add more models from popular providers",
+  "dialog.model.unpaid.addMore.title": "Add self-hosted or paid models",
   "dialog.model.unpaid.viewMoreProviders": "See 70+ more providers",
 
   "dialog.provider.viewAll": "Show more providers",
@@ -675,6 +675,7 @@ export const dict = {
   "session.error.notFound": "This session cannot be found",
   "session.error.notFound.description": "This tab points to a session that no longer exists on this server.",
   "session.error.notFound.closeTab": "Close Tab",
+  "session.error.notFound.recovered": "Stale session removed — tab closed",
   "session.error.serverConnection": "Can't connect to this server",
   "session.review.filesChanged": "Files Changed {{count}}",
   "session.review.change.one": "Change",
@@ -913,6 +914,9 @@ export const dict = {
   "settings.general.row.shell.description": "Shell used by the terminal and agent tools",
   "settings.general.row.shell.autoDefault": "Auto (Default)",
   "settings.general.row.shell.terminalOnly": "terminal only",
+  "settings.general.row.shell.legacyLabel": "Windows PowerShell (Legacy)",
+  "settings.general.row.shell.legacyHint": "Windows PowerShell is a legacy compatibility shell. PowerShell 7 is recommended.",
+  "settings.general.row.shell.switchToPwsh": "Switch to PowerShell 7",
   "settings.general.row.appearance.title": "Appearance",
   "settings.general.row.appearance.description": "Customise how HSCode looks on your device",
   "settings.general.row.colorScheme.title": "Color scheme",

@@ -16,6 +16,13 @@
   --hs-feed-gap: 18px;
 }
 
+/* Rows inside one assistant turn stack tightly — the identity header must
+   sit directly on its answer. Turn-level separation is owned by the task
+   block's margin-top. */
+[data-timeline-row="AssistantPart"] {
+  padding-top: 2px;
+}
+
 /* ============================================================
    User message — task input block, not a chat bubble
    ============================================================ */
@@ -30,29 +37,164 @@
   margin-inline-start: 0;
 }
 
+/* HSCode Workbench: the user's words flow as task content — no bordered
+   bubble, no chip. The task-block signal line carries the hierarchy. */
 [data-component="user-message"] [data-slot="user-message-text"] {
   position: relative;
-  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
-  border: 1px solid var(--v2-border-border-muted, transparent);
-  border-left: 2px solid var(--hs-accent, var(--v2-background-bg-accent));
-  border-radius: 2px 8px 8px 2px;
-  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 2px 0 2px 14px;
+  font-size: 15px;
+  line-height: 1.6;
   max-width: min(100%, 82ch);
 }
 
+[data-component="task-block"] {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  /* A task starts a user turn — separate it clearly from the previous
+     assistant answer above. */
+  margin-top: 20px;
+  padding: 10px 0 2px 12px;
+}
+
+[data-timeline-row="UserMessage"]:first-child [data-component="task-block"],
+[data-timeline-row="UserMessage"][data-first-row] [data-component="task-block"] {
+  margin-top: 0;
+}
+
+/* 2px Ink Blue signal line — the HSCode identity marker */
+[data-component="task-block"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 0 1px 1px 0;
+  background: var(--hs-accent, var(--v2-background-bg-accent));
+}
+
+[data-slot="task-block-header"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+  margin-bottom: 8px;
+  color: var(--hs-accent, var(--v2-background-bg-accent));
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+[data-slot="task-block-marker"] {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  background: var(--hs-accent, var(--v2-background-bg-accent));
+  border-radius: 1.5px;
+}
+
+[data-slot="task-block-rule"] {
+  height: 1px;
+  flex: 0 1 48px;
+  background: var(--hs-border, var(--v2-border-border-muted));
+}
+
+[data-component="task-block"] [data-component="user-message"] {
+  width: 100%;
+}
+
+[data-component="task-block"] [data-slot="user-message-text"] {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  box-shadow: none;
+}
+
 /* ============================================================
-   Assistant prose — on the canvas, no card
+   Agent output — one identity header, then quiet activity
+   ============================================================ */
+
+[data-component="assistant-feed-item"] {
+  display: flex;
+  flex-direction: column;
+  /* Answer hugs its identity header; turn separation lives above the
+     next task block instead. A hairline marks the task→assistant boundary. */
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--v2-border-border-muted, transparent);
+  width: 100%;
+  min-width: 0;
+}
+
+[data-component="agent-feed-header"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  color: var(--hs-text-primary, var(--v2-text-text-base));
+}
+
+[data-slot="agent-feed-name"] {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--hs-accent, var(--v2-background-bg-accent));
+  text-transform: none;
+}
+
+[data-slot="agent-feed-avatar"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--hs-accent, var(--v2-background-bg-accent));
+  border: 1px solid color-mix(in srgb, var(--hs-accent, #475edb) 35%, transparent);
+  border-radius: 5px;
+}
+
+/* Short tick after the name — not a full-width section separator */
+[data-slot="agent-feed-rule"] {
+  height: 1px;
+  flex: 0 1 40px;
+  background: var(--hs-border, var(--v2-border-border-muted));
+}
+
+[data-slot="assistant-feed-body"] {
+  /* HSCode content column: the reply indents under the header avatar so the
+     body has a clear, stable start — never flush against the canvas edge. */
+  width: 100%;
+  min-width: 0;
+  padding-left: 28px;
+}
+
+[data-component="agent-feed-header"][data-active] [data-slot="agent-feed-name"] {
+  color: var(--hs-accent, var(--v2-background-bg-accent));
+}
+
+[data-component="agent-feed-header"][data-active] [data-slot="agent-feed-avatar"] {
+  background: color-mix(in srgb, var(--hs-accent, #475edb) 10%, transparent);
+}
+
+/* ============================================================
+   Assistant prose — document-style on the canvas, no card
    ============================================================ */
 
 [data-component="text-part"] {
-  font-size: 14px;
-  line-height: 1.62;
+  font-size: 15px;
+  line-height: 1.65;
   color: var(--v2-text-text-base);
 }
 
 /* Markdown: workbench typography, no loud colors (tokens are Inkline) */
 [data-component="markdown"] {
-  line-height: 1.62;
+  line-height: 1.65;
 }
 
 [data-component="markdown"] > :first-child {
@@ -102,6 +244,38 @@
   padding-left: 12px;
 }
 
+[data-component="thinking-activity"] {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 3px 0 3px 10px;
+  min-height: 24px;
+  border-left: 2px solid color-mix(in srgb, var(--hs-accent, #475edb) 40%, transparent);
+  color: var(--hs-text-secondary, var(--v2-text-text-muted));
+  font-size: 12px;
+}
+
+/* Reasoning text collapses right under the thinking marker */
+[data-component="reasoning-part"] [data-component="markdown"] {
+  margin-top: 6px;
+}
+
+/* First content inside an assistant answer never carries a top margin —
+   the header must sit directly on the reply. */
+[data-slot="assistant-feed-body"] > :first-child,
+[data-slot="assistant-feed-body"] [data-component="text-part"]:first-child,
+[data-slot="assistant-feed-body"] [data-component="markdown"]:first-child {
+  margin-top: 0 !important;
+}
+
+[data-slot="assistant-feed-body"] [data-component="markdown"] > :first-child {
+  margin-top: 0;
+}
+
+[data-slot="thinking-marker"] {
+  display: inline-flex;
+  color: var(--hs-accent, var(--v2-background-bg-accent));
+}
+
 /* ============================================================
    Tool calls — compact activity rows
    ============================================================ */
@@ -111,6 +285,7 @@
 }
 
 [data-component="tool-trigger"] {
+  min-height: 30px;
   border-radius: 6px;
   transition: background 120ms ease;
 }
@@ -178,8 +353,4 @@
 
 [data-color-scheme="dark"] {
   --hs-code-bg: #171b22;
-}
-
-[data-color-scheme="dark"] [data-component="user-message"] [data-slot="user-message-text"] {
-  background: var(--v2-background-bg-layer-01, var(--v2-background-bg-base));
 }

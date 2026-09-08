@@ -140,29 +140,55 @@ describe("shell", () => {
     })
 
     test("deterministic Windows fallback priority", () => {
-      // Test the chooseWindowsShell logic directly
-      // This test has NO early returns — always makes assertions
+      // Verifies the REAL resolution: Shell.preferred() must pick the first
+      // available shell in the order pwsh > Git Bash > cmd > powershell.
+      // (Legacy Windows PowerShell 5.1 is demoted to the last fallback —
+      // known black-background compatibility issue in the HSCode terminal.)
       const pwsh = which("pwsh")
-      const ps = which("powershell")
       const bash = Shell.gitbash()
       const comspec = process.env.COMSPEC || "cmd.exe"
+      const ps = which("powershell")
 
-      // Build candidate list like win() does
-      const candidates = [pwsh, ps, bash, comspec].filter(Boolean)
-
-      // At minimum, cmd.exe should exist on Windows
+      const candidates = [pwsh, bash, comspec, ps].filter(Boolean)
       expect(candidates.length).toBeGreaterThan(0)
+      const first = candidates[0] as string
 
-      // First candidate should be the highest priority available shell
-      if (pwsh) {
-        expect(candidates[0]).toBe(pwsh)
-      } else if (ps) {
-        expect(candidates[0]).toBe(ps)
-      } else if (bash) {
-        expect(candidates[0]).toBe(bash)
-      } else {
-        expect(candidates[0]).toBe(comspec)
+      Shell.preferred.reset()
+      const preferred = Shell.preferred()
+      expect(preferred).toBe(first)
+
+      // Legacy powershell must never win while a higher-priority shell exists
+      if (preferred && (pwsh || bash || process.env.COMSPEC)) {
+        expect(Shell.name(preferred)).not.toBe("powershell")
       }
+    })
+
+    test("explicit config shell resolves to itself (pwsh and powershell)", () => {
+      const pwsh = which("pwsh")
+      const ps = which("powershell")
+      if (pwsh) {
+        expect(Shell.preferred("pwsh")).toBe(pwsh)
+      }
+      if (ps) {
+        // Legacy PowerShell stays user-selectable: an explicit saved choice
+        // must be respected, even though it is not the default.
+        expect(Shell.preferred("powershell")).toBe(ps)
+      }
+    })
+
+    test("legacy Windows PowerShell is labeled as legacy (display only)", () => {
+      const ps = which("powershell")
+      if (!ps) return // no legacy powershell on this machine — skip
+      expect(Shell.label(ps)).toBe("Windows PowerShell (Legacy)")
+      expect(Shell.isLegacyWindowsPowerShell(ps)).toBe(true)
+      // pwsh is not legacy
+      const pwsh = which("pwsh")
+      if (pwsh) {
+        expect(Shell.label(pwsh)).toBe("PowerShell 7")
+        expect(Shell.isLegacyWindowsPowerShell(pwsh)).toBe(false)
+      }
+      // cmd is not legacy
+      expect(Shell.isLegacyWindowsPowerShell(process.env.COMSPEC || "cmd.exe")).toBe(false)
     })
 
     test("shell list includes canonical names", async () => {

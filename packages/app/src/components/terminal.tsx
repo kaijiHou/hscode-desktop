@@ -99,6 +99,47 @@ const DEFAULT_TERMINAL_COLORS: Record<"light" | "dark", TerminalColors> = {
   },
 }
 
+/**
+ * Classify a PTY command string into a shell kind.
+ * Only used to pick the terminal color palette.
+ */
+export function terminalShellKind(command?: string): "pwsh" | "powershell" | "other" {
+  if (!command) return "other"
+  const base = command.split(/[/\\]/).pop()?.toLowerCase() ?? ""
+  if (base === "pwsh" || base === "pwsh.exe") return "pwsh"
+  if (base === "powershell" || base === "powershell.exe") return "powershell"
+  return "other"
+}
+
+/**
+ * Fixed dark palette for PowerShell sessions.
+ * Applied regardless of app light/dark mode — PowerShell on a light
+ * background produces the "black block" readability disaster.
+ */
+const POWERSHELL_DARK: TerminalColors = {
+  background: "#101114",
+  foreground: "#f5f5f5",
+  cursor: "#ffffff",
+  selectionBackground: withAlpha("#ffffff", 0.2),
+  // High-contrast ANSI palette (reuse common dark terminal values)
+  black: "#1e1e1e",
+  red: "#f44747",
+  green: "#6bcb77",
+  yellow: "#e5c07b",
+  blue: "#61afef",
+  magenta: "#c678dd",
+  cyan: "#56b6c2",
+  white: "#dcdcdc",
+  brightBlack: "#5c6370",
+  brightRed: "#ff7c7c",
+  brightGreen: "#90ee90",
+  brightYellow: "#ffd700",
+  brightBlue: "#85c1ff",
+  brightMagenta: "#dba5ff",
+  brightCyan: "#76d7e4",
+  brightWhite: "#ffffff",
+}
+
 const debugTerminal = (...values: unknown[]) => {
   if (!import.meta.env.DEV) return
   console.debug("[terminal]", ...values)
@@ -297,6 +338,14 @@ export const Terminal = (props: TerminalProps) => {
   }
 
   const getTerminalColors = (): TerminalColors => {
+      // PowerShell sessions always use the fixed dark palette, regardless
+      // of app light/dark mode. This eliminates the black-block readability
+      // disaster on light backgrounds.
+      const shellKind = terminalShellKind(local.pty.command)
+      if (shellKind === "pwsh" || shellKind === "powershell") {
+        return POWERSHELL_DARK
+      }
+
       const mode = theme.mode() === "dark" ? "dark" : "light"
       const fallback = DEFAULT_TERMINAL_COLORS[mode]
       const currentTheme = theme.themes()[theme.themeId()]

@@ -260,10 +260,8 @@ function createModelSelectorController(input: {
 }) {
   const model = input.model ?? useLocal().model
 
-  // HSCode: only show three primary providers in the main selector.
-  // Other providers remain available via "More Providers" / advanced settings.
-  const PRIMARY_PROVIDER_IDS = new Set(["opencode-go", "deepseek"])
-
+  // HSCode: the selector lists every connected provider by default
+  // (free models, DeepSeek, user-added custom providers); search filters across them.
   const allModels = createMemo(() =>
     model
       .list()
@@ -271,23 +269,13 @@ function createModelSelectorController(input: {
       .filter((item) => (input.provider() ? item.provider.id === input.provider() : true)),
   )
 
-  // Models for the three primary entries (OpenCode Go + DeepSeek)
-  const primaryModels = createMemo(() =>
-    allModels().filter((item) => PRIMARY_PROVIDER_IDS.has(item.provider.id)),
-  )
-
   return {
     models: (search: string) => {
       const query = search.trim()
-      // When searching, include all providers for discoverability
-      if (query) {
-        const filtered = allModels().filter((item) => matchesModelSearch(query, [item.name, item.id, item.provider.name]))
-        return [...filtered].sort((a, b) => a.name.localeCompare(b.name))
-      }
-      // When not searching, show only primary providers (OpenCode Go + DeepSeek).
-      // User-defined providers appear once configured via CustomProviderForm.
-      // Do NOT misclassify built-in providers (OpenAI, Anthropic, etc.) as custom.
-      return primaryModels().sort((a, b) => a.name.localeCompare(b.name))
+      const base = query
+        ? allModels().filter((item) => matchesModelSearch(query, [item.name, item.id, item.provider.name]))
+        : allModels()
+      return [...base].sort((a, b) => a.name.localeCompare(b.name))
     },
     groups: (models: ModelItem[]) => {
       const byProvider = new Map<string, ModelItem[]>()

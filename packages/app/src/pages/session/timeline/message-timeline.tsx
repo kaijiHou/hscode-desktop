@@ -133,11 +133,28 @@ function TimelineThinkingRow(props: { reasoningHeading?: string; showReasoningSu
   const language = useLanguage()
 
   return (
-    <div data-slot="session-turn-thinking">
+    <div data-component="thinking-activity" data-slot="session-turn-thinking">
+      <span data-slot="thinking-marker" aria-hidden="true">
+        <Icon name="brain" size="small" />
+      </span>
       <TextShimmer text={language.t("ui.sessionTurn.status.thinking")} />
       <Show when={!props.showReasoningSummaries}>
         <TextReveal text={props.reasoningHeading} class="session-turn-thinking-heading" travel={25} duration={700} />
       </Show>
+    </div>
+  )
+}
+
+function AgentFeedHeader(props: { active: boolean }) {
+  const language = useLanguage()
+
+  return (
+    <div data-component="agent-feed-header" data-active={props.active ? "true" : undefined}>
+      <span data-slot="agent-feed-avatar" aria-hidden="true">
+        <Icon name="brain" size="small" />
+      </span>
+      <span data-slot="agent-feed-name">HSCode {language.t("command.category.agent")}</span>
+      <span data-slot="agent-feed-rule" aria-hidden="true" />
     </div>
   )
 }
@@ -440,7 +457,7 @@ export function MessageTimeline(props: {
     followOnAppend: true,
     scrollEndThreshold: 80,
     get scrollMargin() {
-      return showHeader() ? 64 : 0
+      return showHeader() ? 56 : 0
     },
     overscan: 50,
     paddingEnd: 64,
@@ -972,6 +989,15 @@ export function MessageTimeline(props: {
   }
 
   const renderAssistantPartGroup = (row: Accessor<TimelineRowMap["AssistantPart"]>, onSizeChange?: () => void) => {
+    const wrap = (content: JSX.Element) => (
+      <div data-component="assistant-feed-item">
+        <Show when={!row().previousAssistantPart}>
+          <AgentFeedHeader active={workingTurn(row().userMessageID)} />
+        </Show>
+        <div data-slot="assistant-feed-body">{content}</div>
+      </div>
+    )
+
     if (row().group.type === "context") {
       const parts = createMemo(() => {
         const group = row().group
@@ -985,7 +1011,7 @@ export function MessageTimeline(props: {
         return toolOpen[contextOpenKey()] === true
       })
 
-      return (
+      return wrap(
         <ContextToolGroup
           parts={parts()}
           open={open()}
@@ -994,7 +1020,7 @@ export function MessageTimeline(props: {
             workingTurn(row().userMessageID) && lastAssistantGroupKey().get(row().userMessageID) === row().group.key
           }
           onSizeChange={onSizeChange}
-        />
+        />,
       )
     }
 
@@ -1014,7 +1040,7 @@ export function MessageTimeline(props: {
       return partDefaultOpen(item, settings.general.shellToolPartsExpanded(), settings.general.editToolPartsExpanded())
     })
 
-    return (
+    return wrap(
       <Show when={message()}>
         {(message) => (
           <Show when={part()}>
@@ -1035,7 +1061,7 @@ export function MessageTimeline(props: {
             )}
           </Show>
         )}
-      </Show>
+      </Show>,
     )
   }
 
@@ -1056,8 +1082,7 @@ export function MessageTimeline(props: {
         data-timeline-row={input.row()._tag}
         classList={{
           "min-w-0 w-full max-w-full": true,
-          "md:max-w-200 2xl:max-w-[1000px]": props.centered,
-          "md:mx-auto": props.centered,
+          "md:max-w-[920px] md:mr-auto md:ml-[max(1.25rem,calc((100%-920px)/4))]": props.centered,
           "pt-3": previousAssistantPart(),
         }}
       >
@@ -1131,14 +1156,21 @@ export function MessageTimeline(props: {
             <Show when={message()}>
               {(message) => (
                 <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
-                  <div data-slot="session-turn-message-content" aria-live="off">
-                    <Message
-                      message={message()}
-                      parts={getMsgParts(userMessageRow().userMessageID)}
-                      actions={props.actions}
-                      useV2Actions={settings.general.newLayoutDesigns()}
-                      comments={messageComments()}
-                    />
+                  <div data-component="task-block">
+                    <div data-slot="task-block-header">
+                      <span data-slot="task-block-marker" aria-hidden="true" />
+                      <span data-slot="task-block-label">{language.t("settings.permissions.tool.task.title")}</span>
+                      <span data-slot="task-block-rule" aria-hidden="true" />
+                    </div>
+                    <div data-slot="session-turn-message-content" aria-live="off">
+                      <Message
+                        message={message()}
+                        parts={getMsgParts(userMessageRow().userMessageID)}
+                        actions={props.actions}
+                        useV2Actions={settings.general.newLayoutDesigns()}
+                        comments={messageComments()}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1266,7 +1298,7 @@ export function MessageTimeline(props: {
         data-timeline-key={props.rowKey}
         style={{
           position: "absolute",
-          top: `${item().start - (showHeader() ? 64 : 0)}px`,
+          top: `${item().start - (showHeader() ? 56 : 0)}px`,
           left: "0",
           width: "100%",
           height: `${item().size}px`,
@@ -1296,7 +1328,7 @@ export function MessageTimeline(props: {
   }
 
   return (
-    <div class="relative w-full h-full min-w-0">
+    <div data-component="message-timeline" class="relative w-full h-full min-w-0">
       <div
         class="absolute left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-all duration-200 ease-out"
         classList={{
@@ -1363,34 +1395,33 @@ export function MessageTimeline(props: {
         onClick={props.onAutoScrollInteraction}
         class="relative min-w-0 w-full h-full"
         style={{
-          "--sticky-accordion-top": showHeader() ? "48px" : "0px",
+          "--sticky-accordion-top": showHeader() ? "56px" : "0px",
         }}
       >
         <Show when={showHeader()}>
           <div
             data-session-title
+            data-component="session-context-header"
             classList={{
               "sticky top-0 z-30": true,
-              "bg-[linear-gradient(to_bottom,var(--v2-background-bg-base)_48px,transparent)]":
-                settings.general.newLayoutDesigns(),
-              "bg-[linear-gradient(to_bottom,var(--background-stronger)_48px,transparent)]":
-                !settings.general.newLayoutDesigns(),
+              // HSCode Workbench: flat context header — hairline instead of a
+              // gradient scrim; content column aligns with the feed (<=920px).
+              "bg-v2-background-bg-base": settings.general.newLayoutDesigns(),
+              "bg-background-stronger": !settings.general.newLayoutDesigns(),
+              "border-b border-[var(--v2-border-border-muted)]": true,
               "w-full": true,
-              "pb-4": true,
-              "pr-3": true,
-              "pl-2.5": settings.general.newLayoutDesigns(),
-              "pl-2 md:pl-4": !settings.general.newLayoutDesigns(),
-              "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": props.centered && !settings.general.newLayoutDesigns(),
+              "md:max-w-[920px] md:mr-auto md:ml-[max(1.25rem,calc((100%-920px)/4))]": true,
+              "px-4 md:px-5": true,
             }}
           >
-            <div class="h-12 w-full flex items-center justify-between gap-2">
+            <div class="h-14 w-full flex items-center justify-between gap-2">
               <div
                 classList={{
                   "flex items-center gap-1 min-w-0 flex-1": true,
                   "pr-3": !settings.general.newLayoutDesigns(),
                 }}
               >
-                <div class="flex items-center min-w-0 flex-1 w-full">
+                <div class="flex flex-col justify-center min-w-0 flex-1 w-full gap-0.5">
                   <Show when={parentID()}>
                     <button
                       type="button"
@@ -1415,8 +1446,8 @@ export function MessageTimeline(props: {
                         <h1
                           data-slot="session-title-child"
                           classList={{
-                            "truncate text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base": true,
-                            "w-fit rounded-[6px] px-2 py-1 hover:bg-v2-overlay-simple-overlay-hover":
+                            "truncate text-[14px] font-semibold leading-5 tracking-[-0.1px] text-v2-text-text-base": true,
+                            "w-fit rounded-[4px] -mx-1 px-1 hover:bg-v2-overlay-simple-overlay-hover":
                               settings.general.newLayoutDesigns(),
                             "grow-1 min-w-0": !settings.general.newLayoutDesigns(),
                           }}
@@ -1434,7 +1465,7 @@ export function MessageTimeline(props: {
                         value={title.draft}
                         disabled={titleMutation.isPending}
                         classList={{
-                          "block text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base": true,
+                          "block text-[14px] font-semibold leading-5 tracking-[-0.1px] text-v2-text-text-base": true,
                           "w-full flex-1 grow-1 min-w-0 pl-1 -ml-1 rounded-[6px]": !settings.general.newLayoutDesigns(),
                           "field-sizing-content self-start rounded-[6px] px-2 py-1 ":
                             settings.general.newLayoutDesigns(),
@@ -1460,6 +1491,16 @@ export function MessageTimeline(props: {
                         onBlur={closeTitleEditor}
                       />
                     </Show>
+                  </Show>
+                  {/* HSCode Session Context: project line — the only place the
+                      project name shows besides the document tab. */}
+                  <Show when={!parentID()}>
+                    <div
+                      data-slot="session-context-project"
+                      class="truncate text-[11px] leading-3.5 font-medium tracking-[0.01em] text-v2-text-text-faint pl-0.5"
+                    >
+                      {getFilename(sdk().directory) || "HSCode"}
+                    </div>
                   </Show>
                 </div>
               </div>

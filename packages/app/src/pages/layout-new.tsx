@@ -3,12 +3,15 @@ import { createStore } from "solid-js/store"
 import { DebugBar } from "@/components/debug-bar"
 import { TabsInfoPopup } from "@/components/help-button"
 import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
+import { WorkbenchSidebar } from "@/pages/layout/workbench-rail"
 import { usePlatform } from "@/context/platform"
 import { setV2Toast, ToastRegion } from "@/utils/toast"
 
 export default function NewLayout(props: ParentProps) {
   const platform = usePlatform()
-  const [state, setState] = createStore({ debugTools: true })
+  // HSCode Workbench: the perf overlay is opt-in via the DEV chip, not a
+  // permanent fixture of the chrome.
+  const [state, setState] = createStore({ debugTools: false })
 
   createEffect(() => setV2Toast(true))
 
@@ -38,13 +41,19 @@ export default function NewLayout(props: ParentProps) {
             : undefined
         }
       />
-      <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
-        <Suspense>{props.children}</Suspense>
-      </main>
+      <div class="flex-1 min-h-0 min-w-0 flex flex-row items-stretch">
+        <WorkbenchSidebar />
+        <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
+          <Suspense>{props.children}</Suspense>
+        </main>
+      </div>
       {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
       <TabsInfoPopup />
       <ToastRegion v2 />
-      <div class="absolute bottom-8 inset-x-0 text-center text-[10px] text-v2-text-text-faint/40 select-none pointer-events-none z-50">武汉环声海洋科技有限公司 版权所有</div>
+      {/* HSCode: static footer strip — never overlaps the composer */}
+      <div class="shrink-0 py-0.5 text-center text-[10px] text-v2-text-text-faint/50 select-none pointer-events-none">
+        武汉环声海洋科技有限公司 版权所有
+      </div>
     </div>
   )
 }
