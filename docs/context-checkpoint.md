@@ -245,3 +245,13 @@ Run the full recovery branch from a separate fresh clone at `D:\hscode-repro-che
 - Helper tests 4/4, titlebar-focused tests 7/7, app typecheck, and builder tests 7/7 pass.
 - Next: clean production build, package with a complete official Electron 42.3.3 distribution, verify locales/Network, then install and perform UI/runtime acceptance.
 - Fresh Clone remains OPEN; CI remains UNVERIFIED.
+
+## No-feature-loss slimming + package checkpoint (2026-09-09)
+
+- Protected baseline: GitHub tag `backup/pre-slim-20260909`; verified bundle and toolchain copies at `D:\hscode-backups\2026-09-09-pre-slim`.
+- `d7a3711` omits 49.23 MiB of source maps from packages while preserving them in local build output.
+- `0e0d296` omits only non-Windows Koffi/node-pty native packages from Windows packages; all Windows architectures remain.
+- Post-slim production build: PASS. Official complete Electron 42.3.3 package: PASS. Locales: 55.
+- Installer: `D:\hscode-new\packages\desktop\dist\hscode-desktop-win-x64.exe`, 181,118,452 bytes, SHA256 `F33945A32C1F149DC884AF203B375C1E68E2B360BE4E32DC25FC897538A0BD52`.
+- Static Network regression: WinDivert DLL/SYS/license and Koffi win32-x64 native files PASS. Runtime/UI installation acceptance awaits action-time user confirmation.
+- Fresh Clone OPEN; CI UNVERIFIED (`statuses=[]`).

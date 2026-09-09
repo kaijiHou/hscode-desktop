@@ -196,3 +196,11 @@ Fresh-clone verification at `D:\hscode-repro-check`; CI is still unverified and 
 - Focused helper 4/4, titlebar 7/7, app typecheck, and builder 7/7 are PASS.
 - Packaging/runtime evidence is still pending. Use only a complete official Electron 42.3.3 distribution and reject any package with zero locales.
 - Do not touch Network internals unless a new concrete runtime error appears. Fresh Clone OPEN; CI UNVERIFIED; do not merge master.
+
+## Protected slimming and rebuilt installer
+
+- Before slimming, pushed tag `backup/pre-slim-20260909` and created a verified full Git bundle plus Bun/Node/Electron/CLI copies under `D:\hscode-backups\2026-09-09-pre-slim`.
+- Safe cuts only: source maps excluded from packages (`d7a3711`); non-Windows Koffi/node-pty natives excluded only from Windows packages (`0e0d296`). No business code, dependency, locale, theme, audio, CLI, WinDivert, icon, or historical recovery DLL was removed.
+- Production build and NSIS packaging PASS using complete official Electron 42.3.3; 55 locales; packaged maps/foreign native packages 0; Windows Koffi x64 and WinDivert PASS.
+- Final installer: `D:\hscode-new\packages\desktop\dist\hscode-desktop-win-x64.exe`, 181,118,452 bytes, SHA256 `F33945A32C1F149DC884AF203B375C1E68E2B360BE4E32DC25FC897538A0BD52`.
+- Next action requires confirmation: run the new installer and perform Dev button/DebugBar/Session/Network/Terminal runtime acceptance. Fresh Clone OPEN; CI UNVERIFIED.

@@ -588,9 +588,34 @@ Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后�
 - 标题栏定向测试：7 PASS / 0 FAIL。
 - App typecheck：PASS。
 - Electron Builder branding：7 PASS / 0 FAIL。
-- Windows package / installer / installed runtime：PENDING。
+- Windows production build：PASS。
+- 完整官方 Electron 42.3.3 的 win-unpacked / NSIS package：PASS；locales 55。
+- 安装运行验收：等待执行安装器前的用户即时确认。
 
 ### 对应 Git Commit
 
 - `ca37e36` `fix(ui): restore packaged dev runtime stats toggle`
 - `1ac115b` `test(desktop): align packaging branding expectations`
+
+---
+
+## CHANGE-027 — 2026-09-09 — Windows 安装包无损瘦身
+
+### 修改了什么
+
+- 本地继续生成 source map 供排错，但 Electron Builder 不再把 49.23 MiB `.map` 放入安装包。
+- Windows 包排除 Koffi 与 node-pty 的非 Windows 原生文件；所有 Windows 架构原生文件保留，macOS/Linux 构建配置不受影响。
+- 未删除业务代码、依赖、语言、主题、音效、Dev CLI、WinDivert、平台图标或历史恢复 DLL。
+
+### 验证结果
+
+- Desktop typecheck：PASS；builder test：7 PASS / 0 FAIL。
+- 瘦身后 production build 与 NSIS package：PASS。
+- foreign Koffi / node-pty：0；source map：0；Koffi win32-x64 与 WinDivert：PASS；locales：55。
+- 解包体积减少 15,355,260 bytes；NSIS 再减少 2,778,126 bytes（2.65 MiB）。
+- 最终安装包 181,118,452 bytes，SHA256 `F33945A32C1F149DC884AF203B375C1E68E2B360BE4E32DC25FC897538A0BD52`。
+
+### 对应 Git Commit
+
+- `d7a3711` `build(desktop): omit source maps from packages`
+- `0e0d296` `build(desktop): prune foreign native runtimes on windows`

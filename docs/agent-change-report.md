@@ -474,8 +474,32 @@ Files changed before packaging:
 
 Checks: helper 4 PASS / 0 FAIL; titlebar-focused tests 7 PASS / 0 FAIL; app typecheck PASS; builder branding tests 7 PASS / 0 FAIL. Code commits `ca37e36` and `1ac115b` are pushed to `recovery/fresh-clone-server-start`.
 
-Packaging, installer metadata, installed runtime acceptance, Network regression, and runtime metrics acceptance: PENDING.
+No-feature-loss slimming added after the protected checkpoint:
 
-Fresh Clone: OPEN. CI: UNVERIFIED. Do not merge master.
+- `d7a3711`: keep local source maps for diagnosis but omit `out/**/*.map` from packages; 49.23 MiB of local maps are no longer shipped.
+- `0e0d296`: on Windows only, omit Koffi and node-pty native packages for non-Windows operating systems. All Windows Koffi x64/arm64/ia32 and node-pty x64/arm64 packages remain.
+- Deliberately retained the two historical OpenTUI DLLs, duplicate exported UI fonts, all languages/themes/audio, the Dev CLI, WinDivert runtime, and platform icons because deletion could remove a supported or recovery capability.
+
+Build and package evidence:
+
+- Production build with Bun 1.4.0, `OPENCODE_CHANNEL=dev`, and an 8 GiB Node heap: PASS after slimming.
+- Electron Builder used the complete official `D:\Temp\electron42-official-20260908-2012` distribution: Electron 42.3.3, 55 locales.
+- Windows unpacked package and real NSIS installer: PASS.
+- Packaged source maps: 0. Foreign Koffi packages: 0. Foreign node-pty packages: 0.
+- Windows Koffi x64 native files: 4; WinDivert DLL/SYS/license exist and source hashes match.
+- Foreign-runtime pruning reduced unpacked output by 15,355,260 bytes and the compressed installer by 2,778,126 bytes (2.65 MiB). Source-map exclusion additionally prevents 49.23 MiB of uncompressed maps from entering the package.
+- Installer: `D:\hscode-new\packages\desktop\dist\hscode-desktop-win-x64.exe`
+- Installer size: 181,118,452 bytes (172.73 MiB).
+- Installer SHA256: `F33945A32C1F149DC884AF203B375C1E68E2B360BE4E32DC25FC897538A0BD52`.
+
+Recovery snapshot before slimming:
+
+- GitHub tag: `backup/pre-slim-20260909`.
+- Verified complete Git bundle: `D:\hscode-backups\2026-09-09-pre-slim\hscode-desktop-pre-slim.bundle`, SHA256 `1FAD3A2929CD20E01A71494BE5246FBBE1E4E626A77976994F22774894C7D66A`.
+- The same backup directory contains hashed copies of Bun 1.4.0, Node 20.12.1, the official Electron 42.3.3 ZIP, the Dev CLI, and `ENVIRONMENT.md` restore instructions.
+
+Installed runtime, button show/hide, real metrics, Session/Agent reply, Network native bridge initialization, Terminal, and >40 second renderer stability: PENDING user confirmation for installer execution.
+
+Current code HEAD: `0e0d296459e9cb549c88b3f932b145e57683a76e`. Fresh Clone: OPEN. CI: UNVERIFIED (`statuses=[]`). Do not merge master.
 
 Destructive actions: `rm -rf`: NO; `rm -r`: NO; `git clean`: NO; `git reset --hard`: NO; repo deletion: NO; node_modules deletion: NO; packages deletion: NO; force push: NO; manual dist purge: NO.
