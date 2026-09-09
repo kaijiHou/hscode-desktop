@@ -3,10 +3,10 @@
 > 原版毁于 09-08 仓库误删事故；本版按当日记忆重写，条目有损但核心保全。
 
 ## L1 桌面端启动方式（不要用 `bun run dev`）
-- 正确启动（Git Bash，仓库根=当前 D:\hscode-new）：
+- 正确启动（当前仓库根=`D:\HSCode-Project\source`）：
   ```bash
-  cd <repo>/packages/desktop
-  ELECTRON_EXEC_PATH="<repo>\packages\desktop\node_modules\electron\dist\electron.exe" \
+  cd D:\HSCode-Project\source\packages\desktop
+  ELECTRON_EXEC_PATH="D:\HSCode-Project\source\packages\desktop\node_modules\electron\dist\electron.exe" \
   NODE_OPTIONS=--max-old-space-size=8192 \
   ./node_modules/.bin/electron-vite.exe dev
   ```

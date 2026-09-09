@@ -12,10 +12,15 @@
 - **教训（终身）：Windows 下 rm 一律先确认目标不存在大小写变体；删除前必须 `pwd` 核对。**
 **【最高禁令】永久禁止 rm -rf/rm -r：删除一律进回收站（PowerShell Microsoft.VisualBasic DeleteDirectory SendToRecycleBin）或改名 .deleted-日期。已写入全局记忆 ~/.zcode/AGENTS.md。**
 
-## 当前状态
+## 当前状态（2026-09-09 更新）
 
-- 仓库新家：`D:\hscode-new`（等旧目录解锁后可改名回 D:\hscode）
-- 桌面成品：`D:\Desktop\HSCode\`（HSCode.lnk + HSCode-程序免安装版 + 安装包 + 添加模型脚本 + 使用说明）
+- 仓库新家：`D:\HSCode-Project\source`
+- 用户发布包：`D:\HSCode-Project\releases`（Dev 安装版 + 完整免安装 ZIP）
+- 保护备份：`D:\HSCode-Project\backups`
+- 离线 Skill 包：`D:\HSCode-Project\offline-agent`
+- 旧桌面发布目录：已移动到 `D:\HSCode-Project\archive\desktop-old`
+- 开发启动快捷方式：`D:\Desktop\脚本\hscode`
+- 旧 `D:\hscode\resources` 仍被系统锁定，未强行移动或删除。
 - 未推提交：无（a9751aa 已在 GitHub；EPIPE 修复与 stub 配置已重放但**未提交**，见 git status）
 - 待重打包：安装包（dist 被事故清除，需 bun install + build + package:win 后补 D:\Desktop\HSCode\安装包\）
 - 模型配置：`C:\Users\13772\.config\hscode\opencode.json`（qwen-local 自部署，全局生效，未受事故影响）
