@@ -22,6 +22,8 @@ for (const channel of channels) {
 
     expect(config.appId).toBe(channel.appId)
     expect(config.files).toContain("!out/**/*.map")
+    expect(config.files).toContain("!node_modules/@koromix/koffi-linux-*/**/*")
+    expect(config.files).not.toContain("!node_modules/@koromix/koffi-win32-*/**/*")
     expect(config.extraMetadata?.desktopName).toBe(`${channel.appId}.desktop`)
     expect(config.linux?.executableName).toBe(channel.appId)
     expect(config.linux?.desktop?.entry?.StartupWMClass).toBe(channel.appId)

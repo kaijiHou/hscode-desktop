@@ -56,7 +56,22 @@ const getBase = (appId: string): Configuration => ({
   extraMetadata: {
     desktopName: `${appId}.desktop`,
   },
-  files: ["out/**/*", "!out/**/*.map", "resources/**/*", "!resources/opencode-cli*"],
+  files: [
+    "out/**/*",
+    "!out/**/*.map",
+    "resources/**/*",
+    "!resources/opencode-cli*",
+    ...(process.platform === "win32"
+      ? [
+          "!node_modules/@koromix/koffi-darwin-*/**/*",
+          "!node_modules/@koromix/koffi-freebsd-*/**/*",
+          "!node_modules/@koromix/koffi-linux-*/**/*",
+          "!node_modules/@koromix/koffi-openbsd-*/**/*",
+          "!node_modules/@lydell/node-pty-darwin-*/**/*",
+          "!node_modules/@lydell/node-pty-linux-*/**/*",
+        ]
+      : []),
+  ],
   extraResources: [
     ...(process.platform === "win32" ? [{ from: "resources/win", to: "win" }] : []),
     ...(channel === "dev"
