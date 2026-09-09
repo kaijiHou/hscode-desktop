@@ -655,11 +655,11 @@ function ChannelIndicator(props: { debugTools?: { visible: boolean; toggle: () =
     return (
       <button
         type="button"
-        class="text-[10px] leading-none tracking-[0.06em] px-1 cursor-pointer text-v2-text-text-faint/80 hover:text-v2-text-text-muted transition-colors"
+        class="h-6 rounded-md px-2 text-[10px] leading-none tracking-[0.06em] cursor-pointer border border-v2-border-border-base/60 bg-v2-state-bg-info/30 text-v2-text-text-muted transition-colors hover:border-v2-state-border-info hover:bg-v2-state-bg-info/70 hover:text-v2-state-fg-info focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-v2-border-border-focus data-[pressed=true]:border-v2-state-border-info data-[pressed=true]:bg-v2-state-bg-info data-[pressed=true]:text-v2-state-fg-info"
         data-pressed={props.debugTools.visible}
         onClick={props.debugTools.toggle}
-        title="开发版构建 · 点击切换调试工具"
-        aria-label="切换调试工具"
+        title={props.debugTools.visible ? "隐藏运行统计" : "显示运行统计"}
+        aria-label={props.debugTools.visible ? "隐藏运行统计" : "显示运行统计"}
         aria-pressed={props.debugTools.visible}
       >
         {CHANNEL_LABEL[channel] ?? channel}

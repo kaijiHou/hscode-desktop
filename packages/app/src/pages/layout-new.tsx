@@ -6,6 +6,7 @@ import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
 import { WorkbenchSidebar } from "@/pages/layout/workbench-rail"
 import { usePlatform } from "@/context/platform"
 import { setV2Toast, ToastRegion } from "@/utils/toast"
+import { debugToolsEnabled } from "@/utils/debug-tools"
 
 export default function NewLayout(props: ParentProps) {
   const platform = usePlatform()
@@ -36,7 +37,7 @@ export default function NewLayout(props: ParentProps) {
       <Titlebar
         update={update}
         debugTools={
-          import.meta.env.DEV
+          debugToolsEnabled
             ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
             : undefined
         }
@@ -47,7 +48,7 @@ export default function NewLayout(props: ParentProps) {
           <Suspense>{props.children}</Suspense>
         </main>
       </div>
-      {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
+      {debugToolsEnabled && state.debugTools && <DebugBar inline />}
       <TabsInfoPopup />
       <ToastRegion v2 />
       {/* HSCode: static footer strip — never overlaps the composer */}
