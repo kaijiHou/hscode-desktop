@@ -188,3 +188,11 @@ Code commit: `8938e58 fix(desktop): package network capture runtime`
 ### ONE exact next action
 
 Fresh-clone verification at `D:\hscode-repro-check`; CI is still unverified and merge is not yet ready.
+
+## Packaged Dev statistics + installer run (2026-09-09)
+
+- PRE_PACKAGE_HEAD: `1ac115bae690f54e7255ddcf27224f898609d717`.
+- Pushed `ca37e36` (shared Dev-channel gate, real stats toggle, compact accessible “开发版” button, hidden initial state) and `1ac115b` (three current HSCode packaging IDs in tests).
+- Focused helper 4/4, titlebar 7/7, app typecheck, and builder 7/7 are PASS.
+- Packaging/runtime evidence is still pending. Use only a complete official Electron 42.3.3 distribution and reject any package with zero locales.
+- Do not touch Network internals unless a new concrete runtime error appears. Fresh Clone OPEN; CI UNVERIFIED; do not merge master.

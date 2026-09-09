@@ -456,3 +456,26 @@ Fresh Clone: OPEN.
 Reviewer Assessment: the packaged Network Capture runtime dependency chain is restored. The original Desktop server startup recovery remains PASS. CI remains unverified (`statuses=[]`), so do not merge before fresh-clone verification.
 
 ONE Exact Next Action: perform the full recovery-branch verification from a separate fresh clone at `D:\hscode-repro-check`.
+
+## Run 2026-09-09 — Packaged Dev Debug Stats + Installer
+
+PRE_PACKAGE_HEAD: `1ac115bae690f54e7255ddcf27224f898609d717`
+
+Root cause: the packaged Dev application is a production Vite build, so `import.meta.env.DEV` is false even though `VITE_OPENCODE_CHANNEL=dev`. Both layouts now use one channel-aware helper; Dev enables the existing real `DebugBar`, Beta/Prod and `VITE_DISABLE_DEBUG_BAR=1` disable it. The compact “开发版” control is now a 24px button with hover, pressed, focus, tooltip, and `aria-pressed` states. Both layouts start with statistics hidden.
+
+Files changed before packaging:
+
+- `packages/app/src/utils/debug-tools.ts`
+- `packages/app/src/utils/debug-tools.test.ts`
+- `packages/app/src/pages/layout-new.tsx`
+- `packages/app/src/pages/layout.tsx`
+- `packages/app/src/components/titlebar.tsx`
+- `packages/desktop/electron-builder.config.test.ts`
+
+Checks: helper 4 PASS / 0 FAIL; titlebar-focused tests 7 PASS / 0 FAIL; app typecheck PASS; builder branding tests 7 PASS / 0 FAIL. Code commits `ca37e36` and `1ac115b` are pushed to `recovery/fresh-clone-server-start`.
+
+Packaging, installer metadata, installed runtime acceptance, Network regression, and runtime metrics acceptance: PENDING.
+
+Fresh Clone: OPEN. CI: UNVERIFIED. Do not merge master.
+
+Destructive actions: `rm -rf`: NO; `rm -r`: NO; `git clean`: NO; `git reset --hard`: NO; repo deletion: NO; node_modules deletion: NO; packages deletion: NO; force push: NO; manual dist purge: NO.

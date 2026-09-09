@@ -236,3 +236,12 @@ Code commit: `8938e58 fix(desktop): package network capture runtime`
 ### ONE exact next action
 
 Run the full recovery branch from a separate fresh clone at `D:\hscode-repro-check` before merge.
+
+## Packaged Dev statistics recovery checkpoint (2026-09-09)
+
+- PRE_PACKAGE_HEAD: `1ac115bae690f54e7255ddcf27224f898609d717`.
+- `ca37e36` replaces the incorrect Vite-mode gate with the shared Dev-channel gate, keeps the existing real `DebugBar`, makes “开发版” an accessible compact button, and defaults both layouts to hidden statistics.
+- `1ac115b` updates only the three stale product-ID expectations in the Electron Builder test.
+- Helper tests 4/4, titlebar-focused tests 7/7, app typecheck, and builder tests 7/7 pass.
+- Next: clean production build, package with a complete official Electron 42.3.3 distribution, verify locales/Network, then install and perform UI/runtime acceptance.
+- Fresh Clone remains OPEN; CI remains UNVERIFIED.

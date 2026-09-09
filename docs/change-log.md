@@ -571,3 +571,26 @@ Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后�
 
 - `7a80635` `fix(build): restore canonical opencode node build entry`
 - `24215b4` `fix(desktop): validate embedded server export contract`
+
+---
+
+## CHANGE-026 — 2026-09-09 — Packaged Dev 运行统计开关
+
+### 修改了什么
+
+- 用共享的 Dev 产品通道判断替代 New/Legacy 布局中的 Vite `DEV` 判断；Beta、Prod 和显式禁用仍不会显示调试工具。
+- 复用现有真实 `DebugBar`，两套布局均默认隐藏；“开发版”改为 24px 的可访问按钮并提供 hover、pressed、focus、动态提示和 `aria-pressed` 状态。
+- 修正 Electron Builder 测试中三个过期的 `ai.opencode.*` 预期，不改产品配置。
+
+### 当前验证
+
+- 纯函数：4 PASS / 0 FAIL。
+- 标题栏定向测试：7 PASS / 0 FAIL。
+- App typecheck：PASS。
+- Electron Builder branding：7 PASS / 0 FAIL。
+- Windows package / installer / installed runtime：PENDING。
+
+### 对应 Git Commit
+
+- `ca37e36` `fix(ui): restore packaged dev runtime stats toggle`
+- `1ac115b` `test(desktop): align packaging branding expectations`
