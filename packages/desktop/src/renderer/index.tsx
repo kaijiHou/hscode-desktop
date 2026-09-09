@@ -4,6 +4,7 @@ import {
   ACCEPTED_FILE_EXTENSIONS,
   AppBaseProviders,
   AppInterface,
+  HSCodeLoadingMark,
   loadLocaleDict,
   normalizeLocale,
   type Locale,
@@ -28,7 +29,6 @@ import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./
 import { windowFullscreen } from "./window-fullscreen"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
 import "./styles.css"
-import { Splash } from "@opencode-ai/ui/logo"
 import { useTheme } from "@opencode-ai/ui/theme/context"
 
 const root = document.getElementById("root")
@@ -304,7 +304,7 @@ listenForDeepLinks()
 function LoadingSplash() {
   return (
     <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base">
-      <Splash class="w-16 h-20 opacity-50 animate-pulse" />
+      <HSCodeLoadingMark class="size-16 opacity-50 animate-pulse" />
     </div>
   )
 }

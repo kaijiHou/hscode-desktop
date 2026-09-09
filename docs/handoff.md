@@ -204,3 +204,12 @@ Fresh-clone verification at `D:\hscode-repro-check`; CI is still unverified and 
 - Production build and NSIS packaging PASS using complete official Electron 42.3.3; 55 locales; packaged maps/foreign native packages 0; Windows Koffi x64 and WinDivert PASS.
 - Final installer: `D:\hscode-new\packages\desktop\dist\hscode-desktop-win-x64.exe`, 181,118,452 bytes, SHA256 `F33945A32C1F149DC884AF203B375C1E68E2B360BE4E32DC25FC897538A0BD52`.
 - Next action requires confirmation: run the new installer and perform Dev button/DebugBar/Session/Network/Terminal runtime acceptance. Fresh Clone OPEN; CI UNVERIFIED.
+
+## Cold-start image handoff (2026-09-09)
+
+- Startup/waiting O was replaced by the bundled user image `packages/app/src/assets/brand/fengmian.png` copied from `D:\Desktop\脚本\hscode\fengmian.png`.
+- `HSCodeLoadingMark` is used in both the App health gate and Desktop loading splash; the server retry card uses it too.
+- Focused test 8/8, App/Desktop typecheck PASS, full production build PASS, Windows package PASS.
+- Real packaged `D:\HSCode-Project\source\packages\desktop\dist\win-unpacked\HSCode Dev.exe` launched responsively with title `HSCode`; renderer DOM was readable through isolated CDP.
+- Do not infer a permanent GUI session from the test process; it was stopped after verification. User data was isolated under `D:\Temp\hscode-cold-start-profile-*`.
+- When rebuilding locally, use Bun at `D:\npm-global\node_modules\bun\bin\bun.exe` and an 8 GiB Node heap for the renderer build.

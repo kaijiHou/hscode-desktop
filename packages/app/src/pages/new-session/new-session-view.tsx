@@ -2,7 +2,6 @@ import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
-import { HSCodeSplash } from "@/components/brand/hscode-logo"
 import { Show, createMemo, createSignal, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Portal } from "solid-js/web"
@@ -31,6 +30,8 @@ export function NewSessionView(props: {
   project: PromptProjectController
   workspace: NewSessionWorkspaceController
 }) {
+  const language = useLanguage()
+
   return (
     <div class="@container relative flex flex-col min-h-0 h-full flex-1">
       <div
@@ -39,8 +40,15 @@ export function NewSessionView(props: {
       >
         <div class="absolute inset-x-0 top-[25.375%] flex justify-center px-6">
           <div class={NEW_SESSION_CONTENT_WIDTH}>
-            <HSCodeSplash />
-            <div class="mt-8 flex flex-col gap-8">
+            <div class="flex flex-col items-center gap-1 text-center">
+              <h1 class="text-[15px] font-[530] leading-5 tracking-[-0.04px] text-v2-text-text-base">
+                {language.t("session.new.title")}
+              </h1>
+              <p class="max-w-[360px] text-[12px] font-[440] leading-4 text-v2-text-text-muted">
+                {language.t("prompt.placeholder.simple")}
+              </p>
+            </div>
+            <div class="mt-5 flex flex-col gap-8">
               <PromptInputV2Composer controller={props.input} />
               <Show when={props.project.empty()}>
                 <PromptProjectAddButton controller={props.project} />

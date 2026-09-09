@@ -255,3 +255,13 @@ Run the full recovery branch from a separate fresh clone at `D:\hscode-repro-che
 - Installer: `D:\hscode-new\packages\desktop\dist\hscode-desktop-win-x64.exe`, 181,118,452 bytes, SHA256 `F33945A32C1F149DC884AF203B375C1E68E2B360BE4E32DC25FC897538A0BD52`.
 - Static Network regression: WinDivert DLL/SYS/license and Koffi win32-x64 native files PASS. Runtime/UI installation acceptance awaits action-time user confirmation.
 - Fresh Clone OPEN; CI UNVERIFIED (`statuses=[]`).
+
+## Cold-start branding checkpoint (2026-09-09)
+
+- User cover source: `D:\Desktop\脚本\hscode\fengmian.png`.
+- Bundled copy: `packages/app/src/assets/brand/fengmian.png`; build output contains `assets/fengmian-GMct2LB-.png`.
+- `HSCodeLoadingMark` now replaces the upstream O on app startup, desktop startup, and server retry overlays.
+- New-session page no longer renders the isolated HSCode watermark; it uses existing localized title/prompt keys.
+- Focused branding test 8/8; App/Desktop typecheck PASS; production build and Windows package PASS.
+- Packaged cold start PASS: `HSCode Dev.exe` responsive, window title `HSCode`, renderer DOM reachable over an isolated CDP port.
+- Current source root is `D:\HSCode-Project\source`; old `D:\hscode-new` junction targets were repaired to this root.

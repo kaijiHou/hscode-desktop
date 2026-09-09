@@ -503,3 +503,34 @@ Installed runtime, button show/hide, real metrics, Session/Agent reply, Network 
 Current code HEAD: `0e0d296459e9cb549c88b3f932b145e57683a76e`. Fresh Clone: OPEN. CI: UNVERIFIED (`statuses=[]`). Do not merge master.
 
 Destructive actions: `rm -rf`: NO; `rm -r`: NO; `git clean`: NO; `git reset --hard`: NO; repo deletion: NO; node_modules deletion: NO; packages deletion: NO; force push: NO; manual dist purge: NO.
+
+## Run 2026-09-09 — HSCode cold-start image
+
+Scope: replace the upstream O loading mark in the startup/waiting surfaces with the user's local HSCode cover image.
+
+Files changed:
+
+- `packages/app/src/assets/brand/fengmian.png` — exact copy of `D:\Desktop\脚本\hscode\fengmian.png` (1,269,143 bytes).
+- `packages/app/src/components/brand/hscode-logo.tsx` — added `HSCodeLoadingMark` using the bundled local asset.
+- `packages/app/src/app.tsx` and `packages/desktop/src/renderer/index.tsx` — startup, server-wait, and retry surfaces now render the local mark.
+- `packages/app/src/pages/new-session/new-session-view.tsx` — removed the isolated HSCode empty-state wordmark and reused existing localized strings.
+- `packages/app/src/components/brand/hscode-logo.test.tsx` — focused branding/loading assertions.
+
+Verification:
+
+- Focused branding test: 8 PASS / 0 FAIL.
+- App typecheck: PASS.
+- Desktop typecheck: PASS.
+- Production renderer/main/preload build: PASS with `NODE_OPTIONS=--max-old-space-size=8192`.
+- Windows package: PASS; `dist\\win-unpacked\\HSCode Dev.exe` remains responsive and its window title is `HSCode`.
+- CDP renderer check: final new-session DOM contains the localized title/prompt; loading image is included in the built renderer as `assets/fengmian-GMct2LB-.png`.
+- Packaged `resources\\win\\WinDivert.dll`: present (47,616 bytes).
+
+Environment recovery noted during verification:
+
+- Restored Bun 1.3.14 at `D:\npm-global\node_modules\bun\bin\bun.exe` because the old shim pointed to a missing executable.
+- Repaired 1,484 stale Bun junctions from `D:\hscode-new` to `D:\HSCode-Project\source`; package contents were not deleted.
+- Repaired one corrupted cached `@shikijs/langs` file from the official `4.2.0` package.
+- No `rm -rf`, `git clean`, hard reset, repository deletion, or node_modules deletion was used.
+
+Known unrelated test debt: the full App unit suite still reports the pre-existing Solid non-hydrating-context failures, deep-link helper failures, and locale parity failures; the focused branding test and both package typechecks pass.

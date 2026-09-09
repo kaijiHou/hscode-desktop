@@ -619,3 +619,30 @@ Phase 2A 的 Network Inspector 底层实现已提交，但用户真实启动后�
 
 - `d7a3711` `build(desktop): omit source maps from packages`
 - `0e0d296` `build(desktop): prune foreign native runtimes on windows`
+
+---
+
+## CHANGE-028 — 2026-09-09 — 冷启动封面替换
+
+### 修改了什么
+
+- 将冷启动、等待本地服务和连接重试界面的上游 O 替换为用户提供的 `fengmian.png`。
+- 图片作为本地资源打进 Renderer，不依赖网络或用户电脑上的外部路径。
+- 新会话空状态移除孤立的 HSCode 字样，复用已有多语言标题和提示语。
+
+### 验证结果
+
+- 品牌/启动定向测试：8 PASS / 0 FAIL。
+- App/Desktop typecheck：PASS。
+- Production build：PASS（8 GiB Node heap）。
+- Windows unpacked package：PASS；真实 `HSCode` 窗口响应正常。
+- 包内资源：`fengmian-*.png` 与 WinDivert DLL 均存在。
+
+### 对应文件
+
+- `packages/app/src/assets/brand/fengmian.png`
+- `packages/app/src/components/brand/hscode-logo.tsx`
+- `packages/app/src/app.tsx`
+- `packages/desktop/src/renderer/index.tsx`
+- `packages/app/src/pages/new-session/new-session-view.tsx`
+- `packages/app/src/components/brand/hscode-logo.test.tsx`

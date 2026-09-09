@@ -3,6 +3,7 @@
 // so future upstream merges don't conflict. No external images, no network.
 
 import type { JSX } from "solid-js"
+import fengmianUrl from "@/assets/brand/fengmian.png"
 
 /** Simple responsive CSS wordmark: "HSCode". */
 export function HSCodeWordmark(props: { class?: string }) {
@@ -43,6 +44,20 @@ export function HSCodeLogo(props: { class?: string; wordmarkClass?: string }) {
       </svg>
       <HSCodeWordmark />
     </div>
+  )
+}
+
+/** HSCode loading mark; uses the local project cover, not the upstream O glyph. */
+export function HSCodeLoadingMark(props: { class?: string }) {
+  return (
+    <img
+      data-component="hscode-loading-mark"
+      src={fengmianUrl}
+      alt="HSCode"
+      class={props.class}
+      draggable={false}
+      style={{ "object-fit": "contain", "user-select": "none" }}
+    />
   )
 }
 
