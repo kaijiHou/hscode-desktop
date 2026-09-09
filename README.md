@@ -42,6 +42,14 @@ PATH="/d/bun-bin:$PATH" bun run dev:desktop
 > Electron 二进制：需 `electron@42.3.3`，位于
 > `node_modules/.bun/electron@42.3.3*/node_modules/electron/dist/`。
 
+Windows 发布用户包（PowerShell 7；不联网安装、不重建依赖）：
+
+```text
+pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File .\scripts\package-win.ps1
+```
+
+脚本会固定使用 Bun 1.4.0，完成 bundle、Electron 构建、Windows 打包、真实冷启动和安装版/免安装版同步。普通用户只需要安装版或完整免安装 ZIP，不需要 Node、Bun、PowerShell 或 Electron。
+
 ---
 
 以下为上游 OpenCode 原始 README。

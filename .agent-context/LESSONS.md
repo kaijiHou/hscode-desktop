@@ -46,3 +46,13 @@
 - deepseek-v4-flash 上下文实测 1M（服务端硬限 1048566 input；300K/600K 接受、1.06M 拒绝）。glm-5.3-flash 1M。
 - deepseek-v4-flash 纯文本；走 Anthropic 协议默认开思考，max_tokens 过小回 500。
 - OpenAI 兼容通道 `/api/coding/v3`；Anthropic 通道 `/api/coding`（SDK 用时补 /v1）。
+
+## L9 Bun / Node 环境根因（固定，不再重复排查）
+- 项目构建统一使用 `D:\bun-bin\bun.exe` Bun `1.4.0`；根 `package.json` 已同步为 `bun@1.4.0`。`D:\npm-global` 下的 shim 曾指向缺失文件，且 Bun `1.3.14` 会生成旧的 `init_auth2()` 自等待 bundle。
+- `D:\HSCode-Project\source\scripts\package-win.ps1` 会先锁 Bun 版本、把其目录置于 PATH 首位、检查旧 `D:\hscode-new` junction，再构建和打包；不执行 `bun install`，不触发 predev 的 Electron 下载。
+- 构建必须保留 `NODE_OPTIONS=--max-old-space-size=8192`；默认 Node 20.12.1 缺 `node:sqlite`，不能拿它做 bundle 导入验收。使用 Bun 契约检查 + 实际 Electron 冷启动。
+
+## L10 发布安全边界
+- 发布脚本只从 `source` 生成两个交付物：安装版和包含完整 `win-unpacked` 的免安装 ZIP；同步前会检查 `app.asar`、55 个 locales、WinDivert DLL/SYS/license，并把旧包移动到 `backups\releases`。
+- 不把源码、`node_modules`、Bun、Node、Electron、测试、抓包调试文件单独发给普通用户；用户包内必须保留业务运行所需的终端、网络抓包、native 模块、驱动和许可证。
+- `D:\hscode` 只有旧 app.asar，不是源码；当前被 ZCode PID 6152 锁定。关闭 ZCode 后再用 PowerShell 7 回收站操作，绝不强删。

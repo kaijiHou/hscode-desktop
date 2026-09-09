@@ -1,7 +1,7 @@
 # HSCode 当前工作状态（由 Agent 维护，人工可读）
 
 > 规则：只存高价值状态，不复制聊天记录。每次压缩/交接前更新本文件。
-> 最后更新：2026-09-08（仓库删除事故后重建。此前位于 D:\hscode，因大小写不敏感误删，GitHub 恢复至 a9751aa + 手工重放）
+> 最后更新：2026-09-09（发布流程固化；仓库删除事故后的恢复状态仍保留）
 
 ## ⚠️ 2026-09-08 仓库事故记录
 
@@ -20,9 +20,10 @@
 - 离线 Skill 包：`D:\HSCode-Project\offline-agent`
 - 旧桌面发布目录：已移动到 `D:\HSCode-Project\archive\desktop-old`
 - 开发启动快捷方式：`D:\Desktop\脚本\hscode`
-- 旧 `D:\hscode\resources` 仍被系统锁定，未强行移动或删除。
-- 未推提交：无（a9751aa 已在 GitHub；EPIPE 修复与 stub 配置已重放但**未提交**，见 git status）
-- 待重打包：安装包（dist 被事故清除，需 bun install + build + package:win 后补 D:\Desktop\HSCode\安装包\）
+- `D:\hscode\resources\app.asar` 已确认是旧残留，不含源码和用户数据；回收站移动被 ZCode PID 6152 锁定，关闭 ZCode 后再执行。
+- 本轮新增发布脚本、Bun 版本固定和环境文档尚未提交；提交前需完成最终状态检查。
+- 当前发布脚本：`D:\HSCode-Project\source\scripts\package-win.ps1`；已固定 Bun 1.4.0、8GB heap、无联网安装、无 predev 下载。
+- 最新发布已完成：安装版和完整免安装 ZIP 已同步到 `D:\HSCode-Project\releases`，真实 Electron 冷启动 PASS，55 locales、WinDivert DLL/SYS/license PASS。
 - 模型配置：`C:\Users\13772\.config\hscode\opencode.json`（qwen-local 自部署，全局生效，未受事故影响）
 
 ## 已确认 Root Cause（勿重复调查）
@@ -32,3 +33,4 @@
 3. 主进程 EPIPE（管道断裂）已免疫：logging.ts initLogging 里 uncaughtException 吞 EPIPE。
 4. Windows 路径大小写不敏感：见顶部事故记录。
 5. 自部署模型接入：全局 opencode.json 加 provider（npm=@ai-sdk/openai-compatible），或桌面脚本 HSCode添加自部署模型.bat（自动从 /v1/models 发现模型）。
+6. Bun 版本漂移是反复失败的主因之一：`1.3.14` 与 `1.4.0` 不能混用；当前唯一构建基线是 `D:\bun-bin\bun.exe` 1.4.0。默认 Node 20 也不能做 bundle 导入检查，因为缺 `node:sqlite`。

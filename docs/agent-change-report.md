@@ -539,3 +539,19 @@ Environment recovery noted during verification:
 - No `rm -rf`, `git clean`, hard reset, repository deletion, or node_modules deletion was used.
 
 Known unrelated test debt: the full App unit suite still reports the pre-existing Solid non-hydrating-context failures, deep-link helper failures, and locale parity failures; the focused branding test and both package typechecks pass.
+
+## Run 2026-09-09 — release workflow hardening
+
+The recurring Bun failures were caused by a reproducibility gap: `package.json` declared Bun 1.3.14 while the successful bundle/package evidence used Bun 1.4.0 from `D:\bun-bin\bun.exe`; the machine default Node is 20.12.1 and cannot import this bundle because it lacks `node:sqlite`. The root package now pins Bun 1.4.0, and `scripts/package-win.ps1` validates that exact executable before building.
+
+The release script reuses the existing offline dependency tree and local CLI, bypasses the `predev` Electron-download path, sets the 8 GiB Node heap for Electron tooling, rejects stale `D:\hscode-new` junctions, verifies `Server.listen`, builds Electron, launches the actual packaged app, and only then synchronizes the two user deliverables. It never runs `bun install` or destructive project cleanup.
+
+Verification from commit `da8f45a3945492e6f5e4a373532b10217721a760`:
+
+- Bun 1.4.0 bundle export contract: PASS.
+- Electron production build and Windows x64 packaging: PASS.
+- Packaged Electron cold start: PASS.
+- Complete portable ZIP: 55 locales plus `app.asar`, WinDivert DLL/SYS/license: PASS.
+- Installer: `D:\HSCode-Project\releases\HSCode-Dev-安装版-win-x64.exe`, SHA256 `B529470081BF52609EDD9F5A84CA16D0BB3B03D4650056434A3391440DA73D76`.
+- Portable ZIP: `D:\HSCode-Project\releases\HSCode-Dev-免安装版-win-x64.zip`, SHA256 `6B9ED492F72FB571AAD600F6285AF8779D76D4468971019773E74577FCC76AC8`.
+- `D:\hscode` remains recoverable but locked by ZCode PID 6152; no forced close or deletion was attempted.
