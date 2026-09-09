@@ -1,5 +1,14 @@
 # HSCode Context Checkpoint
 
+## Active source checkpoint (2026-09-09)
+
+- Repository: `D:\HSCode-Project\source`
+- Branch: `recovery/fresh-clone-server-start`
+- Code HEAD: `4e39db3`
+- Latest Dev installer: `D:\HSCode-Project\releases\HSCode-Dev-安装版-win-x64.exe`
+- Latest Dev portable ZIP: `D:\HSCode-Project\releases\HSCode-Dev-免安装版-win-x64.zip`
+- The latest release was rebuilt with `OPENCODE_CHANNEL=dev`; its renderer shows `开发版`, `终端`, and `网络抓包`.
+
 ## Current fresh-clone recovery (2026-09-08)
 
 Repository: `D:\hscode-new`

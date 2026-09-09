@@ -2,11 +2,13 @@
 
 ## Current Status Summary
 
-Current HEAD at the start of this review: `d3d3c33f7b98d6dfc5181182bdafc4b1a3da0ea9`
+Current active source root: `D:\HSCode-Project\source`
+
+Current code HEAD: `4e39db3` (`feat(ui): use HSCode cover for cold start`)
 
 Confirmed PASS:
 
-- Bun found at `D:\bun-bin\bun.exe`; verified version `1.4.0`.
+- Bun executable used for the current build: `D:\npm-global\node_modules\bun\bin\bun.exe`; verified version `1.3.14`.
 - Canonical `build-node.ts` execution.
 - Node 24 and Bun 1.4.0 bundle exports: `Config`, `Database`, `Server`, `bootstrap`.
 - Node and Bun `typeof Server.listen === "function"`.
@@ -22,12 +24,13 @@ Confirmed PASS:
 OPEN:
 
 - Fresh-clone reproduction.
+- Full App unit suite has unrelated pre-existing failures; focused cold-start coverage passes.
 
 Declared Bun: `1.3.14` (`packageManager` in the root `package.json`).
 
-Verified Bun: `1.4.0` (`D:\bun-bin\bun.exe`). This version gap is an open reproducibility risk; it is intentionally not changed in this recovery.
+Verified Bun: `1.3.14` (`D:\npm-global\node_modules\bun\bin\bun.exe`).
 
-ONE Exact Next Action: run the full recovery branch verification from a separate fresh clone at `D:\hscode-repro-check` without deleting or modifying `D:\hscode-new`.
+ONE Exact Next Action: run the full recovery branch verification from a separate fresh clone at `D:\hscode-repro-check` without deleting or modifying the active source root.
 
 Historical sections below preserve the status that was true at the time they were written; later run sections are authoritative for current verification.
 
@@ -525,6 +528,8 @@ Verification:
 - Windows package: PASS; `dist\\win-unpacked\\HSCode Dev.exe` remains responsive and its window title is `HSCode`.
 - CDP renderer check: final new-session DOM contains the localized title/prompt; loading image is included in the built renderer as `assets/fengmian-GMct2LB-.png`.
 - Packaged `resources\\win\\WinDivert.dll`: present (47,616 bytes).
+- Latest release files: `D:\HSCode-Project\releases\HSCode-Dev-安装版-win-x64.exe` (180,809,209 bytes) and `D:\HSCode-Project\releases\HSCode-Dev-免安装版-win-x64.zip` (263,790,296 bytes).
+- Latest release SHA-256: installer `E0211033BA9CFEA52D6672550200007D7574EE2E90313DF563C9083E2535D192`; ZIP `2EBE76D7082C24CFFC9D6CB63AB18F6230FDBDAE4E5ACD2DF8B7930BE51EFF1A`.
 
 Environment recovery noted during verification:
 

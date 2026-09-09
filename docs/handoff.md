@@ -1,6 +1,15 @@
 # HSCode Developer Agent Workbench — Current Handoff
 
-Updated: 2026-09-08
+Updated: 2026-09-09
+
+## Current active handoff
+
+- Source: `D:\HSCode-Project\source`
+- Branch: `recovery/fresh-clone-server-start`
+- HEAD: `4e39db3`
+- The cold-start O is replaced by the bundled local `fengmian.png`; focused branding tests 8/8 and App/Desktop typechecks pass.
+- Latest Dev installer and portable ZIP are in `D:\HSCode-Project\releases`.
+- Real packaged cold start is PASS: the window title is `HSCode`, the renderer is responsive, the page shows `开发版`, `终端`, and `网络抓包`.
 
 ## Current fresh-clone recovery
 
