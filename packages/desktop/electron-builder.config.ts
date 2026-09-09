@@ -56,7 +56,7 @@ const getBase = (appId: string): Configuration => ({
   extraMetadata: {
     desktopName: `${appId}.desktop`,
   },
-  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
+  files: ["out/**/*", "!out/**/*.map", "resources/**/*", "!resources/opencode-cli*"],
   extraResources: [
     ...(process.platform === "win32" ? [{ from: "resources/win", to: "win" }] : []),
     ...(channel === "dev"
