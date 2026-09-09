@@ -1,0 +1,14 @@
+MATURE OFFLINE OPENCODE AGENT
+
+Copy this folder to the offline computer by USB or another trusted medium.
+
+Install for one user:
+1. Find OpenCode's global configuration directory. It is normally:
+   Windows:  %USERPROFILE%\.config\opencode
+   macOS/Linux: ~/.config/opencode
+2. Copy AGENTS.md into that directory.
+3. Copy the entire skills directory into <config-directory>/skills.
+4. Restart OpenCode and use its skill/debug listing to confirm the seven skills appear.
+
+No network connection, package installation, shell-specific script, or external runtime is required.
+If files already exist, merge them or back them up first; do not overwrite personal instructions blindly.

@@ -20,6 +20,17 @@ describe("SkillPlugin.Plugin", () => {
           description: expect.stringContaining("opencode's own configuration"),
         }),
       )
+      expect((yield* skill.list()).map((item) => item.name)).toEqual(
+        expect.arrayContaining([
+          "ponytail",
+          "safe-file-operations",
+          "lean-packaging",
+          "root-cause-debugging",
+          "verification-gates",
+          "offline-first",
+          "context-handoff",
+        ]),
+      )
     }),
   )
 })

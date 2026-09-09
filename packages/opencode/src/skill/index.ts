@@ -281,6 +281,12 @@ const layer = Layer.effect(
           location: "<built-in>",
           content: CUSTOMIZE_OPENCODE_SKILL_BODY,
         }
+        for (const skill of SkillPlugin.BuiltinSkills) {
+          s.skills[skill.name] = {
+            ...skill,
+            location: "<built-in>",
+          }
+        }
         yield* loadSkills(s, yield* InstanceState.get(discovered), events)
         return s
       }),
