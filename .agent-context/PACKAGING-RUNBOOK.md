@@ -64,7 +64,7 @@ pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File D:\HSCode-Project\source\s
 
 ZIP 内必须是完整的 `win-unpacked` 文件夹，用户解压后双击 `HSCode Dev.exe`。不能只发送 EXE，也不能删除同目录 DLL、`resources` 或 `locales`。
 
-当前两个包是 Windows x64 Dev 验收包，已由提交 `da8f45a` 重新构建并通过冷启动：安装版 SHA256 `B529470081BF52609EDD9F5A84CA16D0BB3B03D4650056434A3391440DA73D76`，免安装 ZIP SHA256 `6B9ED492F72FB571AAD600F6285AF8779D76D4468971019773E74577FCC76AC8`。交付普通用户前如需正式品牌，应另行构建 production channel，不能把 Dev 名称当成正式版。
+当前两个包是 Windows x64 Dev 验收包，已由提交 `15a691f` 重新构建并通过冷启动：安装版 SHA256 `CD5FD5975B070FEF99A3C9335842EB6FB6171199CEFA85A1160750ABEA53845D`，免安装 ZIP SHA256 `41B0FB67FBF8FCB42A35E181AE5F30F759B5B3773FCD62B6924ACCE75CE637C7`。交付普通用户前如需正式品牌，应另行构建 production channel，不能把 Dev 名称当成正式版。
 
 ## 本轮打包流程
 

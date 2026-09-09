@@ -21,7 +21,7 @@
 - 旧桌面发布目录：已移动到 `D:\HSCode-Project\archive\desktop-old`
 - 开发启动快捷方式：`D:\Desktop\脚本\hscode`
 - `D:\hscode\resources\app.asar` 已确认是旧残留，不含源码和用户数据；回收站移动被 ZCode PID 6152 锁定，关闭 ZCode 后再执行。
-- 本轮新增发布脚本、Bun 版本固定和环境文档尚未提交；提交前需完成最终状态检查。
+- 本轮发布脚本、Bun 版本固定和环境文档已提交到 `15a691f` 并推送 GitHub 分支 `recovery/fresh-clone-server-start`。
 - 当前发布脚本：`D:\HSCode-Project\source\scripts\package-win.ps1`；已固定 Bun 1.4.0、8GB heap、无联网安装、无 predev 下载。
 - 最新发布已完成：安装版和完整免安装 ZIP 已同步到 `D:\HSCode-Project\releases`，真实 Electron 冷启动 PASS，55 locales、WinDivert DLL/SYS/license PASS。
 - 模型配置：`C:\Users\13772\.config\hscode\opencode.json`（qwen-local 自部署，全局生效，未受事故影响）

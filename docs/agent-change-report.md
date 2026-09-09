@@ -546,12 +546,12 @@ The recurring Bun failures were caused by a reproducibility gap: `package.json` 
 
 The release script reuses the existing offline dependency tree and local CLI, bypasses the `predev` Electron-download path, sets the 8 GiB Node heap for Electron tooling, rejects stale `D:\hscode-new` junctions, verifies `Server.listen`, builds Electron, launches the actual packaged app, and only then synchronizes the two user deliverables. It never runs `bun install` or destructive project cleanup.
 
-Verification from commit `da8f45a3945492e6f5e4a373532b10217721a760`:
+Verification from commit `15a691f7b4d196d2e4d2d05904b9b8deb846ff84`:
 
 - Bun 1.4.0 bundle export contract: PASS.
 - Electron production build and Windows x64 packaging: PASS.
 - Packaged Electron cold start: PASS.
 - Complete portable ZIP: 55 locales plus `app.asar`, WinDivert DLL/SYS/license: PASS.
-- Installer: `D:\HSCode-Project\releases\HSCode-Dev-安装版-win-x64.exe`, SHA256 `B529470081BF52609EDD9F5A84CA16D0BB3B03D4650056434A3391440DA73D76`.
-- Portable ZIP: `D:\HSCode-Project\releases\HSCode-Dev-免安装版-win-x64.zip`, SHA256 `6B9ED492F72FB571AAD600F6285AF8779D76D4468971019773E74577FCC76AC8`.
+- Installer: `D:\HSCode-Project\releases\HSCode-Dev-安装版-win-x64.exe`, SHA256 `CD5FD5975B070FEF99A3C9335842EB6FB6171199CEFA85A1160750ABEA53845D`.
+- Portable ZIP: `D:\HSCode-Project\releases\HSCode-Dev-免安装版-win-x64.zip`, SHA256 `41B0FB67FBF8FCB42A35E181AE5F30F759B5B3773FCD62B6924ACCE75CE637C7`.
 - `D:\hscode` remains recoverable but locked by ZCode PID 6152; no forced close or deletion was attempted.
