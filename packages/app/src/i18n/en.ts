@@ -252,8 +252,8 @@ export const dict = {
   "common.attachment": "attachment",
 
   "prompt.placeholder.shell": "Enter shell command... {{example}}",
-  "prompt.placeholder.normal": 'Ask anything... "{{example}}"',
-  "prompt.placeholder.simple": "Ask anything...",
+  "prompt.placeholder.normal": 'Describe the task, paste an error, or give an objective... "{{example}}"',
+  "prompt.placeholder.simple": "Describe the task, paste an error, or give an objective...",
   "prompt.placeholder.summarizeComments": "Summarize comments…",
   "prompt.placeholder.summarizeComment": "Summarize comment…",
   "prompt.mode.shell": "Shell",
@@ -725,7 +725,7 @@ export const dict = {
   "session.revertDock.expand": "Expand rolled back messages",
   "session.revertDock.restore": "Restore message",
 
-  "session.new.title": "Build anything",
+  "session.new.title": "Hand it to your agent",
   "session.new.project.new": "New project",
   "session.new.project.search": "Search projects",
   "session.new.project.add": "Add project",

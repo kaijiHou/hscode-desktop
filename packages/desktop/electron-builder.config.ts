@@ -60,6 +60,7 @@ const getBase = (appId: string): Configuration => ({
     "out/**/*",
     "!out/**/*.map",
     "resources/**/*",
+    "!resources/icons/**/*",
     "!resources/opencode-cli*",
     ...(process.platform === "win32"
       ? [
@@ -73,6 +74,10 @@ const getBase = (appId: string): Configuration => ({
       : []),
   ],
   extraResources: [
+    {
+      from: "resources/icons",
+      to: "icons",
+    },
     ...(process.platform === "win32" ? [{ from: "resources/win", to: "win" }] : []),
     ...(channel === "dev"
       ? [

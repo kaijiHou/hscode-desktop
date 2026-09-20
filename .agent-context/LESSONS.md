@@ -56,3 +56,14 @@
 - 发布脚本只从 `source` 生成两个交付物：安装版和包含完整 `win-unpacked` 的免安装 ZIP；同步前会检查 `app.asar`、55 个 locales、WinDivert DLL/SYS/license，并把旧包移动到 `backups\releases`。
 - 不把源码、`node_modules`、Bun、Node、Electron、测试、抓包调试文件单独发给普通用户；用户包内必须保留业务运行所需的终端、网络抓包、native 模块、驱动和许可证。
 - `D:\hscode` 只有旧 app.asar，不是源码；当前被 ZCode PID 6152 锁定。关闭 ZCode 后再用 PowerShell 7 回收站操作，绝不强删。
+
+## L11 图标与打包链路（2026-09-09）
+- 直接调用 `electron-vite.exe build` 不会自动执行 `prebuild`，所以发布脚本必须显式运行 `scripts/copy-icons.ts`；否则 `resources/icons` 会继续是旧图标。
+- `windows.ts` 的 packaged 路径是 `process.resourcesPath/icons`；`electron-builder` 的 `files` 不会把它放到顶层，必须在 `extraResources` 显式映射 `resources/icons` 到 `icons`，否则运行时窗口/任务栏显示空白图标。
+- `copy-icons.ts` 不得使用 `rm -rf`；当前实现只递归创建目录并覆盖源文件，避免强删和跨平台 shell 依赖。可再生构建目录清理统一用 PowerShell 7 移入回收站。
+- 图标验收要同时检查：源码 `.ico`、`dist/win-unpacked/resources/icons/icon.ico`、ZIP 内同路径，以及从 `HSCode Dev.exe` 提取的嵌入图标。
+
+## L12 Provider 与新会话文案（2026-09-09）
+- 当前桌面全局配置 `C:\Users\13772\.config\hscode\opencode.json` 只允许 `opencode`（Zen）和 `qwen-local`（自部署）；Ark/方舟不在当前认证或 provider 配置中，历史数据库里的字符串不能整库删除。
+- 模型选择页只保留 Zen 和“自部署模型”，移除 GLM、DeepSeek 以及“更多提供商”入口；不要为了清理历史对话而改动 SQLite。
+- 新会话中文文案使用“交给 Agent 来处理”“描述任务、贴出报错或直接交代目标...”，避免“构建任何内容 / 随便问点什么”这种泛化 AI 聊天文案。

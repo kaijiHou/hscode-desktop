@@ -229,8 +229,8 @@ export const dict = {
   "dialog.model.manage.description": "自訂模型選擇器中顯示的模型。",
   "dialog.model.manage.provider.toggle": "切換所有 {{provider}} 模型",
 
-  "dialog.model.unpaid.freeModels.title": "HSCode 提供的免費模型",
-  "dialog.model.unpaid.addMore.title": "從熱門提供者新增更多模型",
+  "dialog.model.unpaid.freeModels.title": "Zen 模型",
+  "dialog.model.unpaid.addMore.title": "新增自部署模型",
   "dialog.model.unpaid.viewMoreProviders": "查看另外 70 多個提供者",
 
   "dialog.provider.viewAll": "查看更多提供者",
@@ -348,8 +348,8 @@ export const dict = {
   "common.attachment": "附件",
 
   "prompt.placeholder.shell": "輸入 shell 命令... {{example}}",
-  "prompt.placeholder.normal": "想問什麼都可以…「{{example}}」",
-  "prompt.placeholder.simple": "想問什麼都可以…",
+  "prompt.placeholder.normal": "描述任務、貼上錯誤或直接交代目標…「{{example}}」",
+  "prompt.placeholder.simple": "描述任務、貼上錯誤或直接交代目標…",
   "prompt.placeholder.summarizeComments": "摘要留言…",
   "prompt.placeholder.summarizeComment": "摘要這則留言…",
   "prompt.mode.shell": "Shell",
@@ -788,7 +788,7 @@ export const dict = {
   "session.revertDock.expand": "展開已還原的訊息",
   "session.revertDock.restore": "還原訊息",
 
-  "session.new.title": "實現任何想法",
+  "session.new.title": "交給 Agent 處理",
   "session.new.project.new": "新專案",
   "session.new.project.search": "搜尋專案",
   "session.new.project.add": "新增專案",

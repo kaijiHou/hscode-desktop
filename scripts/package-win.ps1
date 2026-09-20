@@ -64,6 +64,7 @@ foreach ($required in @(
     (Join-Path $desktopRoot "node_modules\.bin\electron-vite.exe"),
     (Join-Path $desktopRoot "node_modules\.bin\electron-builder.exe"),
     (Join-Path $desktopRoot "resources\opencode-cli.exe"),
+    (Join-Path $desktopRoot "resources\icons\icon.ico"),
     (Join-Path $desktopRoot "resources\win\WinDivert.dll"),
     (Join-Path $desktopRoot "resources\win\WinDivert64.sys"),
     (Join-Path $desktopRoot "resources\win\WinDivert-LICENSE.txt")
@@ -90,8 +91,9 @@ $electronVite = Join-Path $desktopRoot "node_modules\.bin\electron-vite.exe"
 $electronBuilder = Join-Path $desktopRoot "node_modules\.bin\electron-builder.exe"
 
 Write-Host "HSCode Windows release: channel=$Channel, Bun=$actualBun, heap=8GB"
-Write-Host "1/7 Generate packaging metadata"
+Write-Host "1/7 Generate packaging metadata and sync icons"
 Invoke-CheckedTool $bun @("./scripts/copy-metainfo.ts", $Channel) $desktopRoot
+Invoke-CheckedTool $bun @("./scripts/copy-icons.ts", $Channel) $desktopRoot
 
 Write-Host "2/7 Build the embedded server bundle"
 Invoke-CheckedTool $bun @("./script/build-node.ts") $opencodeRoot
@@ -111,6 +113,7 @@ $appExe = Join-Path $unpackedRoot "HSCode Dev.exe"
 foreach ($required in @(
     $appExe,
     (Join-Path $unpackedRoot "resources\app.asar"),
+    (Join-Path $unpackedRoot "resources\icons\icon.ico"),
     (Join-Path $unpackedRoot "resources\win\WinDivert.dll"),
     (Join-Path $unpackedRoot "resources\win\WinDivert64.sys"),
     (Join-Path $unpackedRoot "resources\win\WinDivert-LICENSE.txt")
@@ -166,6 +169,7 @@ try {
     foreach ($requiredEntry in @(
         "win-unpacked/HSCode Dev.exe",
         "win-unpacked/resources/app.asar",
+        "win-unpacked/resources/icons/icon.ico",
         "win-unpacked/resources/win/WinDivert.dll",
         "win-unpacked/resources/win/WinDivert64.sys",
         "win-unpacked/resources/win/WinDivert-LICENSE.txt"
