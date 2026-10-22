@@ -2,6 +2,14 @@
 
 最新交付边界：2026-10-22 用户已同意安全源码新分支上传；不打包。早期“不上传”记录仅是历史状态。
 
+## F013 移除首页大 H 水印（2026-10-22）
+
+- 需求：删除问候语后方的大 H 装饰，不换成其他图案；应用图标、系统托盘和冷启动 H 保留。
+- 技术：只在既有草稿空态组件中按构建身份省略装饰容器，删除已无调用的 H SVG 分支；不增加 CSS、依赖、设置或状态。原版 ZCode 的深浅主题水印不变。
+- 文件：`packages/ui/src/v4/ConversationDraftEmptyState.tsx`、`packages/ui/test/chatEmptyTimeGreetingI18n.test.ts`、既有 Electron smoke。
+- 问题：截图中的 H 是首页绝对定位的 SVG 水印，不是应用图标或用户背景照片；不能误删其他品牌资产，也不应通过透明度隐藏仍残留的图形。
+- 验证：先补回归得到 1 fail / 4 pass，准确复现 H 仍被渲染；实现后问候语/官方水印/冷启动与托盘相关 3 文件 11 项 PASS。renderer 本地编译 1m25s 成功，最新完整 Electron 18/18 PASS，新增首页无水印断言且冷启动 H 仍通过。typecheck PASS、lint 0 errors / 96 既有 warnings。确认真实窗口没有运行任务、浏览器页或非空草稿后正常刷新，首页水印已消失。不生成安装包。
+
 ## F011 实际插件控制面数据根隔离（2026-10-22）
 
 - 技术：复用 Main 的 `buildHostProcessEnv` 单一环境出口，向 Host/CLI 明确传入 HSCode 的 HOME、Windows USERPROFILE 和 ZCODE_STORAGE_DIR，清除大小写变体的遗留存储与 session DB 覆盖。仅改子进程环境，不改系统 HOME、数据库结构或迁移。

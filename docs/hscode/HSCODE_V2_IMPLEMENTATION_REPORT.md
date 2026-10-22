@@ -6,6 +6,8 @@
 
 用户已明确同意安全源码新分支上传，不带上游历史、不修改线上现有分支；不生成安装包。下面较早的 NOT PUSHED/仅本地段落是历史阶段，不代表新的发布策略。
 
+用户随后要求去掉首页大 H：只移除草稿首页水印，应用图标、托盘与冷启动 H 保留。增量 3 文件 11 项测试、最新完整 Electron 18/18 通过；证据 `.agent-context/electron-smoke-no-home-watermark/result.json`，技术与问题记录 F013。真实窗口已在无运行任务/非空草稿时安全刷新。该改动同步同一安全源码分支，不引入上游历史。
+
 - 本地 Main/Host 和 renderer 编译已成功；未运行 electron-builder，没有制作或安装 EXE。
 - 最新针对性 Vitest：17 文件，133 PASS / 4 skip；构建环境 Node tests 8/8 PASS。整体 typecheck PASS；lint 0 errors / 96 既有 warnings；架构检查 0 violations。
 - 最新完整 Electron 回归：18/18 PASS，证据 `.agent-context/electron-smoke-20261022-storage-final/result.json`。包括冷启动静态 H、免登录、书签/导航/Cookie/重启、多窗口持久化、自定义模型表单、背景照片、卡片交互/大小屏、两精选工具中心、偏好重启与可选 collector 陷阱 0 请求。

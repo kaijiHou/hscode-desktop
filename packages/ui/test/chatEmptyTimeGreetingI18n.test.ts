@@ -1,7 +1,38 @@
-import { describe, expect, it } from "vitest";
-import { resolveGreetingFontSizePx } from "@/v4/ConversationDraftEmptyState.js";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
+const product = vi.hoisted(() => ({ hscode: false }));
+vi.mock("@zcode/shared", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@zcode/shared")>()),
+  get IS_HSCODE_BUILD() {
+    return product.hscode;
+  },
+}));
+vi.mock("@/i18n/IntlProvider.js", () => ({
+  useZCodeIntl: () => ({ intl: { formatMessage: ({ id }: { id: string }) => id } }),
+}));
+vi.mock("@/hooks/useInterfaceMode.js", () => ({ useIsOfficeMode: () => false }));
+afterEach(() => {
+  product.hscode = false;
+});
+import {
+  ConversationDraftEmptyState,
+  resolveGreetingFontSizePx,
+} from "@/v4/ConversationDraftEmptyState.js";
 
 describe("chat empty time greeting i18n", () => {
+  it("HSCode 首页只保留问候语，不显示 H 或回退成 Z 水印", () => {
+    product.hscode = true;
+    const html = renderToStaticMarkup(createElement(ConversationDraftEmptyState));
+    expect(html).toContain('data-v4-draft-greeting="true"');
+    expect(html).not.toContain("<svg");
+    expect(html).not.toContain("<img");
+  });
+  it("原版 ZCode 仍保留原主题水印", () => {
+    const html = renderToStaticMarkup(createElement(ConversationDraftEmptyState));
+    expect(html).toContain("<svg");
+    expect(html).toContain('data-v4-draft-logo="dark"');
+  });
   it("标题只在自身文字真实受到水平挤压后按 1px 档位缩小", () => {
     expect(
       resolveGreetingFontSizePx({

@@ -190,15 +190,18 @@ export function ConversationDraftEmptyState({
         className,
       )}
     >
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute left-1/2 top-1/2 aspect-[5/4] w-[min(72vw,25rem)] -mt-10",
-          "-translate-x-1/2 -translate-y-1/2 text-foreground-subtlest",
-        )}
-      >
-        <ZCodeEmptyStateLogo className="h-full w-full" />
-      </div>
+      {/* HSCode 首页按用户要求不显示品牌水印；启动、托盘和应用图标不受影响。 */}
+      {!IS_HSCODE_BUILD && (
+        <div
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute left-1/2 top-1/2 aspect-[5/4] w-[min(72vw,25rem)] -mt-10",
+            "-translate-x-1/2 -translate-y-1/2 text-foreground-subtlest",
+          )}
+        >
+          <ZCodeEmptyStateLogo className="h-full w-full" />
+        </div>
+      )}
       <p
         ref={greetingContainerRef}
         data-v4-draft-greeting="true"
@@ -228,18 +231,6 @@ export function ConversationDraftEmptyState({
 }
 
 function ZCodeEmptyStateLogo({ className }: { className?: string }) {
-  if (IS_HSCODE_BUILD)
-    return (
-      <svg
-        aria-hidden="true"
-        data-v4-draft-logo="hscode"
-        className={cn(className, "opacity-25")}
-        viewBox="0 0 400 320"
-        fill="none"
-      >
-        <path d="M72 28H124V132H276V28H328V292H276V184H124V292H72Z" stroke="currentColor" />
-      </svg>
-    );
   return (
     <>
       {/* 修复原因：夜间资源已自带渐变和透明度，公共容器叠加遮罩会让它重复变淡；渐隐效果只属于浅色线框。 */}

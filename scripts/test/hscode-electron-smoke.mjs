@@ -230,6 +230,11 @@ try {
     await step("first-run enters workspace directly without account or API key", async () => {
       await visible("composer-workspace-trigger").waitFor({ state: "visible", timeout: 60000 });
       assert.equal(await visible("login-use-api-key-button").count(), 0);
+      assert.equal(
+        await page.locator('[data-testid="chat-empty"] [data-v4-draft-logo]').count(),
+        0,
+        "HSCode draft home must not render a brand watermark",
+      );
     });
     await step("browser navigation and one-click bookmark", async () => {
       await app.evaluate(({ BrowserWindow }, url) => {
