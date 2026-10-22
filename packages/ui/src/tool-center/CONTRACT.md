@@ -1,0 +1,7 @@
+# hscode-tool-center
+
+Renderer UI module for the HSCode-only new-tab tool center. The module owns one bounded preference record in the HSCode profile's localStorage. It contains only versioned entry IDs, pin/hide/order arrays, and the show-hidden toggle; it never persists plugin listings, manifests, descriptions, resources, or runtime state.
+
+The preference store is the sole mutable-state owner. It writes validated records before publishing a same-window snapshot and listens to the native `storage` event for other windows. The first subscriber refreshes from storage; the last unsubscribe drops the cache so a later mount cannot reuse stale state. Invalid/oversized reads return defaults without replacing the stored bytes; failed writes and resets leave the current snapshot intact. A native `storage` event with `key === null` means `localStorage.clear()` and resets this preference snapshot to defaults.
+
+The view receives the current built-in entries and a plugin-tools render function. Existing app-shell callbacks own tab operations; plugin UI discovery, session checks, installation, enablement, sandbox admission, and tab lifecycle stay in `plugin-ui`. `onOrderChange(ids)` accepts the plugin UI's complete visible order after an adjacent move; the preference owner validates the merged record and retains stored IDs omitted from that view. The legacy two-argument `onMove` callback never guesses a neighbor absent from the persisted order.
